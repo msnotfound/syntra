@@ -9,16 +9,16 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-8 h-12 flex items-center">
           <span className="font-semibold text-base tracking-tight mr-8">syntra</span>
           <div className="flex items-center gap-6 text-sm text-text-secondary">
-            {['Product', 'Pricing', 'Docs', 'API'].map(item => (
-              <a key={item} href={`/${item.toLowerCase()}`} className="hover:text-text-primary transition-colors duration-[150ms]">{item}</a>
-            ))}
+            <a href="#how-it-works" className="hover:text-text-primary transition-colors duration-[150ms]">Product</a>
+            <a href="#pricing" className="hover:text-text-primary transition-colors duration-[150ms]">Pricing</a>
+            <Link href="/docs" className="hover:text-text-primary transition-colors duration-[150ms]">Docs</Link>
           </div>
           <div className="flex-1" />
           <div className="flex items-center gap-3">
-            <Link href="/sign-in" className="px-3 h-8 rounded-md text-sm font-medium text-text-secondary hover:bg-bg-surface-2 hover:text-text-primary transition-colors duration-[150ms] ease-out active:scale-95">
+            <Link href="/onboarding/org" className="px-3 h-8 rounded-md text-sm font-medium text-text-secondary hover:bg-bg-surface-2 hover:text-text-primary transition-colors duration-[150ms] ease-out active:scale-95">
               Sign in
             </Link>
-            <Link href="/sign-up" className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
+            <Link href="/onboarding/org" className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
               Start trial
             </Link>
           </div>
@@ -37,10 +37,10 @@ export default function LandingPage() {
             Email, WhatsApp, API. ₹15,000/month.
           </p>
           <div className="flex items-center gap-3">
-            <Link href="/sign-up" className="flex items-center gap-1.5 px-4 h-10 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
+            <Link href="/onboarding/org" className="flex items-center gap-1.5 px-4 h-10 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
               Start free trial
             </Link>
-            <Link href="/demo" className="flex items-center gap-1.5 px-4 h-10 rounded-md text-sm font-medium bg-bg-surface-2 border border-border-default text-text-primary hover:bg-bg-surface-3 transition-colors duration-[150ms] ease-out active:scale-95">
+            <Link href="/app/sundaram-pharma" className="flex items-center gap-1.5 px-4 h-10 rounded-md text-sm font-medium bg-bg-surface-2 border border-border-default text-text-primary hover:bg-bg-surface-3 transition-colors duration-[150ms] ease-out active:scale-95">
               View live demo
               <ArrowRight size={14} />
             </Link>
@@ -86,7 +86,7 @@ export default function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section className="border-t border-border-subtle py-16">
+      <section id="how-it-works" className="border-t border-border-subtle py-16">
         <div className="max-w-6xl mx-auto px-8">
           <h2 className="text-lg font-semibold text-text-primary mb-2">How it works</h2>
           <p className="text-sm text-text-secondary mb-10">Three steps to real-time geopolitical awareness.</p>
@@ -140,7 +140,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <Link
-                  href="/sign-up"
+                  href="/onboarding/org"
                   className={`block w-full text-center px-4 h-9 rounded-md text-sm font-medium transition-colors duration-[150ms] ease-out active:scale-95 ${
                     plan.highlight
                       ? 'bg-accent text-white hover:bg-accent-hover'
@@ -232,10 +232,10 @@ export default function LandingPage() {
           <h2 className="text-xl font-semibold text-text-primary mb-3">Know first. Act first.</h2>
           <p className="text-sm text-text-secondary mb-6">14-day free trial. No credit card. Setup in 5 minutes.</p>
           <div className="flex items-center justify-center gap-3">
-            <Link href="/sign-up" className="flex items-center gap-1.5 px-4 h-10 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
+            <Link href="/onboarding/org" className="flex items-center gap-1.5 px-4 h-10 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
               Start free trial
             </Link>
-            <Link href="/demo" className="flex items-center gap-1.5 px-4 h-10 rounded-md text-sm font-medium bg-bg-surface border border-border-default text-text-primary hover:bg-bg-surface-2 transition-colors duration-[150ms] ease-out active:scale-95">
+            <Link href="/app/sundaram-pharma" className="flex items-center gap-1.5 px-4 h-10 rounded-md text-sm font-medium bg-bg-surface border border-border-default text-text-primary hover:bg-bg-surface-2 transition-colors duration-[150ms] ease-out active:scale-95">
               View live demo
             </Link>
           </div>
@@ -252,9 +252,9 @@ export default function LandingPage() {
             <a href="https://warfront.live" className="hover:text-text-secondary transition-colors duration-[150ms]">Warfront geopolitical intelligence platform</a>
           </div>
           <div className="flex items-center gap-6 text-sm text-text-muted">
-            {['About', 'Contact', 'Status', 'Docs', 'Privacy'].map(item => (
-              <a key={item} href={`/${item.toLowerCase()}`} className="hover:text-text-secondary transition-colors duration-[150ms]">{item}</a>
-            ))}
+            <a href="#pricing" className="hover:text-text-secondary transition-colors duration-[150ms]">Pricing</a>
+            <Link href="/docs" className="hover:text-text-secondary transition-colors duration-[150ms]">Docs</Link>
+            <Link href="/onboarding/org" className="hover:text-text-secondary transition-colors duration-[150ms]">Sign up</Link>
           </div>
         </div>
       </footer>
