@@ -108,13 +108,21 @@ async function dispatchEmail(alert: IAlert, org: IOrganization, entities: IWatch
 }
 
 async function dispatchWhatsApp(alert: IAlert, org: IOrganization, llmCtx: { whyMatters: string; recommendedActions: string[] }) {
-  const sendWA = (await import('@syntra/shared/mocks/twilio')).sendWhatsApp;
   const emoji = { critical: '🔴', high: '🟠', medium: '🟡', low: '🔵' }[alert.severity] ?? '⚪';
-  await sendWA({
+  const payload = {
     to: `whatsapp:${org.contact_phone}`,
     from: `whatsapp:${process.env.TWILIO_WHATSAPP_FROM ?? 'sandbox'}`,
     body: `${emoji} *${alert.severity.toUpperCase()}* — ${alert.event_snapshot.title}\n📍 ${alert.event_snapshot.country}\n\n${llmCtx.whyMatters}\n\nView: ${process.env.NEXT_PUBLIC_APP_URL}/app/${org.slug}/alerts/${String(alert._id)}`,
-  });
+  };
+
+  if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+    const twilio = (await import('twilio')).default;
+    const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+    await client.messages.create({ to: payload.to, from: payload.from, body: payload.body });
+  } else {
+    const { sendWhatsApp } = await import('@syntra/shared/mocks/twilio');
+    await sendWhatsApp(payload);
+  }
 }
 
 async function dispatchWebhook(alert: IAlert, org: IOrganization) {
