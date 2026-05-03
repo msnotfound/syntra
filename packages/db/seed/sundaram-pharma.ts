@@ -114,14 +114,82 @@ export async function seedSundaramPharma() {
   // Seed 8 realistic events
   const now = Date.now();
   const seedEvents = [
-    { title: 'Houthi missile strike near Hodeidah port', description: 'Houthi forces struck a commercial vessel near the port of Hodeidah, disrupting maritime traffic in the Bab-el-Mandeb strait.', lat: 14.7956, lng: 42.9494, country: 'Yemen', cc: 'YE', severity: 'critical', type: 'maritime_attack', minsAgo: 4 },
-    { title: 'Port closure announced — Mombasa Container Terminal', description: 'Kenya Ports Authority announced temporary closure of Mombasa Container Terminal due to industrial action.', lat: -4.0435, lng: 39.6682, country: 'Kenya', cc: 'KE', severity: 'high', type: 'port_closure', minsAgo: 120 },
-    { title: 'New US sanctions update — Iran banking sector', description: 'US Treasury OFAC announced additional designations targeting Iranian financial institutions.', lat: 32.4279, lng: 53.6880, country: 'Iran', cc: 'IR', severity: 'medium', type: 'sanctions', minsAgo: 360 },
-    { title: 'Red Sea vessel diversion advisory issued', description: 'International Maritime Organization issued advisory recommending vessels avoid southern Red Sea corridor.', lat: 15.0, lng: 42.0, country: 'Yemen', cc: 'YE', severity: 'high', type: 'maritime_advisory', minsAgo: 600 },
-    { title: 'Sudan port infrastructure damage reported', description: 'Port Sudan reports damage to loading infrastructure following nearby military operations.', lat: 19.6180, lng: 37.2164, country: 'Sudan', cc: 'SD', severity: 'medium', type: 'infrastructure_damage', minsAgo: 1440 },
-    { title: 'Nigeria dockworkers strike — Apapa terminal', description: 'National Union of Dockworkers announced indefinite strike at Apapa container terminal, Lagos.', lat: 6.4450, lng: 3.3800, country: 'Nigeria', cc: 'NG', severity: 'medium', type: 'labor_action', minsAgo: 2880 },
-    { title: 'Egypt Suez Canal transit fee increase', description: 'Suez Canal Authority announced 15% increase in transit fees effective next month for all vessel classes.', lat: 30.0444, lng: 31.2357, country: 'Egypt', cc: 'EG', severity: 'low', type: 'regulatory', minsAgo: 4320 },
-    { title: 'Oman Gulf of Oman security incident', description: 'UK Maritime Trade Operations reports unverified security incident in Gulf of Oman, vessels advised caution.', lat: 22.0, lng: 58.0, country: 'Oman', cc: 'OM', severity: 'high', type: 'security_incident', minsAgo: 180 },
+    {
+      title: 'Houthi missile strike on MV Galaxy Leader — Bab-el-Mandeb closes to container traffic',
+      description: 'Houthi forces fired two anti-ship ballistic missiles at the MV Galaxy Leader 14nm west of Hodeidah. The vessel took a direct hit midships and is listing. MSC, Hapag-Lloyd, and Evergreen have suspended sailings through the strait pending an IMO safety assessment. All Sundaram Pharma shipments transiting India–East Africa via Suez are affected.',
+      lat: 14.7956, lng: 42.9494, country: 'Yemen', cc: 'YE', severity: 'critical', type: 'maritime_attack', minsAgo: 4,
+      sources: [
+        { url: 'https://reuters.com/world/middle-east/houthi-attack-galaxy-leader', name: 'Reuters' },
+        { url: 'https://maritimeexecutive.com/article/bab-el-mandeb-suspended', name: 'Maritime Executive' },
+        { url: 'https://aljazeera.com/news/2025/houthi-shipping-attack', name: 'Al Jazeera' },
+      ],
+    },
+    {
+      title: 'KPA suspends Mombasa Container Terminal — industrial action by dockers',
+      description: 'Kenya Ports Authority suspended operations at Berths 19–24 of Mombasa Container Terminal after the Dock Workers Union declared a wildcat strike over unpaid allowances. An estimated 14 vessels are at anchor awaiting berthing. Transit times to Nairobi distribution hub expected to slip by 8–12 days.',
+      lat: -4.0435, lng: 39.6682, country: 'Kenya', cc: 'KE', severity: 'high', type: 'port_closure', minsAgo: 120,
+      sources: [
+        { url: 'https://reuters.com/world/africa/mombasa-port-strike-2025', name: 'Reuters' },
+        { url: 'https://portcalls.com/mombasa-dock-workers-2025', name: 'Port Calls' },
+      ],
+    },
+    {
+      title: 'OFAC adds 18 Iranian banks to SDN list — correspondent banking freeze imminent',
+      description: 'US Treasury OFAC designated 18 Iranian financial institutions under the Iran Transactions and Sanctions Regulations. Letters of credit drawn on Iranian correspondent banks for pharma exports via Dubai will be blocked within 30 days. Sundaram Pharma Gulf receivables routed through UAE intermediaries may be caught in secondary sanctions review.',
+      lat: 32.4279, lng: 53.6880, country: 'Iran', cc: 'IR', severity: 'medium', type: 'sanctions', minsAgo: 360,
+      sources: [
+        { url: 'https://home.treasury.gov/news/press-releases/ofac-iran-sdn-2025', name: 'US Treasury OFAC' },
+        { url: 'https://reuters.com/world/us/ofac-iran-banks-2025', name: 'Reuters' },
+      ],
+    },
+    {
+      title: 'IMO MSC issues Circular — all vessels avoid Red Sea south of 15°N',
+      description: "The International Maritime Organization Maritime Safety Committee issued MSC Circular 1772 advising all commercial vessels to avoid the Red Sea south of latitude 15°N. Insurance underwriters at Lloyd's market have suspended war risk cover for the corridor. 22 vessels have already diverted around Cape of Good Hope, adding 14 days transit.",
+      lat: 15.0, lng: 42.0, country: 'Yemen', cc: 'YE', severity: 'high', type: 'maritime_advisory', minsAgo: 600,
+      sources: [
+        { url: 'https://imo.org/en/MediaCentre/msc-circular-1772', name: 'IMO' },
+        { url: 'https://maritimeexecutive.com/red-sea-advisory-msc', name: 'Maritime Executive' },
+        { url: 'https://lloydslist.maritimeintelligence.informa.com/red-sea-war-risk', name: "Lloyd's List" },
+      ],
+    },
+    {
+      title: 'Port Sudan crane collapse — Berths 5–8 offline for 3 weeks',
+      description: 'A Liebherr quay crane at Port Sudan container terminal collapsed onto Berth 7 during a resupply operation, disabling four berths. The Sudan Ports Corporation estimates repairs will take 18–21 days. Port Sudan handles roughly 60% of Sudan\'s pharmaceutical imports, including Sundaram Pharma consignments destined for Khartoum.',
+      lat: 19.6180, lng: 37.2164, country: 'Sudan', cc: 'SD', severity: 'medium', type: 'infrastructure_damage', minsAgo: 1440,
+      sources: [
+        { url: 'https://aljazeera.com/news/sudan-port-crane-collapse-2025', name: 'Al Jazeera' },
+        { url: 'https://maritimeexecutive.com/port-sudan-crane-2025', name: 'Maritime Executive' },
+      ],
+    },
+    {
+      title: 'Apapa terminal indefinite closure — NUD dockworkers strike over wage arrears',
+      description: 'Nigeria\'s National Union of Dockworkers declared an indefinite strike at the Apapa container terminal in Lagos, citing 7 months of unpaid hazard allowances. The Nigerian Ports Authority has not issued a return-to-work order. Apapa handles ~70% of West African pharmaceutical imports; Sundaram Pharma\'s Nigeria consignment is at anchor.',
+      lat: 6.4450, lng: 3.3800, country: 'Nigeria', cc: 'NG', severity: 'medium', type: 'labor_action', minsAgo: 2880,
+      sources: [
+        { url: 'https://reuters.com/world/africa/apapa-strike-2025', name: 'Reuters' },
+        { url: 'https://businessday.ng/maritime/apapa-dockers-strike', name: 'BusinessDay Nigeria' },
+        { url: 'https://maritimebusiness.com/ng/apapa-nud-2025', name: 'Maritime Business' },
+      ],
+    },
+    {
+      title: 'Suez Canal Authority announces 15% transit fee hike effective 1 July',
+      description: 'The Suez Canal Authority issued a tariff circular increasing dues by 15% for all vessel classes from 1 July 2025. The hike follows a 10% increase in January. Containership transits on the India–Europe corridor will see freight surcharges of $180–$240 per TEU. Sundaram Pharma\'s Suez-routed consignments are subject to carrier surcharge adjustments.',
+      lat: 30.0444, lng: 31.2357, country: 'Egypt', cc: 'EG', severity: 'low', type: 'regulatory', minsAgo: 4320,
+      sources: [
+        { url: 'https://suezcanal.gov.eg/English/News/Pages/SCACircular2025', name: 'Suez Canal Authority' },
+        { url: 'https://reuters.com/business/suez-fee-hike-2025', name: 'Reuters' },
+      ],
+    },
+    {
+      title: 'Cyclone Mocha intensifying in Bay of Bengal — Chennai Port issues pre-cyclone notice',
+      description: 'IMD has upgraded Cyclone Mocha to Severe Cyclonic Storm status with winds at 110 kmph. The storm is forecast to make landfall near Chennai in 48–72 hours. Chennai Port has issued a pre-cyclone notice suspending all loading operations from tomorrow 06:00 IST. Sundaram Pharma\'s Cipla and Intas consignments awaiting berth at Chennai are at risk.',
+      lat: 13.0827, lng: 80.2946, country: 'India', cc: 'IN', severity: 'high', type: 'natural_disaster', minsAgo: 180,
+      sources: [
+        { url: 'https://mausam.imd.gov.in/cyclone/mocha-2025', name: 'IMD (India Met)' },
+        { url: 'https://reuters.com/world/india/cyclone-mocha-chennai-2025', name: 'Reuters' },
+        { url: 'https://maritimeexecutive.com/chennai-port-cyclone-2025', name: 'Maritime Executive' },
+      ],
+    },
   ];
 
   const eventIds: Types.ObjectId[] = [];
@@ -137,7 +205,7 @@ export async function seedSundaramPharma() {
         country_code: e.cc,
         severity: e.severity,
         event_type: e.type,
-        sources: [{ url: 'https://reuters.com', name: 'Reuters' }, { url: 'https://maritimeexecutive.com', name: 'Maritime Executive' }],
+        sources: e.sources,
         occurred_at: ts,
       });
     }
@@ -152,14 +220,46 @@ export async function seedSundaramPharma() {
   const countryEntities = allEntities.filter(e => e.type === 'country');
 
   const alertDefs = [
-    { eventIdx: 0, entities: [routeEntities[0], portEntities[0]], reasons: ['proximity', 'route'], severity: 'critical', acked: false },
-    { eventIdx: 1, entities: [countryEntities[0], portEntities[0]], reasons: ['country'], severity: 'high', acked: false },
-    { eventIdx: 2, entities: [countryEntities.find(e => e.country_code === 'IR')].filter(Boolean), reasons: ['country'], severity: 'medium', acked: true },
-    { eventIdx: 3, entities: [routeEntities[0]], reasons: ['route'], severity: 'high', acked: false },
-    { eventIdx: 4, entities: [countryEntities.find(e => e.country_code === 'SD')].filter(Boolean), reasons: ['country'], severity: 'medium', acked: true },
-    { eventIdx: 5, entities: [countryEntities.find(e => e.country_code === 'NG')].filter(Boolean), reasons: ['country'], severity: 'medium', acked: false },
-    { eventIdx: 6, entities: [countryEntities.find(e => e.country_code === 'EG')].filter(Boolean), reasons: ['country'], severity: 'low', acked: true },
-    { eventIdx: 7, entities: [routeEntities[1]].filter(Boolean), reasons: ['route'], severity: 'high', acked: false },
+    {
+      eventIdx: 0, entities: [routeEntities[0], portEntities[0]], reasons: ['proximity', 'route'], severity: 'critical', acked: false,
+      why: 'Your India → East Africa via Suez route passes directly through Bab-el-Mandeb. The Strait is now closed to commercial traffic following the strike. All active consignments on this route face indefinite delay or mandatory Cape of Good Hope diversion, adding 14–18 days and ₹2.4L–₹3.8L in additional freight per container.',
+      actions: ['Contact freight forwarder immediately to assess diversion options', 'Notify East Africa customers of 14–18 day delay', 'Check war risk insurance coverage for active shipments', 'Evaluate air freight for time-sensitive API orders'],
+    },
+    {
+      eventIdx: 1, entities: [countryEntities[0], portEntities[0]], reasons: ['country', 'port'], severity: 'high', acked: false,
+      why: 'Kenya is a primary distribution market and Mombasa is the only deep-water container port serving your Nairobi warehouse hub. With Berths 19–24 suspended, all inbound consignments are at anchor. Expect 8–12 additional days before clearance. This affects ₹1.2Cr of active inventory in transit.',
+      actions: ['Alert Nairobi warehouse team to adjust stock reorder levels', 'Request berthing queue position from freight forwarder', 'Consider Dar es Salaam as alternate discharge port if delay exceeds 10 days'],
+    },
+    {
+      eventIdx: 2, entities: [countryEntities.find(e => e.country_code === 'IR')].filter(Boolean), reasons: ['sanctions'], severity: 'medium', acked: true,
+      why: 'Your Dubai Distribution Hub processes Gulf region collections via UAE banks. New OFAC SDN designations on 18 Iranian institutions may affect UAE correspondent banking chains used for Iran-linked LC settlements. While Sundaram Pharma\'s direct Iran exposure is nil, secondary sanctions risk applies to any UAE bank with Iranian correspondent relationships.',
+      actions: ['Confirm with UAE banking partner that no sanctioned correspondent banks are involved', 'Review outstanding LCs for UAE receivables for compliance'],
+    },
+    {
+      eventIdx: 3, entities: [routeEntities[0]], reasons: ['route'], severity: 'high', acked: false,
+      why: 'IMO Circular 1772 now formally restricts your India → East Africa via Suez route corridor. Lloyd\'s war risk suspension means your standard marine cargo policy may not cover vessels transiting below 15°N. This is the second Red Sea advisory in 4 minutes — the corridor is operationally closed for the foreseeable future.',
+      actions: ['Request updated route planning from freight forwarder', 'Verify marine cargo policy coverage for Cape route', 'Adjust delivery commitments to East Africa customers by 3 weeks'],
+    },
+    {
+      eventIdx: 4, entities: [countryEntities.find(e => e.country_code === 'SD')].filter(Boolean), reasons: ['country', 'infrastructure'], severity: 'medium', acked: true,
+      why: 'Port Sudan is the entry point for your Khartoum consignments. With 4 berths offline for 3 weeks, berthing queues will grow significantly. Sudan does not have an alternate deep-water container facility — all freight must wait. Khartoum delivery is expected to slip by 3–4 weeks.',
+      actions: ['Inform Sudan distributor of expected 3-week delay', 'Assess whether consignment should be held at origin until berths reopen'],
+    },
+    {
+      eventIdx: 5, entities: [countryEntities.find(e => e.country_code === 'NG')].filter(Boolean), reasons: ['country', 'port'], severity: 'medium', acked: false,
+      why: 'Nigeria is your largest West African market. Apapa Container Terminal is the sole viable deep-water discharge port for Lagos. With no return-to-work order, your consignment may remain at anchor for weeks. Nigeria accounts for ~22% of your West Africa revenue — extended delay risks stockouts at Nigerian distributor.',
+      actions: ['Contact Lagos freight agent for current anchorage queue position', 'Alert Nigerian distributor to extend safety stock', 'Monitor NPA communications for resolution timeline'],
+    },
+    {
+      eventIdx: 6, entities: [countryEntities.find(e => e.country_code === 'EG')].filter(Boolean), reasons: ['regulatory'], severity: 'low', acked: true,
+      why: 'The 15% transit fee hike applies to all vessels using Suez, including those carrying your India–Europe and India–East Africa consignments. Carriers will pass this through as a surcharge — expect ₹180–₹240 per TEU added to future freight invoices. This is a cost impact, not a supply chain disruption.',
+      actions: ['Factor Suez surcharge increase into Q3 freight budgeting', 'Review Incoterms on East Africa contracts to confirm who absorbs freight increases'],
+    },
+    {
+      eventIdx: 7, entities: [portEntities.find(e => e.name.includes('Chennai'))].filter(Boolean), reasons: ['proximity', 'port'], severity: 'high', acked: false,
+      why: 'Cyclone Mocha threatens Chennai Port — your Cipla Goa Plant and Intas Chennai Facility have active outbound consignments staging at Chennai Port. Loading operations are suspended from tomorrow 06:00 IST. If the cyclone makes landfall as forecast, damage to port infrastructure could extend delays by 2–3 weeks beyond the storm clearance period.',
+      actions: ['Contact Intas Chennai and confirm consignment status before loading suspension', 'Assess whether cargo can be diverted to Kochi or JNPT for same-vessel loading', 'Monitor IMD Cyclone Track for updated landfall forecast'],
+    },
   ];
 
   for (const def of alertDefs) {
@@ -191,8 +291,8 @@ export async function seedSundaramPharma() {
           sources: event.sources,
         },
         llm_context: {
-          why_matters: 'This event falls within your monitored region and may affect your supply chain.',
-          recommended_actions: ['Review shipment schedule', 'Contact freight forwarder', 'Monitor situation'],
+          why_matters: def.why,
+          recommended_actions: def.actions,
         },
         dispatched_at: new Date(),
         channels_sent: ['email'],

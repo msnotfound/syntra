@@ -15,11 +15,13 @@ export default function OnboardingOrgPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await fetch('/api/onboarding/org', {
+      const res = await fetch('/api/onboarding/org', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(form),
       });
+      const data = await res.json();
+      if (data.slug) sessionStorage.setItem('onboarding_org_slug', data.slug);
       router.push('/onboarding/watchlist');
     } finally {
       setLoading(false);

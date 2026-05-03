@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Zap, CheckCircle2, ArrowRight } from 'lucide-react';
 
 const STEP = 5;
@@ -13,8 +13,15 @@ const DEMO_SCENARIOS = [
 ];
 
 export default function OnboardingDemoPage() {
+  const router = useRouter();
   const [triggered, setTriggered] = useState<string | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
+  const [orgSlug, setOrgSlug] = useState('sundaram-pharma');
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem('onboarding_org_slug');
+    if (stored) setOrgSlug(stored);
+  }, []);
 
   async function triggerDemo(id: string) {
     setLoading(id);
@@ -89,13 +96,13 @@ export default function OnboardingDemoPage() {
         </div>
 
         <div className="flex justify-end">
-          <Link
-            href="/app"
+          <button
+            onClick={() => router.push(`/app/${orgSlug}`)}
             className="flex items-center gap-1.5 px-5 h-9 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95"
           >
             Go to dashboard
             <ArrowRight size={14} />
-          </Link>
+          </button>
         </div>
       </div>
     </div>
