@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-base:        #0B0E14;
+  --bg-surface:     #151921;
+  --bg-surface-2:   #1E2530;
+  --bg-surface-3:   #262C36;
+
+  --border-subtle:  #1E2530;
+  --border-default: #262C36;
+  --border-strong:  #3B82F6;
+
+  --text-primary:   #FAFAFA;
+  --text-secondary: #94A3B8;
+  --text-muted:     #64748B;
+  --text-disabled:  #475569;
+
+  --accent:         #3B82F6;
+  --accent-hover:   #60A5FA;
+  --accent-muted:   #1E3A8A;
+
+  --severity-critical: #EF4444;
+  --severity-high:     #F97316;
+  --severity-medium:   #EAB308;
+  --severity-low:      #60A5FA;
+  --severity-info:     #94A3B8;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --transition: 150ms ease-out;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: Inter, 'Geist Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular nums for all data-heavy contexts */
+.font-mono,
+[data-tabular] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Severity left-border accent */
+.severity-border-critical { border-left: 3px solid var(--severity-critical); }
+.severity-border-high     { border-left: 3px solid var(--severity-high); }
+.severity-border-medium   { border-left: 3px solid var(--severity-medium); }
+.severity-border-low      { border-left: 3px solid var(--severity-low); }
+
+/* Map container */
+.mapbox-container {
+  width: 100%;
+  height: 100%;
+  background: #0A0A0A;
+}
+
+/* Linear-style page progress bar */
+@keyframes progress-bar {
+  0%   { width: 0%; opacity: 1; }
+  90%  { width: 90%; opacity: 1; }
+  100% { width: 100%; opacity: 0; }
+}
+
+.page-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--accent);
+  animation: progress-bar 0.5s ease-out forwards;
+  z-index: 9999;
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-surface-2) 25%, var(--bg-surface-3) 50%, var(--bg-surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* Map event pulse */
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.75; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.map-event-pulse {
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--bg-surface-3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-disabled); }

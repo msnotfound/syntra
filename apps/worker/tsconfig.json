@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "isolatedModules": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "paths": {
+      "@syntra/shared": ["../../packages/shared/index.ts"],
+      "@syntra/shared/*": ["../../packages/shared/*"],
+      "@syntra/db": ["../../packages/db/index.ts"],
+      "@syntra/llm": ["../../packages/llm/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "__tests__/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
