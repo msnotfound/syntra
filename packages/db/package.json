@@ -5,7 +5,8 @@
   "exports": {
     ".": "./index.ts",
     "./models/*": "./models/*.ts",
-    "./seed": "./seed/index.ts"
+    "./seed": "./seed/index.ts",
+    "./seed/api": "./seed/api.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

@@ -226,12 +226,12 @@ export async function seedSundaramPharma() {
       actions: ['Contact freight forwarder immediately to assess diversion options', 'Notify East Africa customers of 14–18 day delay', 'Check war risk insurance coverage for active shipments', 'Evaluate air freight for time-sensitive API orders'],
     },
     {
-      eventIdx: 1, entities: [countryEntities[0], portEntities[0]], reasons: ['country', 'port'], severity: 'high', acked: false,
+      eventIdx: 1, entities: [countryEntities[0], portEntities[0]], reasons: ['country', 'proximity'], severity: 'high', acked: false,
       why: 'Kenya is a primary distribution market and Mombasa is the only deep-water container port serving your Nairobi warehouse hub. With Berths 19–24 suspended, all inbound consignments are at anchor. Expect 8–12 additional days before clearance. This affects ₹1.2Cr of active inventory in transit.',
       actions: ['Alert Nairobi warehouse team to adjust stock reorder levels', 'Request berthing queue position from freight forwarder', 'Consider Dar es Salaam as alternate discharge port if delay exceeds 10 days'],
     },
     {
-      eventIdx: 2, entities: [countryEntities.find(e => e.country_code === 'IR')].filter(Boolean), reasons: ['sanctions'], severity: 'medium', acked: true,
+      eventIdx: 2, entities: [countryEntities.find(e => e.country_code === 'IR')].filter(Boolean), reasons: ['country'], severity: 'medium', acked: true,
       why: 'Your Dubai Distribution Hub processes Gulf region collections via UAE banks. New OFAC SDN designations on 18 Iranian institutions may affect UAE correspondent banking chains used for Iran-linked LC settlements. While Sundaram Pharma\'s direct Iran exposure is nil, secondary sanctions risk applies to any UAE bank with Iranian correspondent relationships.',
       actions: ['Confirm with UAE banking partner that no sanctioned correspondent banks are involved', 'Review outstanding LCs for UAE receivables for compliance'],
     },
@@ -241,22 +241,22 @@ export async function seedSundaramPharma() {
       actions: ['Request updated route planning from freight forwarder', 'Verify marine cargo policy coverage for Cape route', 'Adjust delivery commitments to East Africa customers by 3 weeks'],
     },
     {
-      eventIdx: 4, entities: [countryEntities.find(e => e.country_code === 'SD')].filter(Boolean), reasons: ['country', 'infrastructure'], severity: 'medium', acked: true,
+      eventIdx: 4, entities: [countryEntities.find(e => e.country_code === 'SD')].filter(Boolean), reasons: ['country', 'proximity'], severity: 'medium', acked: true,
       why: 'Port Sudan is the entry point for your Khartoum consignments. With 4 berths offline for 3 weeks, berthing queues will grow significantly. Sudan does not have an alternate deep-water container facility — all freight must wait. Khartoum delivery is expected to slip by 3–4 weeks.',
       actions: ['Inform Sudan distributor of expected 3-week delay', 'Assess whether consignment should be held at origin until berths reopen'],
     },
     {
-      eventIdx: 5, entities: [countryEntities.find(e => e.country_code === 'NG')].filter(Boolean), reasons: ['country', 'port'], severity: 'medium', acked: false,
+      eventIdx: 5, entities: [countryEntities.find(e => e.country_code === 'NG')].filter(Boolean), reasons: ['country', 'proximity'], severity: 'medium', acked: false,
       why: 'Nigeria is your largest West African market. Apapa Container Terminal is the sole viable deep-water discharge port for Lagos. With no return-to-work order, your consignment may remain at anchor for weeks. Nigeria accounts for ~22% of your West Africa revenue — extended delay risks stockouts at Nigerian distributor.',
       actions: ['Contact Lagos freight agent for current anchorage queue position', 'Alert Nigerian distributor to extend safety stock', 'Monitor NPA communications for resolution timeline'],
     },
     {
-      eventIdx: 6, entities: [countryEntities.find(e => e.country_code === 'EG')].filter(Boolean), reasons: ['regulatory'], severity: 'low', acked: true,
+      eventIdx: 6, entities: [countryEntities.find(e => e.country_code === 'EG')].filter(Boolean), reasons: ['country', 'route'], severity: 'low', acked: true,
       why: 'The 15% transit fee hike applies to all vessels using Suez, including those carrying your India–Europe and India–East Africa consignments. Carriers will pass this through as a surcharge — expect ₹180–₹240 per TEU added to future freight invoices. This is a cost impact, not a supply chain disruption.',
       actions: ['Factor Suez surcharge increase into Q3 freight budgeting', 'Review Incoterms on East Africa contracts to confirm who absorbs freight increases'],
     },
     {
-      eventIdx: 7, entities: [portEntities.find(e => e.name.includes('Chennai'))].filter(Boolean), reasons: ['proximity', 'port'], severity: 'high', acked: false,
+      eventIdx: 7, entities: [portEntities.find(e => e.name.includes('Chennai'))].filter(Boolean), reasons: ['proximity', 'country'], severity: 'high', acked: false,
       why: 'Cyclone Mocha threatens Chennai Port — your Cipla Goa Plant and Intas Chennai Facility have active outbound consignments staging at Chennai Port. Loading operations are suspended from tomorrow 06:00 IST. If the cyclone makes landfall as forecast, damage to port infrastructure could extend delays by 2–3 weeks beyond the storm clearance period.',
       actions: ['Contact Intas Chennai and confirm consignment status before loading suspension', 'Assess whether cargo can be diverted to Kochi or JNPT for same-vessel loading', 'Monitor IMD Cyclone Track for updated landfall forecast'],
     },
