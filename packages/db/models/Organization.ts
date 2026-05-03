@@ -46,7 +46,6 @@ const OrgSchema = new Schema<IOrganization>({
   demo_mode: { type: Boolean, default: false },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
-OrgSchema.index({ slug: 1 }, { unique: true });
 OrgSchema.index({ razorpay_subscription_id: 1 });
 
 export const Organization: Model<IOrganization> =

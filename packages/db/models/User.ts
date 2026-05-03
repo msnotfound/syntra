@@ -19,7 +19,6 @@ const UserSchema = new Schema<IUser>({
   last_seen_at: { type: Date, default: Date.now },
 }, { timestamps: { createdAt: 'created_at', updatedAt: false } });
 
-UserSchema.index({ clerk_user_id: 1 }, { unique: true });
 UserSchema.index({ org_id: 1 });
 
 export const User: Model<IUser> =

@@ -25,7 +25,6 @@ const ApiKeySchema = new Schema<IApiKey>({
   revoked_at:   { type: Date, default: null },
 }, { timestamps: { createdAt: 'created_at', updatedAt: false } });
 
-ApiKeySchema.index({ key_hash: 1 }, { unique: true });
 ApiKeySchema.index({ org_id: 1 });
 
 export const ApiKey: Model<IApiKey> =

@@ -27,6 +27,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             { href: '/admin', label: 'Dashboard' },
             { href: '/admin/orgs', label: 'Orgs' },
             { href: '/admin/events', label: 'Events' },
+            { href: '/admin/inject-event', label: '⚡ Inject Event' },
           ].map(item => (
             <a
               key={item.href}
