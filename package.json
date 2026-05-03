@@ -12,5 +12,8 @@
   },
   "devDependencies": {
     "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.5.0"
   }
 }

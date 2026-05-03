@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^7.3.0",
+    "@scalar/nextjs-api-reference": "^0.10.13",
     "@syntra/db": "workspace:*",
     "@syntra/llm": "workspace:*",
     "@syntra/shared": "workspace:*",
