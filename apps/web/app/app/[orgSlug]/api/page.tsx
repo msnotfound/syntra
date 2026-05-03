@@ -11,7 +11,7 @@ export default async function ApiPage({ params }: PageProps) {
   await ensureDb();
   const org = await getOrgBySlugOrThrow(params.orgSlug);
 
-  const keys = await ApiKey.find({ org_id: org._id, revoked_at: null }).sort({ created_at: -1 }).lean() as IApiKey[];
+  const keys = await ApiKey.find({ org_id: org._id, revoked_at: null }).sort({ created_at: -1 }).lean() as unknown as IApiKey[];
 
   const CURL_EXAMPLE = `curl https://app.syntra.app/api/v1/alerts \\
   -H "Authorization: Bearer ${keys[0]?.key_prefix ?? 'syn_live_...'}..."`;

@@ -64,13 +64,13 @@ export async function runMatchingCycle(): Promise<{ processed: number; alertsCre
   const since = new Date(now.getTime() - 10 * 60 * 1000); // 10-min overlap
 
   const events = await Event.find({ created_at: { $gte: since } }).lean();
-  const orgs = await Organization.find({ status: 'active' }).lean() as IOrganization[];
+  const orgs = await Organization.find({ status: 'active' }).lean() as unknown as IOrganization[];
 
   let alertsCreated = 0;
 
   for (const event of events) {
     for (const org of orgs) {
-      const entities = await WatchlistEntity.find({ org_id: org._id, active: true }).lean() as IWatchlistEntity[];
+      const entities = await WatchlistEntity.find({ org_id: org._id, active: true }).lean() as unknown as IWatchlistEntity[];
       const { entities: matched, reasons } = matchEventToEntities(
         { location: event.location, country_code: event.country_code },
         entities,

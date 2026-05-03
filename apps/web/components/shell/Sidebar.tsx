@@ -4,13 +4,13 @@ import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
 import {
   LayoutDashboard, Bell, List, Code2, Settings,
-  HelpCircle, BookOpen, Shield,
+  HelpCircle, BookOpen, type LucideIcon,
 } from 'lucide-react';
 
 interface NavItem {
   label: string;
   href: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
 }
 
 const NAV_ITEMS: NavItem[] = [

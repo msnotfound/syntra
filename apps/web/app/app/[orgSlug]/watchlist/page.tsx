@@ -26,7 +26,7 @@ export default async function WatchlistPage({ params, searchParams }: PageProps)
   await ensureDb();
   const org = await getOrgBySlugOrThrow(params.orgSlug);
 
-  const allEntities = await WatchlistEntity.find({ org_id: org._id, active: true }).sort({ type: 1, name: 1 }).lean() as IWatchlistEntity[];
+  const allEntities = await WatchlistEntity.find({ org_id: org._id, active: true }).sort({ type: 1, name: 1 }).lean() as unknown as IWatchlistEntity[];
 
   const filtered = searchParams.type
     ? allEntities.filter(e => e.type === searchParams.type)

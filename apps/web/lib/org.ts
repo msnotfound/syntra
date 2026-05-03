@@ -4,7 +4,7 @@ import { ensureDb } from './db';
 
 export async function getOrgBySlug(slug: string): Promise<IOrganization | null> {
   await ensureDb();
-  return Organization.findOne({ slug, status: { $ne: 'cancelled' } }).lean();
+  return Organization.findOne({ slug, status: { $ne: 'cancelled' } }).lean() as unknown as Promise<IOrganization | null>;
 }
 
 export async function getOrgBySlugOrThrow(slug: string): Promise<IOrganization> {

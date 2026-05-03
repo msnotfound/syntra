@@ -17,12 +17,12 @@ export default async function AlertDetailPage({ params }: PageProps) {
   await ensureDb();
   const org = await getOrgBySlugOrThrow(params.orgSlug);
 
-  const alert = await Alert.findOne({ _id: params.id, org_id: org._id }).lean() as IAlert | null;
+  const alert = await Alert.findOne({ _id: params.id, org_id: org._id }).lean() as unknown as IAlert | null;
   if (!alert) notFound();
 
   const entities = await WatchlistEntity.find({
     _id: { $in: alert.watchlist_entity_ids },
-  }).lean() as IWatchlistEntity[];
+  }).lean() as unknown as IWatchlistEntity[];
 
   const severityColor: Record<string, string> = {
     critical: '#EF4444', high: '#F97316', medium: '#EAB308', low: '#60A5FA',

@@ -5,7 +5,6 @@ function ent(overrides: Partial<PlainEntity> & { name: string }): PlainEntity {
   return {
     _id: overrides.name,
     type: 'supplier',
-    name: overrides.name,
     latitude: null,
     longitude: null,
     country_code: null,

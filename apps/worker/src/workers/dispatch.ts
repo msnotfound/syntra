@@ -26,7 +26,7 @@ export function startDispatchWorker() {
     const org = await Organization.findById(alert.org_id).lean() as IOrganization | null;
     if (!org || org.status !== 'active') return;
 
-    const entities = await WatchlistEntity.find({ _id: { $in: alert.watchlist_entity_ids } }).lean() as IWatchlistEntity[];
+    const entities = await WatchlistEntity.find({ _id: { $in: alert.watchlist_entity_ids } }).lean() as unknown as IWatchlistEntity[];
     const entityNames = entities.map(e => e.name);
 
     // Generate LLM context

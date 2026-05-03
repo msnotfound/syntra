@@ -1,10 +1,10 @@
 import React from 'react';
 import { clsx } from 'clsx';
-import { Factory, Anchor, MoveRight, Flag, Globe2, Package } from 'lucide-react';
+import { Factory, Anchor, MoveRight, Flag, Globe2, Package, type LucideIcon } from 'lucide-react';
 
 type EntityType = 'supplier' | 'port' | 'route' | 'country' | 'region' | 'asset';
 
-const TYPE_ICONS: Record<EntityType, React.ComponentType<{ size?: number; className?: string }>> = {
+const TYPE_ICONS: Record<EntityType, LucideIcon> = {
   supplier: Factory,
   port:     Anchor,
   route:    MoveRight,

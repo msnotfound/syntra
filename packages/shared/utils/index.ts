@@ -101,7 +101,7 @@ export interface PlainEntity {
   active: boolean;
 }
 
-export type MatchReason = 'proximity' | 'country' | 'route' | 'supplier_country';
+import type { MatchReason } from '../schemas/index.js';
 
 export interface MatchResult {
   entities: PlainEntity[];

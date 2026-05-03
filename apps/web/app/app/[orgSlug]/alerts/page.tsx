@@ -22,11 +22,11 @@ export default async function AlertFeedPage({ params, searchParams }: PageProps)
   const thirtyDays = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   query.created_at = { $gte: thirtyDays };
 
-  const alerts = await Alert.find(query).sort({ created_at: -1 }).limit(100).lean() as IAlert[];
+  const alerts = await Alert.find(query).sort({ created_at: -1 }).limit(100).lean() as unknown as IAlert[];
   const unacked = alerts.filter(a => !a.acknowledged_at).length;
 
   const entityIds = [...new Set(alerts.flatMap(a => a.watchlist_entity_ids.map(String)))];
-  const entities = await WatchlistEntity.find({ _id: { $in: entityIds } }).lean() as IWatchlistEntity[];
+  const entities = await WatchlistEntity.find({ _id: { $in: entityIds } }).lean() as unknown as IWatchlistEntity[];
   const entityMap = new Map(entities.map(e => [String(e._id), e]));
 
   return (

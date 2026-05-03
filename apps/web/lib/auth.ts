@@ -11,7 +11,7 @@ export interface AuthSession {
 export async function getServerAuth(): Promise<AuthSession | null> {
   if (hasClerk) {
     const { auth } = await import('@clerk/nextjs/server');
-    const session = auth();
+    const session = await auth();
     if (!session.userId) return null;
     return {
       userId: session.userId,

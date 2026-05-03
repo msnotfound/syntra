@@ -5,10 +5,11 @@
     "moduleResolution": "NodeNext",
     "isolatedModules": true,
     "outDir": "dist",
-    "rootDir": ".",
     "paths": {
       "@syntra/shared": ["../../packages/shared/index.ts"],
-      "@syntra/shared/*": ["../../packages/shared/*"],
+      "@syntra/shared/mocks/*": ["../../packages/shared/mocks/*.ts"],
+      "@syntra/shared/schemas": ["../../packages/shared/schemas/index.ts"],
+      "@syntra/shared/utils": ["../../packages/shared/utils/index.ts"],
       "@syntra/db": ["../../packages/db/index.ts"],
       "@syntra/llm": ["../../packages/llm/index.ts"]
     }

@@ -6,7 +6,7 @@ import { Alert, WatchlistEntity } from '@syntra/db';
 import { WorldMap } from '@/components/map/WorldMap';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { AlertRow } from '@/components/alerts/AlertRow';
-import type { IAlert } from '@syntra/db';
+import type { IAlert, IWatchlistEntity } from '@syntra/db';
 import type { Severity, EntityType } from '@syntra/shared';
 
 interface PageProps { params: { orgSlug: string } }
@@ -19,22 +19,24 @@ export default async function OverviewPage({ params }: PageProps) {
   const day24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const week = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const [recentAlerts, entities, weekAlerts] = await Promise.all([
+  const [recentAlertsRaw, entitiesRaw, weekAlerts] = await Promise.all([
     Alert.find({ org_id: org._id, created_at: { $gte: day24h } })
       .sort({ created_at: -1 }).limit(10).populate('watchlist_entity_ids').lean(),
     WatchlistEntity.find({ org_id: org._id, active: true }).lean(),
     Alert.countDocuments({ org_id: org._id, created_at: { $gte: week } }),
   ]);
+  const recentAlerts = recentAlertsRaw as unknown as IAlert[];
+  const entities = entitiesRaw as unknown as IWatchlistEntity[];
 
-  const unacked = recentAlerts.filter((a: IAlert) => !a.acknowledged_at).length;
+  const unacked = recentAlerts.filter((a) => !a.acknowledged_at).length;
 
   const watchlistPins = entities
     .filter(e => e.latitude !== null && e.longitude !== null)
     .map(e => ({ id: String(e._id), lat: e.latitude!, lng: e.longitude!, name: e.name, type: e.type }));
 
   const eventPins = recentAlerts
-    .filter((a: IAlert) => a.event_snapshot.location?.lat)
-    .map((a: IAlert) => ({
+    .filter((a) => a.event_snapshot.location?.lat)
+    .map((a) => ({
       id: String(a._id),
       lat: a.event_snapshot.location.lat,
       lng: a.event_snapshot.location.lng,
@@ -44,7 +46,7 @@ export default async function OverviewPage({ params }: PageProps) {
 
   // Top region by alert count
   const regionCounts: Record<string, number> = {};
-  for (const a of recentAlerts as IAlert[]) {
+  for (const a of recentAlerts) {
     const r = (a.event_snapshot as { country?: string }).country ?? 'Unknown';
     regionCounts[r] = (regionCounts[r] ?? 0) + 1;
   }
@@ -95,7 +97,7 @@ export default async function OverviewPage({ params }: PageProps) {
                 <p className="text-xs text-text-secondary">Alerts appear here when events match your watchlist.</p>
               </div>
             ) : (
-              recentAlerts.slice(0, 8).map((alert: IAlert) => (
+              recentAlerts.slice(0, 8).map((alert) => (
                 <Link
                   key={String(alert._id)}
                   href={`/app/${params.orgSlug}/alerts/${String(alert._id)}`}
