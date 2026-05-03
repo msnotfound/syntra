@@ -14,7 +14,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     let ph: { capture: (event: string, props: Record<string, unknown>) => void } | null = null;
     import('posthog-js').then(m => {
       const posthog = m.default;
-      if (!posthog.__loaded) {
+      if (!(posthog as unknown as { __loaded?: boolean }).__loaded) {
         posthog.init(POSTHOG_KEY!, { api_host: 'https://app.posthog.com', autocapture: false, capture_pageview: false });
       }
       ph = posthog;

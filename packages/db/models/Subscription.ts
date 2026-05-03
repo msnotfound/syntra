@@ -9,6 +9,7 @@ export interface ISubscription extends Document {
   current_period_start: Date;
   current_period_end: Date;
   amount_paise: number;
+  metadata?: Record<string, unknown>;
   created_at: Date;
   updated_at: Date;
 }
@@ -22,6 +23,7 @@ const SubscriptionSchema = new Schema<ISubscription>({
   current_period_start: { type: Date, required: true },
   current_period_end:   { type: Date, required: true },
   amount_paise: { type: Number, default: 0 },
+  metadata: { type: Schema.Types.Mixed, default: {} },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 SubscriptionSchema.index({ org_id: 1 });
