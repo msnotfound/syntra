@@ -15,6 +15,8 @@ export { SanctionsReviewQueue } from './models/SanctionsReviewQueue.js';
 export { RiskScore } from './models/RiskScore.js';
 export { Exposure } from './models/Exposure.js';
 export { DataFeed } from './models/DataFeed.js';
+export { SlackInstall } from './models/SlackInstall.js';
+export { TeamsInstall } from './models/TeamsInstall.js';
 
 export type { IOrganization } from './models/Organization.js';
 export type { IUser } from './models/User.js';
@@ -32,3 +34,5 @@ export type { ISanctionsReviewQueue } from './models/SanctionsReviewQueue.js';
 export type { IRiskScore } from './models/RiskScore.js';
 export type { IExposure } from './models/Exposure.js';
 export type { IDataFeed } from './models/DataFeed.js';
+export type { ISlackInstall } from './models/SlackInstall.js';
+export type { ITeamsInstall } from './models/TeamsInstall.js';
