@@ -10,6 +10,7 @@ import { TimeAgo } from '@syntra/ui/components/TimeAgo';
 import { WorldMap } from '@/components/map/WorldMap';
 import { TriageControls } from '@/components/triage/TriageControls';
 import { CommentThread } from '@/components/triage/CommentThread';
+import { GenerateBriefButton } from '@/components/briefs/GenerateBriefButton';
 import type { IAlert, IWatchlistEntity, IUser, IExposure } from '@syntra/db';
 import type { Severity, EntityType } from '@syntra/shared';
 
@@ -94,6 +95,7 @@ export default async function AlertDetailPage({ params }: PageProps) {
               <Share2 size={14} />
               Forward to team
             </button>
+            <GenerateBriefButton alertId={String(alert._id)} orgSlug={params.orgSlug} />
           </div>
         </div>
         {alert.acknowledged_at && (
