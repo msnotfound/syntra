@@ -1,0 +1,17 @@
+{
+  "name": "@syntra/feeds",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    ".": "./index.ts",
+    "./providers/*": "./providers/*.ts",
+    "./withCostGate": "./withCostGate.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.5"
+  }
+}
