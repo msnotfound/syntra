@@ -1,7 +1,9 @@
 import { Queue, Worker } from 'bullmq';
-import { connectDb, Alert, WatchlistEntity, Organization } from '@syntra/db';
+import { connectDb, Alert, WatchlistEntity, Organization, SlackInstall, TeamsInstall } from '@syntra/db';
 import type { IAlert, IOrganization, IWatchlistEntity } from '@syntra/db';
 import { generateAlertContext } from '@syntra/llm';
+import { getSlackDispatchQueue } from './slack-dispatch.js';
+import { getTeamsDispatchQueue } from './teams-dispatch.js';
 
 const REDIS_URL = process.env.UPSTASH_REDIS_URL;
 const connection = REDIS_URL
@@ -61,6 +63,15 @@ export function startDispatchWorker() {
     }
 
     await Alert.updateOne({ _id: alertId }, { dispatched_at: new Date(), channels_sent: channelsSent });
+
+    // M23: enqueue to Slack / Teams if installed for this org
+    const orgIdStr = String(org._id);
+    const [slackInstall, teamsInstall] = await Promise.all([
+      SlackInstall.findOne({ org_id: org._id }).lean(),
+      TeamsInstall.findOne({ org_id: org._id }).lean(),
+    ]);
+    if (slackInstall) await getSlackDispatchQueue().add('slack-alert', { alertId, orgId: orgIdStr });
+    if (teamsInstall) await getTeamsDispatchQueue().add('teams-alert', { alertId, orgId: orgIdStr });
   }, { connection });
 
   worker.on('failed', (job, err) => console.error('[dispatch] Job failed', job?.id, err.message));

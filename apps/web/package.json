@@ -49,26 +49,7 @@
     "postcss": "^8.4.41",
     "tailwindcss": "^3.4.9",
     "ts-jest": "^29.2.3",
-    "typescript": "^5.4.5"
-  },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "testMatch": ["**/__tests__/**/*.test.ts"],
-    "transform": {
-      "^.+\\.tsx?$": [
-        "ts-jest",
-        {
-          "tsconfig": {
-            "module": "commonjs",
-            "moduleResolution": "node"
-          }
-        }
-      ]
-    },
-    "moduleNameMapper": {
-      "^@/lib/(.*)$": "<rootDir>/lib/$1",
-      "^@/components/(.*)$": "<rootDir>/components/$1"
-    }
+    "typescript": "^5.4.5",
+    "ts-node": "^10.9.2"
   }
 }
