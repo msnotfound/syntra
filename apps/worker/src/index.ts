@@ -3,6 +3,9 @@ import cron from 'node-cron';
 import { connectDb } from '@syntra/db';
 import { runMatchingCycle } from './cron/matching.js';
 import { startDispatchWorker } from './workers/dispatch.js';
+import { runDailyDigest } from './cron/digest-daily.js';
+import { runWeeklyDigest } from './cron/digest-weekly.js';
+import { runMonthlyDigest } from './cron/digest-monthly.js';
 
 async function main() {
   console.log('[worker] Starting Syntra worker...');
@@ -25,6 +28,38 @@ async function main() {
   });
 
   console.log('[worker] Matching cron scheduled (interval:', INTERVAL, ')');
+
+  // Daily digest: 08:00 IST (02:30 UTC)
+  cron.schedule('30 2 * * *', async () => {
+    try {
+      const r = await runDailyDigest();
+      console.log(`[digest:daily] orgs=${r.orgs} sent=${r.sent}`);
+    } catch (err) {
+      console.error('[digest:daily] Error:', err);
+    }
+  });
+
+  // Weekly digest: Monday 08:00 IST
+  cron.schedule('30 2 * * 1', async () => {
+    try {
+      const r = await runWeeklyDigest();
+      console.log(`[digest:weekly] orgs=${r.orgs} sent=${r.sent}`);
+    } catch (err) {
+      console.error('[digest:weekly] Error:', err);
+    }
+  });
+
+  // Monthly digest: 1st of each month 08:00 IST
+  cron.schedule('30 2 1 * *', async () => {
+    try {
+      const r = await runMonthlyDigest();
+      console.log(`[digest:monthly] orgs=${r.orgs} sent=${r.sent}`);
+    } catch (err) {
+      console.error('[digest:monthly] Error:', err);
+    }
+  });
+
+  console.log('[worker] Digest crons scheduled (daily 08:00 IST / weekly Mon / monthly 1st)');
   console.log('[worker] Ready.');
 }
 
