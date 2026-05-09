@@ -4,11 +4,28 @@ import { DigestPreference, Organization, User } from '@syntra/db';
 import { ensureDb } from '@/lib/db';
 import { getServerAuth } from '@/lib/auth';
 
+const ChannelConfigSchema = z.object({
+  channel_id:     z.enum(['email', 'slack', 'teams', 'webhook', 'sms']),
+  destination_id: z.string().min(1),
+  format:         z.enum(['summary', 'full', 'oneliner']).default('summary'),
+  enabled:        z.boolean().default(true),
+});
+
+const DeliveryWindowSchema = z.object({
+  start_hour: z.number().int().min(0).max(23),
+  end_hour:   z.number().int().min(0).max(23),
+  timezone:   z.string().min(1),
+});
+
 const PatchSchema = z.object({
-  frequency: z.enum(['daily', 'weekly', 'monthly']).optional(),
-  channels: z.array(z.enum(['email', 'whatsapp', 'webhook'])).optional(),
-  sections: z.array(z.enum(['alerts', 'severity_heatmap', 'watchlist_health', 'var_summary'])).optional(),
-  enabled: z.boolean().optional(),
+  frequency:          z.enum(['daily', 'weekly', 'monthly']).optional(),
+  channels:           z.array(z.enum(['email', 'whatsapp', 'webhook'])).optional(),
+  sections:           z.array(z.enum(['alerts', 'severity_heatmap', 'watchlist_health', 'var_summary'])).optional(),
+  enabled:            z.boolean().optional(),
+  // M37 fields
+  channel_configs:    z.array(ChannelConfigSchema).optional(),
+  delivery_window:    DeliveryWindowSchema.optional(),
+  priority_threshold: z.enum(['critical', 'high', 'medium', 'low', 'info']).optional(),
 });
 
 export async function GET(_req: NextRequest) {

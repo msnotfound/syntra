@@ -8,8 +8,11 @@
     "./schemas": "./schemas/index.ts",
     "./utils": "./utils/index.ts",
     "./token-encrypt": "./token-encrypt.ts",
+<<<<<<< HEAD
     "./utils/intel-provenance": "./utils/intel-provenance.ts",
     "./utils/var-table": "./utils/var-table.ts"
+=======
+>>>>>>> origin/feature/m37-channel-depth
     "./utils/intel-provenance": "./utils/intel-provenance.ts"
   },
   "scripts": {
