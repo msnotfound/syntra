@@ -2,6 +2,7 @@ import 'dotenv/config';
 import cron from 'node-cron';
 import { connectDb } from '@syntra/db';
 import { runMatchingCycle } from './cron/matching.js';
+import { runRiskScoreCycle } from './cron/risk-score.js';
 import { startDispatchWorker } from './workers/dispatch.js';
 
 async function main() {
@@ -25,6 +26,19 @@ async function main() {
   });
 
   console.log('[worker] Matching cron scheduled (interval:', INTERVAL, ')');
+
+  // Risk score cron: every 30 minutes
+  cron.schedule('*/30 * * * *', async () => {
+    const start = Date.now();
+    try {
+      const result = await runRiskScoreCycle();
+      console.log(`[risk-score] orgs_processed=${result.orgsProcessed} duration=${Date.now() - start}ms`);
+    } catch (err) {
+      console.error('[risk-score] Cycle error:', err);
+    }
+  });
+
+  console.log('[worker] Risk score cron scheduled (every 30 min)');
   console.log('[worker] Ready.');
 }
 

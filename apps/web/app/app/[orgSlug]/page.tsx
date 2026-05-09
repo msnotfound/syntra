@@ -2,12 +2,15 @@ import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { ensureDb } from '@/lib/db';
 import { getOrgBySlugOrThrow } from '@/lib/org';
-import { Alert, WatchlistEntity } from '@syntra/db';
+import { Alert, WatchlistEntity, RiskScore } from '@syntra/db';
 import { WorldMap } from '@/components/map/WorldMap';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { AlertRow } from '@/components/alerts/AlertRow';
-import type { IAlert, IWatchlistEntity } from '@syntra/db';
+import { HeatmapPanel } from '@/components/heatmap/HeatmapPanel';
+import { computeRiskScore, computeByRegion } from '@syntra/shared';
+import type { IAlert, IWatchlistEntity, IRiskScore } from '@syntra/db';
 import type { Severity, EntityType } from '@syntra/shared';
+import type { HeatmapCell } from '@/components/heatmap/HeatmapPanel';
 
 interface PageProps { params: { orgSlug: string } }
 
@@ -19,11 +22,15 @@ export default async function OverviewPage({ params }: PageProps) {
   const day24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const week = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const [recentAlertsRaw, entitiesRaw, weekAlerts] = await Promise.all([
+  const month = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  const [recentAlertsRaw, entitiesRaw, weekAlerts, latestScore, monthAlertsRaw] = await Promise.all([
     Alert.find({ org_id: org._id, created_at: { $gte: day24h } })
       .sort({ created_at: -1 }).limit(10).populate('watchlist_entity_ids').lean(),
     WatchlistEntity.find({ org_id: org._id, active: true }).lean(),
     Alert.countDocuments({ org_id: org._id, created_at: { $gte: week } }),
+    RiskScore.findOne({ org_id: org._id }).sort({ computed_at: -1 }).lean() as Promise<IRiskScore | null>,
+    Alert.find({ org_id: org._id, created_at: { $gte: month } }).lean() as Promise<unknown>,
   ]);
   const recentAlerts = recentAlertsRaw as unknown as IAlert[];
   const entities = entitiesRaw as unknown as IWatchlistEntity[];
