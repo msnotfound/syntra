@@ -143,6 +143,9 @@ export function meetsThreshold(alertSeverity: string, threshold: string): boolea
   return severityOrder(alertSeverity) >= severityOrder(threshold);
 }
 
+export { getDisruptionFactor, computeVarUsd, USD_TO_INR } from './var-table.js';
+export type { AlertKind, AlertSeverity } from './var-table.js';
+
 // Plain-object entity shape used by the pure matching function.
 // Intentionally has no Mongoose dependency so it is safe to import in tests.
 export interface PlainEntity {

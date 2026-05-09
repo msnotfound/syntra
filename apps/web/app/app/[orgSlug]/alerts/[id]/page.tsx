@@ -1,16 +1,16 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronRight, CheckCircle, Share2 } from 'lucide-react';
+import { ChevronRight, CheckCircle, Share2, TrendingDown } from 'lucide-react';
 import { ensureDb } from '@/lib/db';
 import { getOrgBySlugOrThrow } from '@/lib/org';
-import { Alert, WatchlistEntity, User } from '@syntra/db';
+import { Alert, WatchlistEntity, User, Exposure } from '@syntra/db';
 import { SeverityBadge } from '@syntra/ui/components/SeverityBadge';
 import { EntityChip } from '@syntra/ui/components/EntityChip';
 import { TimeAgo } from '@syntra/ui/components/TimeAgo';
 import { WorldMap } from '@/components/map/WorldMap';
 import { TriageControls } from '@/components/triage/TriageControls';
 import { CommentThread } from '@/components/triage/CommentThread';
-import type { IAlert, IWatchlistEntity, IUser } from '@syntra/db';
+import type { IAlert, IWatchlistEntity, IUser, IExposure } from '@syntra/db';
 import type { Severity, EntityType } from '@syntra/shared';
 
 interface PageProps { params: { orgSlug: string; id: string } }
@@ -27,6 +27,13 @@ export default async function AlertDetailPage({ params }: PageProps) {
   }).lean() as unknown as IWatchlistEntity[];
 
   const members = await User.find({ org_id: org._id }).lean() as unknown as IUser[];
+
+  const exposures = await Exposure.find({
+    alert_id: alert._id,
+    org_id: org._id,
+  }).lean() as unknown as IExposure[];
+
+  const totalVarUsd = exposures.reduce((sum, e) => sum + e.var_value_usd, 0);
 
   const severityColor: Record<string, string> = {
     critical: '#EF4444', high: '#F97316', medium: '#EAB308', low: '#60A5FA',
@@ -227,6 +234,43 @@ export default async function AlertDetailPage({ params }: PageProps) {
           />
         </div>
       </div>
+
+      {/* Estimated Impact (VaR) */}
+      {exposures.length > 0 && (
+        <div className="bg-bg-surface border border-border-subtle rounded-md">
+          <div className="px-5 py-3 border-b border-border-subtle flex items-center gap-2">
+            <TrendingDown size={14} className="text-severity-high" />
+            <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">Estimated Impact</span>
+          </div>
+          <div className="p-5">
+            <div className="text-2xl font-semibold font-mono text-text-primary mb-1">
+              ${(totalVarUsd / 1_000_000).toFixed(1)}M at risk
+            </div>
+            <div className="text-sm text-text-secondary mb-4">
+              Across {exposures.length} affected {exposures.length === 1 ? 'entity' : 'entities'} · 95% confidence
+            </div>
+            <div className="space-y-2">
+              {exposures.map((exp) => {
+                const entity = entities.find(e => String(e._id) === String(exp.entity_id));
+                const pct = entity?.contribution_pct ?? null;
+                return (
+                  <div key={String(exp._id)} className="flex items-center justify-between py-2 border-t border-border-subtle first:border-0">
+                    <span className="text-sm text-text-primary">{entity?.name ?? String(exp.entity_id)}</span>
+                    <div className="text-right">
+                      <span className="text-sm font-mono font-medium text-text-primary">
+                        ${(exp.var_value_usd / 1_000_000).toFixed(1)}M
+                      </span>
+                      {pct !== null && (
+                        <span className="text-xs text-text-muted ml-2">({pct}% of annual revenue)</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
