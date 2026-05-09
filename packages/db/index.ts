@@ -21,6 +21,8 @@ export { InsurancePolicy } from './models/InsurancePolicy.js';
 export { Decision } from './models/Decision.js';
 export { WarRoom } from './models/WarRoom.js';
 export { WarRoomMessage } from './models/WarRoomMessage.js';
+export { IntelClaim } from './models/IntelClaim.js';
+export { SourceReliability, seedSourceReliability, KNOWN_SOURCES } from './models/SourceReliability.js';
 
 export type { IOrganization } from './models/Organization.js';
 export type { IUser } from './models/User.js';
@@ -44,3 +46,5 @@ export type { IInsurancePolicy, CoverageType } from './models/InsurancePolicy.js
 export type { IDecision, DecisionType } from './models/Decision.js';
 export type { IWarRoom } from './models/WarRoom.js';
 export type { IWarRoomMessage } from './models/WarRoomMessage.js';
+export type { IIntelClaim, ClaimType } from './models/IntelClaim.js';
+export type { ISourceReliability, AdmiraltyCode } from './models/SourceReliability.js';

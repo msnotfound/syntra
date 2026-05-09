@@ -10,6 +10,7 @@
       "@syntra/shared/mocks/*": ["../../packages/shared/mocks/*.ts"],
       "@syntra/shared/schemas": ["../../packages/shared/schemas/index.ts"],
       "@syntra/shared/utils": ["../../packages/shared/utils/index.ts"],
+      "@syntra/shared/utils/intel-provenance": ["../../packages/shared/utils/intel-provenance.ts"],
       "@syntra/db": ["../../packages/db/index.ts"],
       "@syntra/llm": ["../../packages/llm/index.ts"],
       "@syntra/feeds": ["../../packages/feeds/index.ts"],
