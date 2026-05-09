@@ -5,6 +5,7 @@ import { clsx } from 'clsx';
 import {
   LayoutDashboard, Bell, List, Code2, Settings,
   HelpCircle, BookOpen, Kanban, Activity, TrendingDown, Shield, ClipboardList, Users, FileText, Network, Rss,
+  HelpCircle, BookOpen, Kanban, Activity, TrendingDown, Shield, ClipboardList, Users, FileText, Network, Briefcase,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -27,6 +28,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Briefs',       href: '/briefs',       icon: FileText },
   { label: 'Supply Graph', href: '/supply-graph', icon: Network },
   { label: 'Sources',      href: '/sources',      icon: Rss },
+  { label: 'Operations',  href: '/operations',   icon: Briefcase },
   { label: 'API',          href: '/api',          icon: Code2 },
   { label: 'Settings',     href: '/settings',     icon: Settings },
 ];

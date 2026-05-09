@@ -53,6 +53,7 @@
     "ts-jest": "^29.2.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
+<<<<<<< HEAD
     "typescript": "^5.4.5",
     "ts-node": "^10.9.2"
   },
@@ -82,5 +83,7 @@
       "^@syntra/ui/(.*)$": "<rootDir>/../../packages/ui/$1.ts",
       "^bullmq$": "<rootDir>/../../packages/shared/mocks/bullmq.ts"
     }
+=======
+>>>>>>> origin/feature/m31-operational-ontology
   }
 }
