@@ -106,6 +106,7 @@ export async function runMatchingCycle(): Promise<{ processed: number; alertsCre
       if (!inQuiet) {
         await enqueueDispatch(String(alert._id));
       }
+      await enqueueVarCompute(String(alert._id));
     }
   }
 
@@ -119,5 +120,14 @@ async function enqueueDispatch(alertId: string): Promise<void> {
   } catch {
     // Queue unavailable — log and continue
     console.warn('[matching] Could not enqueue dispatch for alert', alertId);
+  }
+}
+
+async function enqueueVarCompute(alertId: string): Promise<void> {
+  try {
+    const { getVarComputeQueue } = await import('../workers/var-compute.js');
+    await getVarComputeQueue().add('var-compute', { alertId }, { jobId: `var_compute:${alertId}` });
+  } catch {
+    console.warn('[matching] Could not enqueue var-compute for alert', alertId);
   }
 }

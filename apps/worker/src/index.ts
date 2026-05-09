@@ -3,6 +3,7 @@ import cron from 'node-cron';
 import { connectDb } from '@syntra/db';
 import { runMatchingCycle } from './cron/matching.js';
 import { startDispatchWorker } from './workers/dispatch.js';
+import { startVarComputeWorker } from './workers/var-compute.js';
 
 async function main() {
   console.log('[worker] Starting Syntra worker...');
@@ -11,6 +12,9 @@ async function main() {
 
   startDispatchWorker();
   console.log('[worker] Dispatch worker started');
+
+  startVarComputeWorker();
+  console.log('[worker] VaR compute worker started');
 
   // Matching cron: every 5 minutes
   const INTERVAL = process.env.DEMO_MODE === 'true' ? '*/1 * * * *' : '*/5 * * * *';

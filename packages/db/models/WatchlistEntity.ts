@@ -10,6 +10,10 @@ export interface IWatchlistEntity extends Document {
   region: string | null;
   metadata: Record<string, unknown>;
   active: boolean;
+  // M21 VaR additions
+  annual_revenue_usd: number | null;
+  contribution_pct: number | null;
+  supplier_tier: 1 | 2 | 3 | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -24,6 +28,9 @@ const WatchlistEntitySchema = new Schema<IWatchlistEntity>({
   region: { type: String, default: null },
   metadata: { type: Schema.Types.Mixed, default: {} },
   active: { type: Boolean, default: true },
+  annual_revenue_usd: { type: Number, default: null },
+  contribution_pct: { type: Number, min: 0, max: 100, default: null },
+  supplier_tier: { type: Number, enum: [1, 2, 3], default: null },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 WatchlistEntitySchema.index({ org_id: 1, active: 1 });
