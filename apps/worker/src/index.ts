@@ -3,6 +3,7 @@ import cron from 'node-cron';
 import { connectDb } from '@syntra/db';
 import { runMatchingCycle } from './cron/matching.js';
 import { runSanctionsScreeningCycle } from './cron/sanctions-screen.js';
+import { runRiskScoreCycle } from './cron/risk-score.js';
 import { startDispatchWorker } from './workers/dispatch.js';
 import { runDailyDigest } from './cron/digest-daily.js';
 import { runWeeklyDigest } from './cron/digest-weekly.js';
@@ -76,6 +77,19 @@ async function main() {
   });
 
   console.log('[worker] Sanctions screening cron scheduled (daily 02:00 UTC)');
+
+  // Risk score cron: every 30 minutes
+  cron.schedule('*/30 * * * *', async () => {
+    const start = Date.now();
+    try {
+      const result = await runRiskScoreCycle();
+      console.log(`[risk-score] orgs_processed=${result.orgsProcessed} duration=${Date.now() - start}ms`);
+    } catch (err) {
+      console.error('[risk-score] Cycle error:', err);
+    }
+  });
+
+  console.log('[worker] Risk score cron scheduled (every 30 min)');
   console.log('[worker] Ready.');
 }
 

@@ -271,3 +271,12 @@ export function applySeverityOverride(
 
   return best;
 }
+
+export {
+  recencyDecay,
+  computeRiskScore,
+  computeByRegion,
+  computeByRoute,
+  computeBySeverity,
+} from './risk-score.js';
+export type { ScoredAlert, GroupedScoredAlert } from './risk-score.js';

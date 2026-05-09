@@ -12,6 +12,7 @@ export { SeverityRule } from './models/SeverityRule.js';
 export { DigestPreference } from './models/DigestPreference.js';
 export { SanctionsList } from './models/SanctionsList.js';
 export { SanctionsReviewQueue } from './models/SanctionsReviewQueue.js';
+export { RiskScore } from './models/RiskScore.js';
 
 export type { IOrganization } from './models/Organization.js';
 export type { IUser } from './models/User.js';
@@ -26,3 +27,4 @@ export type { ISeverityRule, SeverityRuleCondition, SeverityRuleThreshold } from
 export type { IDigestPreference } from './models/DigestPreference.js';
 export type { ISanctionsList, ISanctionsEntry } from './models/SanctionsList.js';
 export type { ISanctionsReviewQueue } from './models/SanctionsReviewQueue.js';
+export type { IRiskScore } from './models/RiskScore.js';

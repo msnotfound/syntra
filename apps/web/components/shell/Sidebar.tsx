@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
 import {
   LayoutDashboard, Bell, List, Code2, Settings,
-  HelpCircle, BookOpen, Kanban, type LucideIcon,
+  HelpCircle, BookOpen, Kanban, Activity, type LucideIcon,
 } from 'lucide-react';
 
 interface NavItem {
@@ -18,6 +18,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Alerts',    href: '/alerts',   icon: Bell },
   { label: 'Triage',    href: '/triage',   icon: Kanban },
   { label: 'Watchlist', href: '/watchlist', icon: List },
+  { label: 'Heatmap',  href: '/heatmap',   icon: Activity },
   { label: 'API',       href: '/api',      icon: Code2 },
   { label: 'Settings',  href: '/settings', icon: Settings },
 ];
