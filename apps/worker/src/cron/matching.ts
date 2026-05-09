@@ -1,10 +1,8 @@
 import { connectDb } from '@syntra/db';
-import { Organization, WatchlistEntity, Event, Alert } from '@syntra/db';
+import { Organization, WatchlistEntity, Event, Alert, SeverityRule } from '@syntra/db';
 import type { IOrganization, IWatchlistEntity, IEvent } from '@syntra/db';
-import { haversineKm, pointNearPolyline, isInQuietHours, meetsThreshold } from '@syntra/shared';
-import type { MatchReason } from '@syntra/shared';
-import { Types } from 'mongoose';
-
+import { haversineKm, pointNearPolyline, isInQuietHours, meetsThreshold, applySeverityOverride } from '@syntra/shared';
+import type { MatchReason, PlainSeverityRule } from '@syntra/shared';
 export interface MatchResult {
   entities: IWatchlistEntity[];
   reasons: MatchReason[];
@@ -78,9 +76,27 @@ export async function runMatchingCycle(): Promise<{ processed: number; alertsCre
       if (matched.length === 0) continue;
       if (!meetsThreshold(event.severity, org.settings.severity_threshold)) continue;
 
-      const alertSeverity = event.severity as 'critical' | 'high' | 'medium' | 'low';
+      const defaultSeverity = event.severity as 'critical' | 'high' | 'medium' | 'low';
       const existing = await Alert.findOne({ event_id: event._id, org_id: org._id });
       if (existing) continue; // idempotency
+
+      // Load active severity rules for this org and apply override.
+      const rulesRaw = await SeverityRule.find({ org_id: org._id, active: true }).lean();
+      const plainRules: PlainSeverityRule[] = rulesRaw.map(r => ({
+        entity_id: String(r.entity_id),
+        condition_type: r.condition_type,
+        event_kind: r.event_kind,
+        geo_country_code: r.geo_country_code,
+        threshold: r.threshold,
+      }));
+      const entityIds = matched.map(e => String(e._id));
+      const alertSeverity = applySeverityOverride(
+        plainRules,
+        entityIds,
+        event.event_type,
+        event.country_code,
+        defaultSeverity,
+      );
 
       const alert = await Alert.create({
         org_id: org._id,
