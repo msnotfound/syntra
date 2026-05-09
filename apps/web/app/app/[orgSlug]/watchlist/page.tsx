@@ -5,6 +5,7 @@ import { getOrgBySlugOrThrow } from '@/lib/org';
 import { WatchlistEntity } from '@syntra/db';
 import { WorldMap } from '@/components/map/WorldMap';
 import { SeverityBadge } from '@syntra/ui/components/SeverityBadge';
+import { NLBar } from '@/components/watchlist/NLBar';
 import type { IWatchlistEntity } from '@syntra/db';
 import type { EntityType } from '@syntra/shared';
 
@@ -82,6 +83,9 @@ export default async function WatchlistPage({ params, searchParams }: PageProps)
       <div className="bg-bg-surface border border-border-subtle rounded-md overflow-hidden" style={{ height: 280 }}>
         <WorldMap watchlistPins={mapPins} height="280px" />
       </div>
+
+      {/* NL watchlist bar */}
+      <NLBar orgSlug={params.orgSlug} />
 
       {/* Search + import */}
       <div className="flex items-center justify-between">

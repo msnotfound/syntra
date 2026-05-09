@@ -17,6 +17,16 @@ export interface AnthropicMockResult {
   recommendedActions: string[];
 }
 
+export interface NLWatchlistParseOutput {
+  entity_types: string[];
+  countries: string[];
+  regions: string[];
+  keywords: string[];
+  severity_threshold: 'critical' | 'high' | 'medium' | 'low' | null;
+  summary: string;
+  confidence: number;
+}
+
 export async function generateAlertContext(
   _eventTitle: string,
   _affectedEntities: string[],
@@ -26,6 +36,23 @@ export async function generateAlertContext(
   return {
     whyMatters: STUB_WHY_MATTERS[Math.floor(Math.random() * STUB_WHY_MATTERS.length)],
     recommendedActions: STUB_ACTIONS,
+  };
+}
+
+export async function parseNLWatchlist(
+  _userQuery: string,
+  _availableEntityTypes: string[],
+  _availableRegions: string[],
+): Promise<NLWatchlistParseOutput> {
+  await delay(50);
+  return {
+    entity_types: ['supplier'],
+    countries: ['IN'],
+    regions: [],
+    keywords: ['India'],
+    severity_threshold: null,
+    summary: 'Track suppliers in India',
+    confidence: 0.85,
   };
 }
 

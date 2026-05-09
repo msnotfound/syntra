@@ -3,6 +3,38 @@ export interface AlertContext {
   recommendedActions: string[];
 }
 
+export async function callLLMJson<T>(
+  model: string,
+  systemPrompt: string,
+  userMessage: string,
+  fallback?: () => Promise<T>,
+): Promise<T> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    if (fallback) return fallback();
+    throw new Error('ANTHROPIC_API_KEY not set and no fallback provided');
+  }
+  const client = getClient();
+  const message = await client.messages.create({
+    model,
+    max_tokens: 1024,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userMessage }],
+  });
+  const text = (message.content[0] as { type: string; text: string }).text;
+  const jsonMatch = text.match(/```json\s*([\s\S]+?)\s*```/) ?? text.match(/(\{[\s\S]+\})/);
+  const jsonStr = (jsonMatch?.[1] ?? text).trim();
+  return JSON.parse(jsonStr) as T;
+}
+
+export function renderTemplate(template: string, vars: Record<string, unknown>): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => {
+    const val = (vars as Record<string, unknown>)[key];
+    if (Array.isArray(val)) return val.join(', ');
+    return val !== undefined ? String(val) : '';
+  });
+}
+
 let _client: import('@anthropic-ai/sdk').default | null = null;
 
 function getClient() {
