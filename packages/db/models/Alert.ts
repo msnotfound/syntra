@@ -1,5 +1,11 @@
 import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 
+export interface IAlertComment {
+  user_id: Types.ObjectId;
+  body: string;
+  created_at: Date;
+}
+
 export interface IAlert extends Document {
   org_id: Types.ObjectId;
   event_id: Types.ObjectId;
@@ -20,6 +26,14 @@ export interface IAlert extends Document {
     why_matters: string | null;
     recommended_actions: string[];
   };
+  /** v3: narrows the alert type. */
+  subtype: 'physical_risk' | 'sanctions_match' | 'compliance';
+  /** v3: triage lifecycle status (M18). */
+  status: 'open' | 'triaged' | 'closed';
+  /** v3: assigned team member (M18). */
+  assignee_user_id: Types.ObjectId | null;
+  /** v3: threaded comments (M18). */
+  comments: IAlertComment[];
   created_at: Date;
   dispatched_at: Date | null;
   channels_sent: ('email' | 'whatsapp' | 'webhook')[];
@@ -48,6 +62,14 @@ const AlertSchema = new Schema<IAlert>({
     why_matters: { type: String, default: null },
     recommended_actions: { type: [String], default: [] },
   },
+  subtype: { type: String, enum: ['physical_risk','sanctions_match','compliance'], default: 'physical_risk' },
+  status: { type: String, enum: ['open','triaged','closed'], default: 'open' },
+  assignee_user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+  comments: [{
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    body: { type: String, required: true },
+    created_at: { type: Date, default: Date.now },
+  }],
   dispatched_at: { type: Date, default: null },
   channels_sent: { type: [String], default: [] },
   acknowledged_at: { type: Date, default: null },
@@ -59,6 +81,7 @@ AlertSchema.index({ org_id: 1, created_at: -1 });
 AlertSchema.index({ event_id: 1, org_id: 1 }, { unique: true });
 AlertSchema.index({ acknowledged_at: 1 });
 AlertSchema.index({ org_id: 1, severity: 1 });
+AlertSchema.index({ org_id: 1, status: 1 });
 
 export const Alert: Model<IAlert> =
   mongoose.models.Alert ?? mongoose.model<IAlert>('Alert', AlertSchema);
