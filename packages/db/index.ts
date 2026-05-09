@@ -14,6 +14,8 @@ export { SanctionsList } from './models/SanctionsList.js';
 export { SanctionsReviewQueue } from './models/SanctionsReviewQueue.js';
 export { RiskScore } from './models/RiskScore.js';
 export { Exposure } from './models/Exposure.js';
+export { WarRoom } from './models/WarRoom.js';
+export { WarRoomMessage } from './models/WarRoomMessage.js';
 
 export type { IOrganization } from './models/Organization.js';
 export type { IUser } from './models/User.js';
@@ -30,3 +32,5 @@ export type { ISanctionsList, ISanctionsEntry } from './models/SanctionsList.js'
 export type { ISanctionsReviewQueue } from './models/SanctionsReviewQueue.js';
 export type { IRiskScore } from './models/RiskScore.js';
 export type { IExposure } from './models/Exposure.js';
+export type { IWarRoom } from './models/WarRoom.js';
+export type { IWarRoomMessage } from './models/WarRoomMessage.js';
