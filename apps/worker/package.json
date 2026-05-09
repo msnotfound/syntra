@@ -25,6 +25,7 @@
     "@types/node": "^20.14.0",
     "@types/node-cron": "^3.0.11",
     "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.0.0",
     "ts-jest": "^29.2.3",
     "tsx": "^4.16.0",
     "typescript": "^5.4.5"
@@ -38,10 +39,21 @@
         {
           "tsconfig": {
             "module": "commonjs",
-            "moduleResolution": "node"
+            "moduleResolution": "node",
+            "esModuleInterop": true,
+            "allowSyntheticDefaultImports": true
           }
         }
       ]
+    },
+    "moduleNameMapper": {
+      "^@syntra/db$": "<rootDir>/../../packages/db/index.ts",
+      "^@syntra/db/(.+)\\.js$": "<rootDir>/../../packages/db/$1.ts",
+      "^@syntra/db/(.*)$": "<rootDir>/../../packages/db/$1.ts",
+      "^@syntra/shared$": "<rootDir>/../../packages/shared/index.ts",
+      "^@syntra/shared/(.+)\\.js$": "<rootDir>/../../packages/shared/$1.ts",
+      "^@syntra/shared/(.*)$": "<rootDir>/../../packages/shared/$1.ts",
+      "^(\\.{1,2}/.*)\\.js$": "$1"
     }
   }
 }
