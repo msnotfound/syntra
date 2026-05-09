@@ -9,6 +9,7 @@ import { runDailyDigest } from './cron/digest-daily.js';
 import { runWeeklyDigest } from './cron/digest-weekly.js';
 import { runMonthlyDigest } from './cron/digest-monthly.js';
 import { startVarComputeWorker } from './workers/var-compute.js';
+import { startDecisionRecordWorker } from './workers/decision-record.js';
 
 async function main() {
   console.log('[worker] Starting Syntra worker...');
@@ -20,6 +21,9 @@ async function main() {
 
   startVarComputeWorker();
   console.log('[worker] VaR compute worker started');
+
+  startDecisionRecordWorker();
+  console.log('[worker] Decision record worker started');
 
   // Matching cron: every 5 minutes
   const INTERVAL = process.env.DEMO_MODE === 'true' ? '*/1 * * * *' : '*/5 * * * *';

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerAuth } from '@/lib/auth';
-import { Alert, User } from '@syntra/db';
+import { Alert, User, Decision } from '@syntra/db';
 import { apiResponse, apiError } from '@syntra/shared';
 import { ensureDb } from '@/lib/db';
 import { z } from 'zod';
@@ -40,6 +40,19 @@ export async function POST(req: NextRequest, { params }: { params: { alertId: st
   ).lean();
 
   if (!alert) return NextResponse.json(apiError('NOT_FOUND', 'Alert not found'), { status: 404 });
+
+  // Append decision record for assignment change (fire-and-forget, non-blocking).
+  Decision.create({
+    org_id: requestingUser.org_id,
+    alert_id: alert._id,
+    user_id: requestingUser._id,
+    decision_type: 'assigned',
+    decision_text: assignee_user_id
+      ? `Assigned alert to user ${assignee_user_id}`
+      : 'Unassigned alert',
+    justification: '',
+    made_at: now,
+  }).catch(err => console.error('[decision-record] assign write failed', err));
 
   return NextResponse.json(apiResponse({
     alert_id: String(alert._id),
