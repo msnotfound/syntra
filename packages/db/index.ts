@@ -10,6 +10,8 @@ export { AuditLog } from './models/AuditLog.js';
 export { UsageEvent } from './models/UsageEvent.js';
 export { SeverityRule } from './models/SeverityRule.js';
 export { DigestPreference } from './models/DigestPreference.js';
+export { SanctionsList } from './models/SanctionsList.js';
+export { SanctionsReviewQueue } from './models/SanctionsReviewQueue.js';
 
 export type { IOrganization } from './models/Organization.js';
 export type { IUser } from './models/User.js';
@@ -22,3 +24,5 @@ export type { IAuditLog } from './models/AuditLog.js';
 export type { IUsageEvent } from './models/UsageEvent.js';
 export type { ISeverityRule, SeverityRuleCondition, SeverityRuleThreshold } from './models/SeverityRule.js';
 export type { IDigestPreference } from './models/DigestPreference.js';
+export type { ISanctionsList, ISanctionsEntry } from './models/SanctionsList.js';
+export type { ISanctionsReviewQueue } from './models/SanctionsReviewQueue.js';

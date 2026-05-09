@@ -6,6 +6,8 @@ export interface IAlert extends Document {
   watchlist_entity_ids: Types.ObjectId[];
   severity: 'critical' | 'high' | 'medium' | 'low';
   match_reasons: ('proximity' | 'country' | 'route' | 'supplier_country')[];
+  /** v3 M17: alert subtype; defaults to 'physical_risk' for pre-v3 alerts. */
+  subtype: 'physical_risk' | 'sanctions_match' | 'compliance';
   event_snapshot: {
     title: string;
     description: string;
@@ -33,6 +35,7 @@ const AlertSchema = new Schema<IAlert>({
   event_id: { type: Schema.Types.ObjectId, ref: 'Event', required: true },
   watchlist_entity_ids: [{ type: Schema.Types.ObjectId, ref: 'WatchlistEntity' }],
   severity: { type: String, enum: ['critical','high','medium','low'], required: true },
+  subtype: { type: String, enum: ['physical_risk','sanctions_match','compliance'], default: 'physical_risk' },
   match_reasons: [{ type: String, enum: ['proximity','country','route','supplier_country'] }],
   event_snapshot: {
     title: String,
