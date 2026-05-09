@@ -158,3 +158,61 @@ export function matchEventToEntities(
   }
   return { entities: entitiesOut, reasons: [...reasonsOut] };
 }
+
+// ---------------------------------------------------------------------------
+// Severity rule override — pure function, no Mongoose dependency.
+// ---------------------------------------------------------------------------
+
+export type SeverityRuleCondition = 'event_kind' | 'event_kind+geo' | 'always';
+export type SeverityRuleThreshold = 'low' | 'medium' | 'high' | 'critical';
+
+export interface PlainSeverityRule {
+  entity_id: string;
+  condition_type: SeverityRuleCondition;
+  event_kind: string | null;
+  geo_country_code: string | null;
+  threshold: SeverityRuleThreshold;
+}
+
+const SEVERITY_RULE_ORDER: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+
+/**
+ * Given a list of active rules, the matched entity IDs, and the event context,
+ * returns the highest-priority override severity or defaultSeverity on no match.
+ * Only upgrades severity — never downgrades.
+ */
+export function applySeverityOverride(
+  rules: PlainSeverityRule[],
+  entityIds: string[],
+  eventKind: string,
+  countryCode: string,
+  defaultSeverity: SeverityRuleThreshold,
+): SeverityRuleThreshold {
+  let best = defaultSeverity;
+  let bestScore = SEVERITY_RULE_ORDER[defaultSeverity] ?? 0;
+
+  for (const rule of rules) {
+    if (!entityIds.includes(rule.entity_id)) continue;
+
+    let matches = false;
+    if (rule.condition_type === 'always') {
+      matches = true;
+    } else if (rule.condition_type === 'event_kind') {
+      matches = rule.event_kind === eventKind;
+    } else if (rule.condition_type === 'event_kind+geo') {
+      matches =
+        rule.event_kind === eventKind &&
+        (rule.geo_country_code ?? '').toUpperCase() === countryCode.toUpperCase();
+    }
+
+    if (matches) {
+      const score = SEVERITY_RULE_ORDER[rule.threshold] ?? 0;
+      if (score > bestScore) {
+        best = rule.threshold;
+        bestScore = score;
+      }
+    }
+  }
+
+  return best;
+}
