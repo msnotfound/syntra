@@ -17,6 +17,7 @@ export { Exposure } from './models/Exposure.js';
 export { DataFeed } from './models/DataFeed.js';
 export { SlackInstall } from './models/SlackInstall.js';
 export { TeamsInstall } from './models/TeamsInstall.js';
+export { InsurancePolicy } from './models/InsurancePolicy.js';
 
 export type { IOrganization } from './models/Organization.js';
 export type { IUser } from './models/User.js';
@@ -36,3 +37,4 @@ export type { IExposure } from './models/Exposure.js';
 export type { IDataFeed } from './models/DataFeed.js';
 export type { ISlackInstall } from './models/SlackInstall.js';
 export type { ITeamsInstall } from './models/TeamsInstall.js';
+export type { IInsurancePolicy, CoverageType } from './models/InsurancePolicy.js';

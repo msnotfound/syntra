@@ -263,6 +263,23 @@ export default async function AlertDetailPage({ params }: PageProps) {
                       {pct !== null && (
                         <span className="text-xs text-text-muted ml-2">({pct}% of annual revenue)</span>
                       )}
+                      {/* M30: coverage line */}
+                      {exp.coverage_gap_usd != null && exp.coverage_gap_usd > 0 && (
+                        <div className="text-xs font-mono text-severity-high mt-0.5">
+                          ${(exp.coverage_gap_usd / 1_000_000).toFixed(1)}M uncovered
+                          {(exp.insurance_coverage_pct ?? 0) > 0 && (
+                            <span className="text-text-muted ml-1">
+                              · {(exp.insurance_coverage_pct ?? 0).toFixed(0)}% insured
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {exp.exposure_delta_usd != null && (
+                        <div className={`text-xs font-mono mt-0.5 ${exp.exposure_delta_usd > 0 ? 'text-severity-high' : 'text-green-500'}`}>
+                          {exp.exposure_delta_usd > 0 ? '+' : ''}
+                          {(exp.exposure_delta_usd / 1_000_000).toFixed(1)}M vs prior
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
