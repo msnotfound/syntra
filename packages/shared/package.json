@@ -10,6 +10,7 @@
     "./token-encrypt": "./token-encrypt.ts",
     "./utils/intel-provenance": "./utils/intel-provenance.ts",
     "./utils/var-table": "./utils/var-table.ts"
+    "./utils/intel-provenance": "./utils/intel-provenance.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

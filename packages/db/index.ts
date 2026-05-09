@@ -26,6 +26,7 @@ export { SourceReliability, seedSourceReliability, KNOWN_SOURCES } from './model
 export { RiskBrief } from './models/RiskBrief.js';
 export { SupplierLink } from './models/SupplierLink.js';
 export { Scenario } from './models/Scenario.js';
+export { CustomSource } from './models/CustomSource.js';
 
 export type { IOrganization } from './models/Organization.js';
 export type { IUser } from './models/User.js';
@@ -54,3 +55,4 @@ export type { ISourceReliability, AdmiraltyCode } from './models/SourceReliabili
 export type { IRiskBrief, IRiskBriefContent } from './models/RiskBrief.js';
 export type { ISupplierLink } from './models/SupplierLink.js';
 export type { IScenario, HypothesisEvent } from './models/Scenario.js';
+export type { ICustomSource, CustomSourceType, CustomSourceStatus, CustomSourceConfig } from './models/CustomSource.js';

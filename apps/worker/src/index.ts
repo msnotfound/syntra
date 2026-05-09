@@ -11,6 +11,7 @@ import { runMonthlyDigest } from './cron/digest-monthly.js';
 import { startVarComputeWorker } from './workers/var-compute.js';
 import { runFeedsPollCycle } from './cron/feeds-poll.js';
 import { startDecisionRecordWorker } from './workers/decision-record.js';
+import { runCommunityPollCycle } from './workers/community-poller.js';
 
 async function main() {
   console.log('[worker] Starting Syntra worker...');
@@ -116,6 +117,21 @@ async function main() {
   });
 
   console.log('[worker] Feeds poll cron scheduled (every 15 min)');
+
+  // Community sources poll: every 15 minutes (RSS sources only; webhook/push handled by API)
+  cron.schedule('*/15 * * * *', async () => {
+    const start = Date.now();
+    try {
+      const result = await runCommunityPollCycle();
+      console.log(
+        `[community-poll] polled=${result.polled} claims=${result.claims} errors=${result.errors} duration=${Date.now() - start}ms`,
+      );
+    } catch (err) {
+      console.error('[community-poll] Cycle error:', err);
+    }
+  });
+
+  console.log('[worker] Community sources poll cron scheduled (every 15 min)');
   console.log('[worker] Ready.');
 }
 
