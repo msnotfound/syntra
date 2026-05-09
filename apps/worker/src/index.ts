@@ -9,6 +9,7 @@ import { runDailyDigest } from './cron/digest-daily.js';
 import { runWeeklyDigest } from './cron/digest-weekly.js';
 import { runMonthlyDigest } from './cron/digest-monthly.js';
 import { startVarComputeWorker } from './workers/var-compute.js';
+import { runFeedsPollCycle } from './cron/feeds-poll.js';
 
 async function main() {
   console.log('[worker] Starting Syntra worker...');
@@ -94,6 +95,23 @@ async function main() {
   });
 
   console.log('[worker] Risk score cron scheduled (every 30 min)');
+
+  // Feeds poll cron: every 15 minutes
+  cron.schedule('*/15 * * * *', async () => {
+    const start = Date.now();
+    try {
+      const result = await runFeedsPollCycle();
+      console.log(
+        `[feeds-poll] weather=${result.weather} tariffs=${result.tariffs} regulatory=${result.regulatory} ` +
+        `sanctions=${result.sanctions} maritime=${result.maritime} currency=${result.currency} ` +
+        `total=${result.total} duration=${Date.now() - start}ms`,
+      );
+    } catch (err) {
+      console.error('[feeds-poll] Cycle error:', err);
+    }
+  });
+
+  console.log('[worker] Feeds poll cron scheduled (every 15 min)');
   console.log('[worker] Ready.');
 }
 

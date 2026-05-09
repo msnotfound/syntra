@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@syntra/db": "workspace:*",
+    "@syntra/feeds": "workspace:*",
     "@syntra/llm": "workspace:*",
     "@syntra/shared": "workspace:*",
     "bullmq": "^5.12.0",

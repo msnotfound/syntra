@@ -11,7 +11,10 @@
       "@syntra/shared/schemas": ["../../packages/shared/schemas/index.ts"],
       "@syntra/shared/utils": ["../../packages/shared/utils/index.ts"],
       "@syntra/db": ["../../packages/db/index.ts"],
-      "@syntra/llm": ["../../packages/llm/index.ts"]
+      "@syntra/llm": ["../../packages/llm/index.ts"],
+      "@syntra/feeds": ["../../packages/feeds/index.ts"],
+      "@syntra/feeds/providers/*": ["../../packages/feeds/providers/*.ts"],
+      "@syntra/feeds/withCostGate": ["../../packages/feeds/withCostGate.ts"]
     }
   },
   "include": ["src/**/*.ts", "__tests__/**/*.ts"],
