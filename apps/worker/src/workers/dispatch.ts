@@ -4,6 +4,7 @@ import type { IAlert, IOrganization, IWatchlistEntity } from '@syntra/db';
 import { generateAlertContext } from '@syntra/llm';
 import { getSlackDispatchQueue } from './slack-dispatch.js';
 import { getTeamsDispatchQueue } from './teams-dispatch.js';
+import { routeAlertToUserChannels } from './digest-router.js';
 
 const REDIS_URL = process.env.UPSTASH_REDIS_URL;
 const connection = REDIS_URL
@@ -72,6 +73,11 @@ export function startDispatchWorker() {
     ]);
     if (slackInstall) await getSlackDispatchQueue().add('slack-alert', { alertId, orgId: orgIdStr });
     if (teamsInstall) await getTeamsDispatchQueue().add('teams-alert', { alertId, orgId: orgIdStr });
+
+    // M37: route to per-user channel configs (additive — does not replace the above)
+    await routeAlertToUserChannels({ alertId, orgId: orgIdStr }).catch(
+      err => console.error('[dispatch] M37 channel routing failed', err),
+    );
   }, { connection });
 
   worker.on('failed', (job, err) => console.error('[dispatch] Job failed', job?.id, err.message));

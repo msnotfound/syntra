@@ -26,6 +26,7 @@ const config: Config = {
     '^@syntra/shared/token-encrypt$': '<rootDir>/../../packages/shared/token-encrypt.ts',
     '^@syntra/db$': '<rootDir>/../../packages/db/index.ts',
     '^@syntra/ui/(.*)$': '<rootDir>/../../packages/ui/$1.ts',
+    '^bullmq$': '<rootDir>/../../packages/shared/mocks/bullmq.ts',
   },
 };
 
