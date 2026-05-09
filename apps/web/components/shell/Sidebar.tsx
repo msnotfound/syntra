@@ -6,6 +6,7 @@ import {
   LayoutDashboard, Bell, List, Code2, Settings,
   HelpCircle, BookOpen, Kanban, Activity, TrendingDown, Shield, ClipboardList, Users, type LucideIcon,
   HelpCircle, BookOpen, Kanban, Activity, TrendingDown, FileText, type LucideIcon,
+  HelpCircle, BookOpen, Kanban, Activity, TrendingDown, Network, type LucideIcon,
 } from 'lucide-react';
 
 interface NavItem {
@@ -25,6 +26,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Decisions', href: '/decisions', icon: ClipboardList },
   { label: 'War Rooms', href: '/war-rooms', icon: Users },
   { label: 'Briefs',    href: '/briefs',    icon: FileText },
+  { label: 'Heatmap',   href: '/heatmap',      icon: Activity },
+  { label: 'Supply Graph', href: '/supply-graph', icon: Network },
   { label: 'API',       href: '/api',       icon: Code2 },
   { label: 'Settings',  href: '/settings',  icon: Settings },
 ];

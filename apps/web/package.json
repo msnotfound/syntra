@@ -27,6 +27,7 @@
     "mapbox-gl": "^3.6.0",
     "next": "14.2.5",
     "papaparse": "^5.4.1",
+    "reactflow": "^11.11.4",
     "posthog-js": "^1.372.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -79,6 +80,8 @@
       "^@syntra/db$": "<rootDir>/../../packages/db/index.ts",
       "^@syntra/ui/(.*)$": "<rootDir>/../../packages/ui/$1.ts"
     }
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   }

@@ -24,6 +24,7 @@ export { WarRoomMessage } from './models/WarRoomMessage.js';
 export { IntelClaim } from './models/IntelClaim.js';
 export { SourceReliability, seedSourceReliability, KNOWN_SOURCES } from './models/SourceReliability.js';
 export { RiskBrief } from './models/RiskBrief.js';
+export { SupplierLink } from './models/SupplierLink.js';
 
 export type { IOrganization } from './models/Organization.js';
 export type { IUser } from './models/User.js';
@@ -50,3 +51,4 @@ export type { IWarRoomMessage } from './models/WarRoomMessage.js';
 export type { IIntelClaim, ClaimType } from './models/IntelClaim.js';
 export type { ISourceReliability, AdmiraltyCode } from './models/SourceReliability.js';
 export type { IRiskBrief, IRiskBriefContent } from './models/RiskBrief.js';
+export type { ISupplierLink } from './models/SupplierLink.js';
