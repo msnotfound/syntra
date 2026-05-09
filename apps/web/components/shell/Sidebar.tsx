@@ -4,8 +4,7 @@ import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
 import {
   LayoutDashboard, Bell, List, Code2, Settings,
-  HelpCircle, BookOpen, Kanban, Activity, TrendingDown, Shield, type LucideIcon,
-  HelpCircle, BookOpen, Kanban, Activity, TrendingDown, ClipboardList, type LucideIcon,
+  HelpCircle, BookOpen, Kanban, Activity, TrendingDown, Shield, ClipboardList, Users, type LucideIcon,
 } from 'lucide-react';
 
 interface NavItem {
@@ -23,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Insurance', href: '/insurance', icon: Shield },
   { label: 'Heatmap',   href: '/heatmap',   icon: Activity },
   { label: 'Decisions', href: '/decisions', icon: ClipboardList },
+  { label: 'War Rooms', href: '/war-rooms', icon: Users },
   { label: 'API',       href: '/api',       icon: Code2 },
   { label: 'Settings',  href: '/settings',  icon: Settings },
 ];

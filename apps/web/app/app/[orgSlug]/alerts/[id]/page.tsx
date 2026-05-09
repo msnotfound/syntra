@@ -11,6 +11,7 @@ import { TimeAgo } from '@syntra/ui/components/TimeAgo';
 import { WorldMap } from '@/components/map/WorldMap';
 import { TriageControls } from '@/components/triage/TriageControls';
 import { CommentThread } from '@/components/triage/CommentThread';
+import { StartWarRoomButton } from '@/components/warroom/StartWarRoomButton';
 import type { IAlert, IWatchlistEntity, IUser, IExposure } from '@syntra/db';
 import type { Severity, EntityType } from '@syntra/shared';
 
@@ -80,6 +81,13 @@ export default async function AlertDetailPage({ params }: PageProps) {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
+            {alert.severity === 'critical' && (
+              <StartWarRoomButton
+                alertId={String(alert._id)}
+                alertTitle={alert.event_snapshot.title}
+                orgSlug={params.orgSlug}
+              />
+            )}
             {!alert.acknowledged_at && (
               <form action={`/api/v1/alerts/${String(alert._id)}/acknowledge`} method="POST">
                 <button

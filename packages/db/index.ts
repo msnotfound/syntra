@@ -19,6 +19,8 @@ export { SlackInstall } from './models/SlackInstall.js';
 export { TeamsInstall } from './models/TeamsInstall.js';
 export { InsurancePolicy } from './models/InsurancePolicy.js';
 export { Decision } from './models/Decision.js';
+export { WarRoom } from './models/WarRoom.js';
+export { WarRoomMessage } from './models/WarRoomMessage.js';
 
 export type { IOrganization } from './models/Organization.js';
 export type { IUser } from './models/User.js';
@@ -40,3 +42,5 @@ export type { ISlackInstall } from './models/SlackInstall.js';
 export type { ITeamsInstall } from './models/TeamsInstall.js';
 export type { IInsurancePolicy, CoverageType } from './models/InsurancePolicy.js';
 export type { IDecision, DecisionType } from './models/Decision.js';
+export type { IWarRoom } from './models/WarRoom.js';
+export type { IWarRoomMessage } from './models/WarRoomMessage.js';
