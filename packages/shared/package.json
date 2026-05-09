@@ -6,7 +6,8 @@
     ".": "./index.ts",
     "./mocks/*": "./mocks/*.ts",
     "./schemas": "./schemas/index.ts",
-    "./utils": "./utils/index.ts"
+    "./utils": "./utils/index.ts",
+    "./utils/intel-provenance": "./utils/intel-provenance.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
