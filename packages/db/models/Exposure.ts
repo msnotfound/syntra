@@ -9,6 +9,11 @@ export interface IExposure extends Document {
   confidence_interval: number;
   methodology: string;
   computed_at: Date;
+  // M30: insurance fields
+  insurance_coverage_pct: number;       // 0–100, pct of VaR covered by policy
+  policy_id: string | null;             // reference to InsurancePolicy.policy_id
+  coverage_gap_usd: number;             // max(0, var_value_usd * (1 - insurance_coverage_pct/100))
+  exposure_delta_usd: number | null;    // change vs prior computed value (positive = worsened)
 }
 
 const ExposureSchema = new Schema<IExposure>({
@@ -20,6 +25,11 @@ const ExposureSchema = new Schema<IExposure>({
   confidence_interval: { type: Number, required: true },
   methodology: { type: String, required: true },
   computed_at: { type: Date, required: true },
+  // M30: insurance fields (additive, all have defaults so existing docs keep working)
+  insurance_coverage_pct: { type: Number, default: 0, min: 0, max: 100 },
+  policy_id: { type: String, default: null },
+  coverage_gap_usd: { type: Number, default: 0 },
+  exposure_delta_usd: { type: Number, default: null },
 }, { timestamps: false });
 
 ExposureSchema.index({ org_id: 1, computed_at: -1 });
