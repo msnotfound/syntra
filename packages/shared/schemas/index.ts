@@ -66,3 +66,62 @@ export const RiskQuerySchema = z.object({
   lng: z.coerce.number().min(-180).max(180),
   radius: z.coerce.number().min(1).max(5000).default(200),
 });
+
+// M31 Operational Ontology schemas
+const GeoPointSchema = z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) });
+
+export const AssetCreateSchema = z.object({
+  name:         z.string().min(1).max(200),
+  kind:         z.enum(['facility', 'machinery', 'inventory', 'ip']),
+  location_geo: GeoPointSchema.nullable().optional().default(null),
+  value_usd:    z.number().min(0),
+  criticality:  z.enum(['low', 'medium', 'high', 'critical']),
+});
+export type AssetCreate = z.infer<typeof AssetCreateSchema>;
+
+export const ShipmentCreateSchema = z.object({
+  ref:                   z.string().min(1).max(100),
+  origin_entity_id:      z.string().length(24),
+  destination_entity_id: z.string().length(24),
+  route_polyline:        z.array(GeoPointSchema).optional().default([]),
+  status:                z.enum(['draft', 'in_transit', 'delivered', 'cancelled']).optional().default('draft'),
+  eta_at:                z.string().datetime().nullable().optional().default(null),
+  value_usd:             z.number().min(0),
+});
+export type ShipmentCreate = z.infer<typeof ShipmentCreateSchema>;
+
+export const POItemSchema = z.object({
+  description:    z.string().min(1),
+  qty:            z.number().min(0),
+  unit_price_usd: z.number().min(0),
+});
+
+export const PurchaseOrderCreateSchema = z.object({
+  po_number:          z.string().min(1).max(100),
+  supplier_entity_id: z.string().length(24),
+  items:              z.array(POItemSchema).optional().default([]),
+  total_usd:          z.number().min(0),
+  status:             z.enum(['draft', 'approved', 'shipped', 'received', 'cancelled']).optional().default('draft'),
+  due_at:             z.string().datetime().nullable().optional().default(null),
+});
+export type PurchaseOrderCreate = z.infer<typeof PurchaseOrderCreateSchema>;
+
+export const CounterpartyCreateSchema = z.object({
+  entity_id:              z.string().length(24),
+  role:                   z.enum(['supplier', 'customer', 'broker', 'logistics']),
+  risk_score:             z.number().min(0).max(100),
+  relationship_value_usd: z.number().min(0),
+  contract_id:            z.string().length(24).nullable().optional().default(null),
+});
+export type CounterpartyCreate = z.infer<typeof CounterpartyCreateSchema>;
+
+export const ContractCreateSchema = z.object({
+  counterparty_id:       z.string().length(24),
+  ref:                   z.string().min(1).max(100),
+  type:                  z.enum(['supply', 'service', 'distribution', 'nda', 'other']),
+  value_usd:             z.number().min(0),
+  expires_at:            z.string().datetime().nullable().optional().default(null),
+  terms_summary:         z.string().max(5000).optional().default(''),
+  force_majeure_clauses: z.array(z.string()).optional().default([]),
+});
+export type ContractCreate = z.infer<typeof ContractCreateSchema>;

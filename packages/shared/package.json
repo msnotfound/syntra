@@ -7,7 +7,7 @@
     "./mocks/*": "./mocks/*.ts",
     "./schemas": "./schemas/index.ts",
     "./utils": "./utils/index.ts",
-    "./token-encrypt": "./token-encrypt.ts"
+    "./token-encrypt": "./token-encrypt.ts",
     "./utils/intel-provenance": "./utils/intel-provenance.ts"
   },
   "scripts": {
