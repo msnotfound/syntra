@@ -31,7 +31,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^2.12.7",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "@react-pdf/renderer": "^3.4.4"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
@@ -78,5 +79,7 @@
       "^@syntra/db$": "<rootDir>/../../packages/db/index.ts",
       "^@syntra/ui/(.*)$": "<rootDir>/../../packages/ui/$1.ts"
     }
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
   }
 }
