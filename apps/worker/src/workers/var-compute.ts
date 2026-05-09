@@ -3,6 +3,7 @@ import { connectDb, Alert, WatchlistEntity, Exposure } from '@syntra/db';
 import type { IAlert } from '@syntra/db';
 import { getDisruptionFactor, computeVarUsd, USD_TO_INR } from '@syntra/shared/utils/var-table.js';
 import type { AlertKind, AlertSeverity } from '@syntra/shared/utils/var-table.js';
+import { getExposureDeltaQueue } from './exposure-delta.js';
 
 const REDIS_URL = process.env.UPSTASH_REDIS_URL;
 const connection = REDIS_URL
@@ -67,6 +68,19 @@ export function startVarComputeWorker() {
 
     if (ops.length > 0) {
       await Exposure.bulkWrite(ops);
+      // Enqueue delta computation for each affected entity (M30).
+      const deltaQueue = getExposureDeltaQueue();
+      await Promise.all(entities.map(entity =>
+        deltaQueue.add('compute', {
+          orgId: String(alert.org_id),
+          entityId: String(entity._id),
+          newVarUsd: computeVarUsd(
+            entity.annual_revenue_usd ?? null,
+            entity.contribution_pct ?? null,
+            disruption_factor,
+          ),
+        }),
+      ));
     }
   }, { connection });
 
