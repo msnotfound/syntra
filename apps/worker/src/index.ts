@@ -2,6 +2,7 @@ import 'dotenv/config';
 import cron from 'node-cron';
 import { connectDb } from '@syntra/db';
 import { runMatchingCycle } from './cron/matching.js';
+import { runSanctionsScreeningCycle } from './cron/sanctions-screen.js';
 import { startDispatchWorker } from './workers/dispatch.js';
 
 async function main() {
@@ -25,6 +26,21 @@ async function main() {
   });
 
   console.log('[worker] Matching cron scheduled (interval:', INTERVAL, ')');
+
+  // Sanctions screening cron: daily at 02:00 UTC
+  cron.schedule('0 2 * * *', async () => {
+    const start = Date.now();
+    try {
+      const result = await runSanctionsScreeningCycle();
+      console.log(
+        `[sanctions] screened=${result.entitiesScreened} alerts=${result.autoAlerts} review=${result.reviewQueueEntries} duration=${Date.now() - start}ms`,
+      );
+    } catch (err) {
+      console.error('[sanctions] Cycle error:', err);
+    }
+  });
+
+  console.log('[worker] Sanctions screening cron scheduled (daily 02:00 UTC)');
   console.log('[worker] Ready.');
 }
 

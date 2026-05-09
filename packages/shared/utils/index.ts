@@ -84,6 +84,61 @@ export function severityOrder(s: string): number {
   return { critical: 4, high: 3, medium: 2, low: 1, info: 0 }[s] ?? 0;
 }
 
+// ---------------------------------------------------------------------------
+// Levenshtein distance + sanctions name scoring
+// ---------------------------------------------------------------------------
+
+export function levenshtein(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  let curr = new Array<number>(n + 1);
+  for (let i = 1; i <= m; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= n; j++) {
+      curr[j] = a[i - 1] === b[j - 1]
+        ? prev[j - 1]
+        : 1 + Math.min(prev[j], curr[j - 1], prev[j - 1]);
+    }
+    [prev, curr] = [curr, prev];
+  }
+  return prev[n];
+}
+
+/** Returns 0-100 match score between two name strings. */
+export function nameMatchScore(a: string, b: string): number {
+  const al = a.toLowerCase().trim();
+  const bl = b.toLowerCase().trim();
+  if (al === bl) return 100;
+  if (al.length === 0 || bl.length === 0) return 0;
+  const dist = levenshtein(al, bl);
+  return Math.round((1 - dist / Math.max(al.length, bl.length)) * 100);
+}
+
+export interface SanctionsEntryShape {
+  name: string;
+  aliases: string[];
+}
+
+/**
+ * Returns the highest Levenshtein score between a set of entity name variants
+ * and a sanctions entry (name + aliases).
+ */
+export function bestMatchScore(
+  entityNames: string[],
+  entry: SanctionsEntryShape,
+): { score: number; matchedName: string; entityName: string } {
+  const entryNames = [entry.name, ...entry.aliases];
+  let best = { score: 0, matchedName: entry.name, entityName: entityNames[0] ?? '' };
+  for (const eName of entityNames) {
+    for (const sName of entryNames) {
+      const score = nameMatchScore(eName, sName);
+      if (score > best.score) best = { score, matchedName: sName, entityName: eName };
+    }
+  }
+  return best;
+}
+
 export function meetsThreshold(alertSeverity: string, threshold: string): boolean {
   return severityOrder(alertSeverity) >= severityOrder(threshold);
 }
