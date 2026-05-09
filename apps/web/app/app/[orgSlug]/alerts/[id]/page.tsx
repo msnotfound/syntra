@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, CheckCircle, Share2, TrendingDown } from 'lucide-react';
+import { LogDecisionModal } from '@/components/decisions/LogDecisionModal';
 import { ensureDb } from '@/lib/db';
 import { getOrgBySlugOrThrow } from '@/lib/org';
 import { Alert, WatchlistEntity, User, Exposure } from '@syntra/db';
@@ -90,6 +91,7 @@ export default async function AlertDetailPage({ params }: PageProps) {
                 </button>
               </form>
             )}
+            <LogDecisionModal alertId={String(alert._id)} orgSlug={params.orgSlug} />
             <button className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-bg-surface-2 border border-border-default text-text-primary hover:bg-bg-surface-3 transition-colors duration-[150ms] ease-out active:scale-95">
               <Share2 size={14} />
               Forward to team

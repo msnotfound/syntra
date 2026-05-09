@@ -5,6 +5,7 @@ import { clsx } from 'clsx';
 import {
   LayoutDashboard, Bell, List, Code2, Settings,
   HelpCircle, BookOpen, Kanban, Activity, TrendingDown, Shield, type LucideIcon,
+  HelpCircle, BookOpen, Kanban, Activity, TrendingDown, ClipboardList, type LucideIcon,
 } from 'lucide-react';
 
 interface NavItem {
@@ -21,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Exposures', href: '/exposures', icon: TrendingDown },
   { label: 'Insurance', href: '/insurance', icon: Shield },
   { label: 'Heatmap',   href: '/heatmap',   icon: Activity },
+  { label: 'Decisions', href: '/decisions', icon: ClipboardList },
   { label: 'API',       href: '/api',       icon: Code2 },
   { label: 'Settings',  href: '/settings',  icon: Settings },
 ];
