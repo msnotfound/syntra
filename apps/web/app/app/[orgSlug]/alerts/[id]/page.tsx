@@ -3,12 +3,14 @@ import Link from 'next/link';
 import { ChevronRight, CheckCircle, Share2 } from 'lucide-react';
 import { ensureDb } from '@/lib/db';
 import { getOrgBySlugOrThrow } from '@/lib/org';
-import { Alert, WatchlistEntity } from '@syntra/db';
+import { Alert, WatchlistEntity, User } from '@syntra/db';
 import { SeverityBadge } from '@syntra/ui/components/SeverityBadge';
 import { EntityChip } from '@syntra/ui/components/EntityChip';
 import { TimeAgo } from '@syntra/ui/components/TimeAgo';
 import { WorldMap } from '@/components/map/WorldMap';
-import type { IAlert, IWatchlistEntity } from '@syntra/db';
+import { TriageControls } from '@/components/triage/TriageControls';
+import { CommentThread } from '@/components/triage/CommentThread';
+import type { IAlert, IWatchlistEntity, IUser } from '@syntra/db';
 import type { Severity, EntityType } from '@syntra/shared';
 
 interface PageProps { params: { orgSlug: string; id: string } }
@@ -24,9 +26,27 @@ export default async function AlertDetailPage({ params }: PageProps) {
     _id: { $in: alert.watchlist_entity_ids },
   }).lean() as unknown as IWatchlistEntity[];
 
+  const members = await User.find({ org_id: org._id }).lean() as unknown as IUser[];
+
   const severityColor: Record<string, string> = {
     critical: '#EF4444', high: '#F97316', medium: '#EAB308', low: '#60A5FA',
   };
+
+  const memberList = members.map(m => ({
+    id: String(m._id),
+    name: m.name,
+    email: m.email,
+  }));
+
+  const initialComments = (alert.comments ?? []).map(c => {
+    const author = members.find(m => String(m._id) === String(c.user_id));
+    return {
+      user_id: String(c.user_id),
+      body: c.body,
+      created_at: c.created_at,
+      user_name: author?.name,
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -112,76 +132,101 @@ export default async function AlertDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Event details */}
-      <div className="bg-bg-surface border border-border-subtle rounded-md">
-        <div className="px-5 py-3 border-b border-border-subtle">
-          <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">Event Details</span>
-        </div>
-        <div className="p-5 grid grid-cols-2 gap-3">
-          {[
-            ['Type', alert.event_snapshot.event_type ?? 'Unknown'],
-            ['Time', new Date(alert.event_snapshot.occurred_at).toLocaleString('en-GB', { timeZone: 'UTC' }) + ' UTC'],
-            ['Coordinates', alert.event_snapshot.location
-              ? `${alert.event_snapshot.location.lat.toFixed(4)}°N, ${alert.event_snapshot.location.lng.toFixed(4)}°E`
-              : '—'],
-            ['Country', alert.event_snapshot.country],
-            ['Match reasons', alert.match_reasons.join(', ')],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <div className="text-xs text-text-muted uppercase tracking-wider mb-0.5">{label}</div>
-              <div className="text-sm text-text-primary font-mono">{value}</div>
+      {/* Event details + Triage panel */}
+      <div className="grid grid-cols-[1fr_280px] gap-4">
+        <div className="space-y-4">
+          {/* Event details */}
+          <div className="bg-bg-surface border border-border-subtle rounded-md">
+            <div className="px-5 py-3 border-b border-border-subtle">
+              <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">Event Details</span>
             </div>
-          ))}
+            <div className="p-5 grid grid-cols-2 gap-3">
+              {[
+                ['Type', alert.event_snapshot.event_type ?? 'Unknown'],
+                ['Time', new Date(alert.event_snapshot.occurred_at).toLocaleString('en-GB', { timeZone: 'UTC' }) + ' UTC'],
+                ['Coordinates', alert.event_snapshot.location
+                  ? `${alert.event_snapshot.location.lat.toFixed(4)}°N, ${alert.event_snapshot.location.lng.toFixed(4)}°E`
+                  : '—'],
+                ['Country', alert.event_snapshot.country],
+                ['Match reasons', alert.match_reasons.join(', ')],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <div className="text-xs text-text-muted uppercase tracking-wider mb-0.5">{label}</div>
+                  <div className="text-sm text-text-primary font-mono">{value}</div>
+                </div>
+              ))}
+            </div>
+            <div className="px-5 pb-4">
+              <div className="text-xs text-text-muted uppercase tracking-wider mb-2">Description</div>
+              <p className="text-sm text-text-secondary">{alert.event_snapshot.description}</p>
+            </div>
+          </div>
+
+          {/* Recommended actions */}
+          {alert.llm_context.recommended_actions.length > 0 && (
+            <div className="bg-bg-surface border border-border-subtle rounded-md">
+              <div className="px-5 py-3 border-b border-border-subtle flex items-center justify-between">
+                <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">Recommended Actions</span>
+                <span className="text-xs text-text-muted bg-bg-surface-2 px-2 py-0.5 rounded-sm font-mono">AI-generated</span>
+              </div>
+              <ul className="p-5 space-y-2">
+                {alert.llm_context.recommended_actions.map((action, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-text-primary">
+                    <span className="text-accent mt-0.5">•</span>
+                    {action}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Sources */}
+          {alert.event_snapshot.sources.length > 0 && (
+            <div className="bg-bg-surface border border-border-subtle rounded-md">
+              <div className="px-5 py-3 border-b border-border-subtle">
+                <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">Sources</span>
+              </div>
+              <div className="p-5 space-y-2">
+                {alert.event_snapshot.sources.map((src, i) => (
+                  <a
+                    key={i}
+                    href={src.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-text-secondary hover:text-accent transition-colors duration-[150ms] ease-out"
+                  >
+                    <div className="w-6 h-6 rounded-sm bg-bg-surface-2 flex items-center justify-center text-xs font-mono text-text-muted flex-shrink-0">
+                      {src.name.charAt(0)}
+                    </div>
+                    <span className="font-medium">{src.name}</span>
+                    <span className="text-text-muted">→</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Comment thread */}
+          <div className="bg-bg-surface border border-border-subtle rounded-md p-5">
+            <CommentThread
+              alertId={String(alert._id)}
+              orgSlug={params.orgSlug}
+              initialComments={initialComments}
+            />
+          </div>
         </div>
-        <div className="px-5 pb-4">
-          <div className="text-xs text-text-muted uppercase tracking-wider mb-2">Description</div>
-          <p className="text-sm text-text-secondary">{alert.event_snapshot.description}</p>
+
+        {/* Triage controls sidebar */}
+        <div className="bg-bg-surface border border-border-subtle rounded-md p-4 self-start sticky top-6">
+          <div className="text-xs font-medium uppercase tracking-wider text-text-secondary mb-4">Triage</div>
+          <TriageControls
+            alertId={String(alert._id)}
+            currentStatus={(alert.status ?? 'open') as 'open' | 'triaged' | 'closed'}
+            currentAssigneeId={alert.assignee_user_id ? String(alert.assignee_user_id) : null}
+            members={memberList}
+          />
         </div>
       </div>
-
-      {/* Recommended actions */}
-      {alert.llm_context.recommended_actions.length > 0 && (
-        <div className="bg-bg-surface border border-border-subtle rounded-md">
-          <div className="px-5 py-3 border-b border-border-subtle flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">Recommended Actions</span>
-            <span className="text-xs text-text-muted bg-bg-surface-2 px-2 py-0.5 rounded-sm font-mono">AI-generated</span>
-          </div>
-          <ul className="p-5 space-y-2">
-            {alert.llm_context.recommended_actions.map((action, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-text-primary">
-                <span className="text-accent mt-0.5">•</span>
-                {action}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Sources */}
-      {alert.event_snapshot.sources.length > 0 && (
-        <div className="bg-bg-surface border border-border-subtle rounded-md">
-          <div className="px-5 py-3 border-b border-border-subtle">
-            <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">Sources</span>
-          </div>
-          <div className="p-5 space-y-2">
-            {alert.event_snapshot.sources.map((src, i) => (
-              <a
-                key={i}
-                href={src.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-text-secondary hover:text-accent transition-colors duration-[150ms] ease-out"
-              >
-                <div className="w-6 h-6 rounded-sm bg-bg-surface-2 flex items-center justify-center text-xs font-mono text-text-muted flex-shrink-0">
-                  {src.name.charAt(0)}
-                </div>
-                <span className="font-medium">{src.name}</span>
-                <span className="text-text-muted">→</span>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
