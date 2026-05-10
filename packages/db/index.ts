@@ -33,6 +33,7 @@ export { Shipment } from './models/Shipment.js';
 export { PurchaseOrder } from './models/PurchaseOrder.js';
 export { Counterparty } from './models/Counterparty.js';
 export { Contract } from './models/Contract.js';
+export { MitigationSuggestion } from './models/MitigationSuggestion.js';
 
 export type { IOrganization } from './models/Organization.js';
 export type { IUser } from './models/User.js';
@@ -69,3 +70,4 @@ export type { IShipment, ShipmentStatus } from './models/Shipment.js';
 export type { IPurchaseOrder, IPOItem, POStatus } from './models/PurchaseOrder.js';
 export type { ICounterparty, CounterpartyRole } from './models/Counterparty.js';
 export type { IContract, ContractType } from './models/Contract.js';
+export type { IMitigationSuggestion, MitigationSuggestionType, MitigationStatus } from './models/MitigationSuggestion.js';

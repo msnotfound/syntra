@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronRight, CheckCircle, Share2, TrendingDown } from 'lucide-react';
+import { ChevronRight, CheckCircle, Share2, TrendingDown, Lightbulb, CheckCircle2, XCircle } from 'lucide-react';
 import { LogDecisionModal } from '@/components/decisions/LogDecisionModal';
 import { ensureDb } from '@/lib/db';
 import { getOrgBySlugOrThrow } from '@/lib/org';
-import { Alert, WatchlistEntity, User, Exposure } from '@syntra/db';
+import { Alert, WatchlistEntity, User, Exposure, MitigationSuggestion } from '@syntra/db';
 import { SeverityBadge } from '@syntra/ui/components/SeverityBadge';
 import { EntityChip } from '@syntra/ui/components/EntityChip';
 import { TimeAgo } from '@syntra/ui/components/TimeAgo';
@@ -13,7 +13,7 @@ import { TriageControls } from '@/components/triage/TriageControls';
 import { CommentThread } from '@/components/triage/CommentThread';
 import { StartWarRoomButton } from '@/components/warroom/StartWarRoomButton';
 import { GenerateBriefButton } from '@/components/briefs/GenerateBriefButton';
-import type { IAlert, IWatchlistEntity, IUser, IExposure } from '@syntra/db';
+import type { IAlert, IWatchlistEntity, IUser, IExposure, IMitigationSuggestion } from '@syntra/db';
 import type { Severity, EntityType } from '@syntra/shared';
 
 interface PageProps { params: { orgSlug: string; id: string } }
@@ -37,6 +37,11 @@ export default async function AlertDetailPage({ params }: PageProps) {
   }).lean() as unknown as IExposure[];
 
   const totalVarUsd = exposures.reduce((sum, e) => sum + e.var_value_usd, 0);
+
+  const mitigations = await MitigationSuggestion.find({
+    alert_id: alert._id,
+    org_id: org._id,
+  }).sort({ created_at: -1 }).lean() as unknown as IMitigationSuggestion[];
 
   const severityColor: Record<string, string> = {
     critical: '#EF4444', high: '#F97316', medium: '#EAB308', low: '#60A5FA',
@@ -246,6 +251,81 @@ export default async function AlertDetailPage({ params }: PageProps) {
           />
         </div>
       </div>
+
+      {/* Suggested Mitigations */}
+      {mitigations.length > 0 && (
+        <div className="bg-bg-surface border border-border-subtle rounded-md">
+          <div className="px-5 py-3 border-b border-border-subtle flex items-center gap-2">
+            <Lightbulb size={14} className="text-accent" />
+            <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">Suggested Mitigations</span>
+            <span className="ml-auto text-xs font-mono text-text-muted bg-bg-surface-2 px-2 py-0.5 rounded-sm">AI-generated</span>
+          </div>
+          <div className="divide-y divide-border-subtle">
+            {mitigations.map(m => {
+              const typeLabel: Record<string, string> = {
+                alt_route: 'Alt Route',
+                alt_supplier: 'Alt Supplier',
+                inventory_buffer: 'Inventory Buffer',
+                contract_clause: 'Contract Clause',
+              };
+              const statusColor: Record<string, string> = {
+                proposed: '#94A3B8',
+                accepted: '#22C55E',
+                rejected: '#EF4444',
+              };
+              return (
+                <div key={String(m._id)} className="p-5">
+                  <div className="flex items-start justify-between gap-4 mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-sm bg-bg-surface-2 text-text-secondary" style={{ borderRadius: '4px' }}>
+                        {typeLabel[m.suggestion_type] ?? m.suggestion_type}
+                      </span>
+                      <span className="text-xs font-mono" style={{ color: statusColor[m.status] ?? '#94A3B8' }}>
+                        {m.status}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {m.status === 'proposed' && (
+                        <>
+                          <form action={`/api/v1/alerts/${String(alert._id)}/mitigations/${String(m._id)}`} method="PATCH">
+                            <input type="hidden" name="status" value="accepted" />
+                            <button
+                              type="submit"
+                              className="flex items-center gap-1 px-2.5 h-7 rounded-sm text-xs font-medium transition-colors duration-[150ms] ease-out active:scale-95"
+                              style={{ backgroundColor: 'rgba(34,197,94,0.1)', color: '#22C55E', border: '1px solid rgba(34,197,94,0.2)' }}
+                            >
+                              <CheckCircle2 size={12} /> Accept
+                            </button>
+                          </form>
+                          <form action={`/api/v1/alerts/${String(alert._id)}/mitigations/${String(m._id)}`} method="PATCH">
+                            <input type="hidden" name="status" value="rejected" />
+                            <button
+                              type="submit"
+                              className="flex items-center gap-1 px-2.5 h-7 rounded-sm text-xs font-medium transition-colors duration-[150ms] ease-out active:scale-95"
+                              style={{ backgroundColor: '#1E2530', color: '#94A3B8', border: '1px solid #262C36' }}
+                            >
+                              <XCircle size={12} /> Dismiss
+                            </button>
+                          </form>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-text-primary mb-2">{m.narrative}</p>
+                  <div className="flex items-center gap-4 text-xs text-text-muted font-mono">
+                    <span>{m.confidence_pct}% confidence</span>
+                    {m.estimated_var_reduction_usd !== null && m.estimated_var_reduction_usd > 0 && (
+                      <span className="text-green-500">
+                        ~${(m.estimated_var_reduction_usd / 1_000).toFixed(0)}K potential VaR reduction
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Estimated Impact (VaR) */}
       {exposures.length > 0 && (
