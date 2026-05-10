@@ -15,6 +15,7 @@ import { runCommunityPollCycle } from './workers/community-poller.js';
 import { startGraphExtractWorker } from './workers/graph-extract.js';
 import { startWarRoomStateSyncWorker } from './workers/warroom-state-sync.js';
 import { startContractExtractWorker } from './workers/contract-extract.js';
+import { startResearchRunnerWorker } from './workers/research-runner.js';
 
 async function main() {
   console.log('[worker] Starting Syntra worker...');
@@ -38,6 +39,8 @@ async function main() {
 
   startWarRoomStateSyncWorker();
   console.log('[worker] War room state sync worker started');
+
+  startResearchRunnerWorker();
 
   // Matching cron: every 5 minutes
   const INTERVAL = process.env.DEMO_MODE === 'true' ? '*/1 * * * *' : '*/5 * * * *';

@@ -106,6 +106,23 @@ export type { IAssistantThread, IAssistantThreadTurn } from './models/AssistantT
 export { Forecast } from './models/Forecast.js';
 export { ForecastPrior } from './models/ForecastPrior.js';
 export { LeadingIndicator, seedLeadingIndicators, INDICATOR_SEEDS } from './models/LeadingIndicator.js';
+export { ResearchSession } from './models/ResearchSession.js';
+export { ResearchReport } from './models/ResearchReport.js';
+export type {
+  IResearchSession,
+  IResearchPlanStep,
+  IResearchStepOutput,
+  ResearchSessionStatus,
+  ResearchStepKind,
+  ResearchStepStatus,
+} from './models/ResearchSession.js';
+export type {
+  IResearchReport,
+  IReportSection,
+  IClaimGraphNode,
+  IClaimGraphEdge,
+  IRecommendedAction,
+} from './models/ResearchReport.js';
 
 export type { IForecast, ForecastEvidenceEvent, ForecastIndicatorType, ForecastOutcome } from './models/Forecast.js';
 export type { IForecastPrior } from './models/ForecastPrior.js';

@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
 import {
   LayoutDashboard, Bell, List, Code2, Settings, ChevronDown,
-  HelpCircle, BookOpen, Kanban, Activity, TrendingDown, Shield, ClipboardList, Users, FileText, Network, Rss, Briefcase, Lightbulb,
+  HelpCircle, BookOpen, Kanban, Activity, TrendingDown, Shield, ClipboardList, Users, FileText, Network, Rss, Briefcase, Lightbulb, FlaskConical,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -27,6 +27,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Briefs',       href: '/briefs',       icon: FileText },
   { label: 'Supply Graph', href: '/supply-graph', icon: Network },
   { label: 'Mitigations', href: '/mitigations',  icon: Lightbulb },
+  { label: 'Research',    href: '/research',     icon: FlaskConical },
   { label: 'Sources',      href: '/sources',      icon: Rss },
   { label: 'Operations',  href: '/operations',   icon: Briefcase },
   { label: 'API',          href: '/api',          icon: Code2 },

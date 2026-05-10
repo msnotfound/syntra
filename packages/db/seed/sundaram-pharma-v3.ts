@@ -28,6 +28,8 @@ import { InsurancePolicy } from '../models/InsurancePolicy.js';
 import { SeverityRule } from '../models/SeverityRule.js';
 import { DataFeed } from '../models/DataFeed.js';
 import { seedSundaramPharma } from './sundaram-pharma.js';
+import { ResearchSession } from '../models/ResearchSession.js';
+import { ResearchReport } from '../models/ResearchReport.js';
 
 type SeedUser = {
   clerk_user_id: string;
@@ -850,7 +852,234 @@ export async function seedSundaramPharmaV3() {
   await seedCommercialCollections(orgId, entities, now);
   await seedPreferencesAndControls(orgId, users, entities, now);
   await seedDataFeeds(now);
+  await seedResearchSessions(orgId, objectId(users[0]._id), now);
 
   console.log('[seed] Sundaram Pharma v3 seed complete. org_id:', orgId.toString());
   return org;
+}
+
+async function seedResearchSessions(orgId: Types.ObjectId, userId: Types.ObjectId, now: Date) {
+  const srcDoc = await SourceReliability.findOne({ source_id: 'research-session' }) ??
+    await SourceReliability.create({
+      source_id: 'research-session',
+      source_name: 'Syntra Research Session',
+      admiralty_code: 'B',
+      reliability_pct: 75,
+      last_assessed_at: now,
+    });
+
+  // Seed evidence claims
+  const claimA = await IntelClaim.findOne({ claim_text: /Red Sea closure.*container traffic/i }) ??
+    await IntelClaim.create({
+      source_id: srcDoc._id,
+      claim_text: 'Red Sea Houthi attacks have diverted approx 15% of global container traffic via Cape of Good Hope as of Q1 2026.',
+      evidence_url: 'https://lloydslist.com/ll1149100/red-sea-diversions',
+      asserted_at: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000),
+      parent_claim_ids: [],
+      claim_type: 'fact',
+      alert_id: null,
+    });
+
+  const claimB = await IntelClaim.findOne({ claim_text: /Indian pharma.*transit time/i }) ??
+    await IntelClaim.create({
+      source_id: srcDoc._id,
+      claim_text: 'Indian pharma exporters routing through Cape of Good Hope face 12–16 additional days transit time to EU ports.',
+      evidence_url: null,
+      asserted_at: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000),
+      parent_claim_ids: [claimA._id],
+      claim_type: 'inference',
+      alert_id: null,
+    });
+
+  const claimC = await IntelClaim.findOne({ claim_text: /temperature-sensitive.*cold chain/i }) ??
+    await IntelClaim.create({
+      source_id: srcDoc._id,
+      claim_text: 'Temperature-sensitive generics require cold chain re-qualification when switching shipping routes, adding 2-4 weeks regulatory time.',
+      evidence_url: null,
+      asserted_at: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000),
+      parent_claim_ids: [claimB._id],
+      claim_type: 'inference',
+      alert_id: null,
+    });
+
+  const { randomUUID: uuidv4 } = await import('crypto');
+
+  // 1. In-progress session (researching state, some steps done)
+  const inProgressExists = await ResearchSession.findOne({
+    org_id: orgId,
+    question: { $regex: /Red Sea.*generics/i },
+    status: { $ne: 'finalized' },
+  });
+  if (!inProgressExists) {
+    const subStepId = uuidv4();
+    const pullStepId = uuidv4();
+    const synthStepId = uuidv4();
+    const recStepId = uuidv4();
+
+    await ResearchSession.create({
+      org_id: orgId,
+      user_id: 'user_sundaram_cfo',
+      question: 'Impact of Red Sea closure on Indian generics export to EU — costs and alternatives',
+      status: 'researching',
+      plan_steps: [
+        {
+          step_id: subStepId,
+          order: 0,
+          kind: 'sub_question',
+          title: 'Break question into sub-questions',
+          description: 'Decompose into focused investigative angles.',
+          status: 'done',
+          prompt: null,
+          output: { kind: 'text', payload: 'Route impact; Cost analysis; Regulatory compliance; Mitigation options' },
+          evidence_claim_ids: [],
+          created_at: new Date(now.getTime() - 3 * 60 * 60 * 1000),
+          updated_at: new Date(now.getTime() - 3 * 60 * 60 * 1000 + 30000),
+        },
+        {
+          step_id: pullStepId,
+          order: 1,
+          kind: 'pull_intel_claims',
+          title: 'Pull evidence: Assess current route disruption magnitude',
+          description: 'Quantify how many vessels and TEUs are affected.',
+          status: 'done',
+          prompt: 'Assess current Red Sea closure impact on Suez transit',
+          output: { kind: 'claim_ids', payload: [String(claimA._id), String(claimB._id)] },
+          evidence_claim_ids: [String(claimA._id), String(claimB._id)],
+          created_at: new Date(now.getTime() - 2.5 * 60 * 60 * 1000),
+          updated_at: new Date(now.getTime() - 2.5 * 60 * 60 * 1000 + 45000),
+        },
+        {
+          step_id: synthStepId,
+          order: 2,
+          kind: 'synthesize',
+          title: 'Draft section: Assess current route disruption magnitude',
+          description: 'Write a research section on the route disruption.',
+          status: 'proposed',
+          prompt: 'Assess current Red Sea closure impact on Suez transit',
+          output: null,
+          evidence_claim_ids: [],
+          created_at: new Date(now.getTime() - 2.5 * 60 * 60 * 1000),
+          updated_at: new Date(now.getTime() - 2.5 * 60 * 60 * 1000),
+        },
+        {
+          step_id: recStepId,
+          order: 3,
+          kind: 'recommend_actions',
+          title: 'Generate recommended actions',
+          description: 'Synthesise findings into actionable recommendations.',
+          status: 'proposed',
+          prompt: null,
+          output: null,
+          evidence_claim_ids: [],
+          created_at: new Date(now.getTime() - 2.5 * 60 * 60 * 1000),
+          updated_at: new Date(now.getTime() - 2.5 * 60 * 60 * 1000),
+        },
+      ],
+      final_report_id: null,
+      created_at: new Date(now.getTime() - 3 * 60 * 60 * 1000),
+      updated_at: new Date(now.getTime() - 30 * 60 * 1000),
+    });
+    console.log('[seed] Research session (in-progress): done');
+  }
+
+  // 2. Finalized session with full report
+  const finalizedExists = await ResearchSession.findOne({
+    org_id: orgId,
+    status: 'finalized',
+    question: { $regex: /EU regulatory/i },
+  });
+  if (!finalizedExists) {
+    const session = await ResearchSession.create({
+      org_id: orgId,
+      user_id: 'user_sundaram_cfo',
+      question: 'EU regulatory changes affecting Indian API imports — compliance gaps at Sundaram Pharma',
+      status: 'finalized',
+      plan_steps: [
+        {
+          step_id: uuidv4(),
+          order: 0,
+          kind: 'sub_question',
+          title: 'Break question into sub-questions',
+          status: 'done',
+          prompt: null,
+          output: { kind: 'text', payload: 'done' },
+          evidence_claim_ids: [],
+          created_at: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+          updated_at: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+        },
+        {
+          step_id: uuidv4(),
+          order: 1,
+          kind: 'synthesize',
+          title: 'Draft section: EU GMP compliance landscape',
+          status: 'done',
+          prompt: 'Assess EU GMP compliance requirements for Indian API imports',
+          output: {
+            kind: 'text',
+            payload: {
+              heading: 'EU GMP Compliance Landscape',
+              markdown: `EU Regulation 2023/1182 tightens GMP certification requirements for third-country API manufacturers. [claim:${String(claimC._id)}] Indian manufacturers must requalify documentation by September 2026 or face import suspension.`,
+              cited_claim_ids: [String(claimC._id)],
+            },
+          },
+          evidence_claim_ids: [String(claimC._id)],
+          created_at: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000),
+          updated_at: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000),
+        },
+        {
+          step_id: uuidv4(),
+          order: 2,
+          kind: 'recommend_actions',
+          title: 'Generate recommended actions',
+          status: 'done',
+          prompt: null,
+          output: {
+            kind: 'text',
+            payload: {
+              actions: [
+                { text: 'Audit all API supplier GMP certificates for EU validity', rationale: 'Regulation 2023/1182 requires updated certificates by September 2026.', cited_claim_ids: [] },
+                { text: 'Engage EMA pre-submission meeting for affected product lines', rationale: 'Early engagement reduces approval timelines by 4-6 months on average.', cited_claim_ids: [] },
+              ],
+            },
+          },
+          evidence_claim_ids: [],
+          created_at: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
+          updated_at: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
+        },
+      ],
+      final_report_id: null,
+      created_at: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+      updated_at: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000),
+    });
+
+    const report = await ResearchReport.create({
+      org_id: orgId,
+      research_session_id: session._id,
+      exec_summary: 'EU Regulation 2023/1182 introduces tighter GMP certification requirements for Indian API imports. Sundaram Pharma must audit 12 supplier certifications and initiate EMA pre-submission by Q3 2026 to avoid import suspension affecting EUR 45M in annual EU revenue.',
+      sections: [{
+        heading: 'EU GMP Compliance Landscape',
+        markdown: `EU Regulation 2023/1182 tightens GMP certification requirements for third-country API manufacturers. [claim:${String(claimC._id)}] Indian manufacturers must requalify documentation by September 2026 or face import suspension.`,
+        cited_claim_ids: [String(claimC._id)],
+      }],
+      claim_graph: {
+        nodes: [
+          { id: String(claimA._id), label: 'Red Sea traffic diversion fact', kind: 'fact' },
+          { id: String(claimB._id), label: 'Pharma transit time inference', kind: 'inference' },
+          { id: String(claimC._id), label: 'Cold chain re-qualification inference', kind: 'inference' },
+        ],
+        edges: [
+          { from: String(claimA._id), to: String(claimB._id), label: 'supports' },
+          { from: String(claimB._id), to: String(claimC._id), label: 'supports' },
+        ],
+      },
+      recommended_actions: [
+        { text: 'Audit all API supplier GMP certificates for EU validity', rationale: 'Regulation 2023/1182 requires updated certificates by September 2026.', cited_claim_ids: [] },
+        { text: 'Engage EMA pre-submission meeting for affected product lines', rationale: 'Early engagement reduces approval timelines by 4-6 months on average.', cited_claim_ids: [] },
+      ],
+      risk_brief_id: null,
+    });
+
+    await ResearchSession.updateOne({ _id: session._id }, { $set: { final_report_id: report._id } });
+    console.log('[seed] Research session (finalized) + report: done');
+  }
 }
