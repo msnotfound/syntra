@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import dotenv from 'dotenv'; import path from 'path'; dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 import { connectDb, disconnectDb } from '../connection.js';
 import { seedSundaramPharma } from './sundaram-pharma.js';
 import { seedSundaramPharmaV3 } from './sundaram-pharma-v3.js';

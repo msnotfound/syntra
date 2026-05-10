@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import dotenv from 'dotenv'; import path from 'path'; dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 import cron from 'node-cron';
 import { connectDb } from '@syntra/db';
 import { runMatchingCycle } from './cron/matching.js';
