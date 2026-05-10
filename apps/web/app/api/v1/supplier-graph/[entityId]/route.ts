@@ -66,6 +66,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       child_id: e.child_id,
       tier_offset: e.tier_offset,
       source: e.source,
+      confidence_pct: e.confidence_pct,
     })),
     node_count: nodes.length,
     edge_count: edges.length,

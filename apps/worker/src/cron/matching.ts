@@ -123,6 +123,7 @@ export async function runMatchingCycle(): Promise<{ processed: number; alertsCre
         await enqueueDispatch(String(alert._id));
       }
       await enqueueVarCompute(String(alert._id));
+      await enqueueGraphExtract(String(alert._id));
     }
   }
 
@@ -145,5 +146,14 @@ async function enqueueVarCompute(alertId: string): Promise<void> {
     await getVarComputeQueue().add('var-compute', { alertId }, { jobId: `var_compute:${alertId}` });
   } catch {
     console.warn('[matching] Could not enqueue var-compute for alert', alertId);
+  }
+}
+
+async function enqueueGraphExtract(alertId: string): Promise<void> {
+  try {
+    const { getGraphExtractQueue } = await import('../workers/graph-extract.js');
+    await getGraphExtractQueue().add('graph-extract', { alertId }, { jobId: `graph_extract:${alertId}` });
+  } catch {
+    console.warn('[matching] Could not enqueue graph-extract for alert', alertId);
   }
 }
