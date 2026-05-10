@@ -5,6 +5,9 @@ import { ensureDb } from '@/lib/db';
 import { getOrgBySlugOrThrow } from '@/lib/org';
 import { WarRoom, WarRoomMessage, User } from '@syntra/db';
 import { WarRoom as WarRoomUI } from '@/components/warroom/WarRoom';
+import { ActionItemsPanel } from '@/components/warroom/ActionItemsPanel';
+import { MitigationDecisionPanel } from '@/components/warroom/MitigationDecisionPanel';
+import { LiveExposureSidebar } from '@/components/warroom/LiveExposureSidebar';
 import { getServerAuth } from '@/lib/auth';
 import type { IWarRoom, IWarRoomMessage, IUser } from '@syntra/db';
 
@@ -31,6 +34,8 @@ export default async function WarRoomDetailPage({ params }: PageProps) {
     currentUserId = me ? String(me._id) : '';
   }
 
+  const alertId = room.alert_id ? String(room.alert_id) : null;
+
   const participants = participantDocs.map(u => ({
     id:    String(u._id),
     name:  u.name,
@@ -43,6 +48,8 @@ export default async function WarRoomDetailPage({ params }: PageProps) {
     user_id:     String(m.user_id),
     body:        m.body,
     attachments: m.attachments,
+    msg_type:    (m as unknown as { msg_type?: string }).msg_type ?? 'chat',
+    poll:        (m as unknown as { poll?: unknown }).poll ?? null,
     created_at:  m.created_at,
   }));
 
@@ -60,16 +67,27 @@ export default async function WarRoomDetailPage({ params }: PageProps) {
         <span className="truncate max-w-sm" style={{ color: '#94A3B8' }}>{room.name}</span>
       </nav>
 
-      <div className="rounded-md border overflow-hidden" style={{ borderColor: '#1E2530' }}>
-        <WarRoomUI
-          roomId={params.id}
-          roomName={room.name}
-          status={room.status}
-          orgSlug={params.orgSlug}
-          initialMessages={initialMessages}
-          participants={participants}
-          currentUserId={currentUserId}
-        />
+      <div className="flex gap-4 items-start">
+        {/* Main chat column */}
+        <div className="flex-1 min-w-0 rounded-md border overflow-hidden" style={{ borderColor: '#1E2530' }}>
+          <WarRoomUI
+            roomId={params.id}
+            roomName={room.name}
+            status={room.status}
+            orgSlug={params.orgSlug}
+            alertId={alertId}
+            initialMessages={initialMessages}
+            participants={participants}
+            currentUserId={currentUserId}
+          />
+        </div>
+
+        {/* Right sidebar */}
+        <div className="w-72 flex-shrink-0 space-y-3">
+          <LiveExposureSidebar roomId={params.id} alertId={alertId} />
+          <ActionItemsPanel roomId={params.id} status={room.status} participants={participants} />
+          <MitigationDecisionPanel alertId={alertId} />
+        </div>
       </div>
     </div>
   );

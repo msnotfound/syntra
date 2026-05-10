@@ -1,15 +1,13 @@
 import { NextRequest } from 'next/server';
 import { getServerAuth } from '@/lib/auth';
-import { WarRoom, WarRoomMessage, User } from '@syntra/db';
+import { WarRoom, Exposure, User } from '@syntra/db';
 import { ensureDb } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerAuth();
-  if (!session) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+  if (!session) return new Response('Unauthorized', { status: 401 });
 
   await ensureDb();
   const user = await User.findOne({ clerk_user_id: session.userId }).lean();
@@ -19,56 +17,49 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   if (!room) return new Response('War room not found', { status: 404 });
 
   const encoder = new TextEncoder();
-  let lastMessageAt = new Date();
   let closed = false;
+  let lastComputedAt: Date | null = null;
 
   const stream = new ReadableStream({
     async start(controller) {
-      // Send connection event
+      if (!room.alert_id) {
+        controller.enqueue(encoder.encode(': no-alert\n\n'));
+        controller.close();
+        return;
+      }
+
       controller.enqueue(encoder.encode(`event: connected\ndata: ${JSON.stringify({ war_room_id: params.id })}\n\n`));
 
       const poll = async () => {
         if (closed) return;
 
         try {
-          const newMessages = await WarRoomMessage.find({
-            war_room_id: params.id,
-            created_at:  { $gt: lastMessageAt },
-          }).sort({ created_at: 1 }).lean();
+          const query: Record<string, unknown> = { alert_id: room.alert_id, org_id: user.org_id };
+          if (lastComputedAt) query.computed_at = { $gt: lastComputedAt };
 
-          for (const msg of newMessages) {
+          const latest = await Exposure.findOne(query).sort({ computed_at: -1 }).lean();
+          if (latest) {
+            lastComputedAt = latest.computed_at;
             const payload = JSON.stringify({
-              id:          String(msg._id),
-              war_room_id: String(msg.war_room_id),
-              user_id:     String(msg.user_id),
-              body:        msg.body,
-              attachments: msg.attachments,
-              msg_type:    msg.msg_type,
-              poll:        msg.poll,
-              created_at:  msg.created_at,
+              var_value_usd:     latest.var_value_usd,
+              var_value_inr:     latest.var_value_inr,
+              exposure_delta_usd: latest.exposure_delta_usd,
+              computed_at:       latest.computed_at,
             });
-            controller.enqueue(encoder.encode(`event: message\ndata: ${payload}\n\n`));
-            lastMessageAt = msg.created_at;
+            controller.enqueue(encoder.encode(`event: exposure\ndata: ${payload}\n\n`));
           }
         } catch {
-          // DB error — emit keepalive and retry
+          // DB error — retry next tick
         }
 
-        if (!closed) {
-          setTimeout(poll, 2000);
-        }
+        if (!closed) setTimeout(poll, 3000);
       };
 
-      setTimeout(poll, 2000);
+      setTimeout(poll, 1000);
 
-      // Keepalive ping every 20s
       const ping = setInterval(() => {
         if (closed) { clearInterval(ping); return; }
-        try {
-          controller.enqueue(encoder.encode(': ping\n\n'));
-        } catch {
-          clearInterval(ping);
-        }
+        try { controller.enqueue(encoder.encode(': ping\n\n')); } catch { clearInterval(ping); }
       }, 20000);
 
       req.signal.addEventListener('abort', () => {
@@ -81,9 +72,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   return new Response(stream, {
     headers: {
-      'Content-Type':  'text/event-stream',
-      'Cache-Control': 'no-cache, no-transform',
-      'Connection':    'keep-alive',
+      'Content-Type':      'text/event-stream',
+      'Cache-Control':     'no-cache, no-transform',
+      'Connection':        'keep-alive',
       'X-Accel-Buffering': 'no',
     },
   });

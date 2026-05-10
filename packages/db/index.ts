@@ -35,6 +35,7 @@ export { PurchaseOrder } from './models/PurchaseOrder.js';
 export { Counterparty } from './models/Counterparty.js';
 export { Contract } from './models/Contract.js';
 export { MitigationSuggestion } from './models/MitigationSuggestion.js';
+export { WarRoomActionItem } from './models/WarRoomActionItem.js';
 
 export type { IOrganization } from './models/Organization.js';
 export type { IUser } from './models/User.js';
@@ -57,7 +58,7 @@ export type { ITeamsInstall } from './models/TeamsInstall.js';
 export type { IInsurancePolicy, CoverageType } from './models/InsurancePolicy.js';
 export type { IDecision, DecisionType } from './models/Decision.js';
 export type { IWarRoom } from './models/WarRoom.js';
-export type { IWarRoomMessage } from './models/WarRoomMessage.js';
+// IWarRoomMessage re-exported with full types below
 export type { IIntelClaim, ClaimType } from './models/IntelClaim.js';
 export type { ISourceReliability, AdmiraltyCode } from './models/SourceReliability.js';
 export type { IRiskBrief, IRiskBriefContent } from './models/RiskBrief.js';
@@ -73,6 +74,8 @@ export type { IPurchaseOrder, IPOItem, POStatus } from './models/PurchaseOrder.j
 export type { ICounterparty, CounterpartyRole } from './models/Counterparty.js';
 export type { IContract, ContractType } from './models/Contract.js';
 export type { IMitigationSuggestion, MitigationSuggestionType, MitigationStatus } from './models/MitigationSuggestion.js';
+export type { IWarRoomActionItem, ActionItemStatus } from './models/WarRoomActionItem.js';
+export type { IWarRoomMessage, WarRoomMsgType, IPoll, IPollVote } from './models/WarRoomMessage.js';
 
 export { Forecast } from './models/Forecast.js';
 export { LeadingIndicator, seedLeadingIndicators, INDICATOR_SEEDS } from './models/LeadingIndicator.js';

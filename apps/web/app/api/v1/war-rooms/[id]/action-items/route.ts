@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerAuth } from '@/lib/auth';
-import { WarRoom, WarRoomMessage, User } from '@syntra/db';
+import { WarRoom, WarRoomActionItem, User } from '@syntra/db';
 import { apiResponse, apiError } from '@syntra/shared';
 import { ensureDb } from '@/lib/db';
 import { z } from 'zod';
 
 const PostSchema = z.object({
-  body:        z.string().min(1).max(10000),
-  attachments: z.array(z.string().url()).max(10).optional(),
+  title:             z.string().min(1).max(500),
+  assignee_user_id:  z.string().optional(),
+  due_at:            z.string().datetime().optional(),
 });
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
@@ -21,20 +22,17 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   const room = await WarRoom.findOne({ _id: params.id, org_id: user.org_id }).lean();
   if (!room) return NextResponse.json(apiError('NOT_FOUND', 'War room not found'), { status: 404 });
 
-  const messages = await WarRoomMessage.find({ war_room_id: params.id })
-    .sort({ created_at: 1 })
-    .limit(100)
-    .lean();
+  const items = await WarRoomActionItem.find({ war_room_id: params.id }).sort({ created_at: 1 }).lean();
 
-  return NextResponse.json(apiResponse(messages.map(m => ({
-    id:          String(m._id),
-    war_room_id: String(m.war_room_id),
-    user_id:     String(m.user_id),
-    body:        m.body,
-    attachments: m.attachments,
-    msg_type:    m.msg_type,
-    poll:        m.poll,
-    created_at:  m.created_at,
+  return NextResponse.json(apiResponse(items.map(i => ({
+    id:               String(i._id),
+    war_room_id:      String(i.war_room_id),
+    title:            i.title,
+    assignee_user_id: i.assignee_user_id ? String(i.assignee_user_id) : null,
+    due_at:           i.due_at,
+    status:           i.status,
+    created_by:       String(i.created_by),
+    created_at:       i.created_at,
   }))));
 }
 
@@ -57,27 +55,23 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json(apiError('FORBIDDEN', 'War room is closed'), { status: 403 });
   }
 
-  const msg = await WarRoomMessage.create({
-    war_room_id: room._id,
-    user_id:     user._id,
-    body:        parsed.data.body,
-    attachments: parsed.data.attachments ?? [],
+  const item = await WarRoomActionItem.create({
+    war_room_id:      room._id,
+    org_id:           user.org_id,
+    title:            parsed.data.title,
+    assignee_user_id: parsed.data.assignee_user_id ?? null,
+    due_at:           parsed.data.due_at ? new Date(parsed.data.due_at) : null,
+    created_by:       user._id,
   });
 
-  // Add user to participants if not already there
-  await WarRoom.updateOne(
-    { _id: params.id, participants: { $ne: user._id } },
-    { $addToSet: { participants: user._id } },
-  );
-
   return NextResponse.json(apiResponse({
-    id:          String(msg._id),
-    war_room_id: String(msg.war_room_id),
-    user_id:     String(msg.user_id),
-    body:        msg.body,
-    attachments: msg.attachments,
-    msg_type:    msg.msg_type,
-    poll:        msg.poll,
-    created_at:  msg.created_at,
+    id:               String(item._id),
+    war_room_id:      String(item.war_room_id),
+    title:            item.title,
+    assignee_user_id: item.assignee_user_id ? String(item.assignee_user_id) : null,
+    due_at:           item.due_at,
+    status:           item.status,
+    created_by:       String(item.created_by),
+    created_at:       item.created_at,
   }), { status: 201 });
 }
