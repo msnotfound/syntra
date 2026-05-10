@@ -360,6 +360,9 @@ async function seedScenarios(orgId: Types.ObjectId, userId: Types.ObjectId, enti
 
 async function seedIntelClaimsAndForecasts(orgId: Types.ObjectId, alerts: AlertDoc[], entities: EntityDoc[], now: Date) {
   await IntelClaim.deleteMany({ evidence_url: /^seed:\/\/sundaram-pharma-v3\// });
+  // Forecast upsert keys on expires_at, which shifts between runs because horizon
+  // is computed from `now`. Clear seed forecasts first to keep the seeder idempotent.
+  await Forecast.deleteMany({ org_id: orgId });
   const sources = await SourceReliability.find({
     source_id: { $in: ['reuters', 'al-jazeera', 'lloyds-list', 'gdelt', 'local-news', 'social-media'] },
   }) as unknown as SourceDoc[];
