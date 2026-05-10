@@ -218,3 +218,80 @@ Don't re-learn these. They're the cost of admission, paid.
 Maya is sharp. Don't bullshit her. If you find yourself using buildplan or scope as a shield, she'll spot it and shove the conversation back to "absolute completion." That's the right instinct. Build the thing.
 
 — Claude (this session)
+
+---
+
+## Appendix: orcha cheatsheet
+
+Bash scripts at `~/agents/bin/`, on `$PATH`. Run any with `-h` for help.
+
+```bash
+# Spawn an agent
+orch-spawn <agent-type> <task-id> "<prompt>" --repo . [--budget-usd N] [--turns N]
+#   agent-types: codex | gemini | claude-haiku | claude-sonnet | claude-opus
+#   creates worktree at ~/agents/worktrees/<task-id>/ on branch agent/<task-id>
+#   logs to ~/agents/logs/<task-id>.log
+#   spawns in tmux session "orchestra"
+#   for codex: --budget-usd is silently ignored (codex bills OpenAI directly)
+#   for claude: --budget-usd caps spend per spawn
+
+# Status / monitoring
+orch-list                          # status table of all tracked agents
+orch-watch <task-id>               # last 50 lines from agent's tmux pane
+orch-watch <task-id> --follow      # tail -F the log
+orch-watch <task-id> --grep ERR    # filter
+
+# Killing
+orch-kill <task-id>                # kills tmux window; asks whether to keep worktree
+
+# Inspecting output
+~/agents/logs/<task-id>.log        # full streaming log (claude --verbose, codex always streams)
+~/agents/worktrees/<task-id>/      # the worktree — `git status`, `git diff`, `cat <file>`
+
+# When codex finishes (ALWAYS staged-but-not-committed — recurring pattern):
+cd ~/agents/worktrees/<task-id>
+git add -A
+git commit -m "feat(...): description"
+git push origin HEAD:feature/<your-branch>
+
+# Auto-resolve trivial both-side additive merge conflicts (model exports, route registers):
+python3 /tmp/auto_keep_both.py <conflicted-file>
+# Won't handle import-line collisions or non-additive merges → manual edit.
+
+# Defaults patched into orch-spawn (do NOT lower):
+#   sonnet  --max-turns 150
+#   haiku   --max-turns 50
+#   opus    --max-turns 200
+#   --verbose flag enabled so claude streams during run
+
+# Disk hygiene — every worktree gets ~150-800MB of pnpm install:
+git worktree prune
+rm -rf ~/agents/worktrees/<finished-id>
+
+# State file (jq-readable):
+~/agents/state/.orchestra-state.json
+```
+
+### TPM management for codex
+- Org `org-A2u9BRRQ1FShG06i1gvwwSF5` is at Tier 1 (~500K TPM on gpt-5.5).
+- Running >3 codex agents in parallel collectively will exceed TPM → silent truncation → exit 0 with partial work.
+- Sequence codex when each agent's prompt + reads will exceed ~150K tokens. Parallelize codex only for trivial scopes.
+- Anthropic rate limits are separate and much higher; sonnet/haiku/opus can run 5+ in parallel safely.
+
+### Common spawn templates
+
+```bash
+# Codex on the main syntra repo:
+orch-spawn codex syn-feature-name \
+  "your tight prompt here. Push to feature/feature-name." \
+  --repo .
+
+# Sonnet on a heavy module:
+orch-spawn claude-sonnet syn-feature-name \
+  "preamble + tight prompt + push instruction" \
+  --repo . --budget-usd 16
+
+# Gemini for long-context reads (1M ctx, free tier):
+orch-spawn gemini doc-reader-task "..." 
+# (gemini sandbox to cwd — pre-stage docs in worktree before spawning)
+```
