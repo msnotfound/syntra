@@ -105,6 +105,25 @@ describe('computePolicyCoverage', () => {
     expect(result.exclusion_reason).toBeNull();
   });
 
+  test('applies counterparty sub_limit when it is tighter than the peril limit', () => {
+    const result = computePolicyCoverage({
+      varUsd: 1_200_000,
+      perilKind: 'port_closure',
+      counterpartyId: 'counterparty-123',
+      policy: {
+        ...basePolicy,
+        sub_limits: [
+          { peril_kind: 'port_closure', limit_usd: 900_000 },
+          { counterparty_id: 'counterparty-123', limit_usd: 400_000 },
+        ],
+      },
+    });
+
+    expect(result.coverage_actual_usd).toBe(400_000);
+    expect(result.gap_usd).toBe(800_000);
+    expect(result.insurance_coverage_pct).toBeCloseTo(33.333, 3);
+  });
+
   test('aggregate exhaustion leaves zero available coverage', () => {
     const result = computePolicyCoverage({
       varUsd: 800_000,
@@ -156,6 +175,30 @@ describe('computePolicyCoverage', () => {
 
     expect(result.coverage_actual_usd).toBe(800_000);
     expect(result.gap_usd).toBe(700_000);
+  });
+
+  test('full coverage uses claim amount when policy, sub-limit, and aggregate all have room', () => {
+    const result = computePolicyCoverage({
+      varUsd: 600_000,
+      perilKind: 'port_closure',
+      counterpartyId: 'counterparty-123',
+      policy: {
+        ...basePolicy,
+        aggregate_limit_usd: 3_000_000,
+        sub_limits: [
+          { peril_kind: 'port_closure', limit_usd: 1_000_000 },
+          { counterparty_id: 'counterparty-123', limit_usd: 900_000 },
+        ],
+        claims_history: [
+          { claim_id: 'CLM-PAID', paid_usd: 250_000, denied: false, date: new Date('2026-01-01') },
+        ],
+      },
+    });
+
+    expect(result.coverage_actual_usd).toBe(600_000);
+    expect(result.gap_usd).toBe(0);
+    expect(result.insurance_coverage_pct).toBe(100);
+    expect(result.exclusion_reason).toBeNull();
   });
 });
 
@@ -269,13 +312,17 @@ describe('InsurancePolicy schema', () => {
   test('stores sub-limits, exclusions, and claims history', async () => {
     const p = await InsurancePolicy.create(makePolicy({
       aggregate_limit_usd: 4_000_000,
-      sub_limits: [{ peril_kind: 'maritime_attack', limit_usd: 750_000 }],
+      sub_limits: [
+        { peril_kind: 'maritime_attack', limit_usd: 750_000 },
+        { counterparty_id: 'counterparty-123', limit_usd: 500_000 },
+      ],
       exclusions: [{ peril_kind: 'sanctions_match', reason: 'Sanctions excluded' }],
       claims_history: [{ claim_id: 'CLM-001', paid_usd: 250_000, denied: false, date: new Date('2026-01-01') }],
     }));
 
     expect(p.aggregate_limit_usd).toBe(4_000_000);
     expect(p.sub_limits[0]?.peril_kind).toBe('maritime_attack');
+    expect(p.sub_limits[1]?.counterparty_id).toBe('counterparty-123');
     expect(p.exclusions[0]?.reason).toBe('Sanctions excluded');
     expect(p.claims_history[0]?.paid_usd).toBe(250_000);
   });

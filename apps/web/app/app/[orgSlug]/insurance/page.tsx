@@ -39,12 +39,22 @@ function paidClaims(policy: IInsurancePolicy): number {
   ), 0);
 }
 
+function aggregateRemaining(policy: IInsurancePolicy): number {
+  return Math.max(0, (policy.aggregate_limit_usd ?? policy.max_payout_usd) - paidClaims(policy));
+}
+
 function remainingForPeril(policy: IInsurancePolicy, peril: string): number {
   if ((policy.exclusions ?? []).some(item => item.peril_kind === peril)) return 0;
-  const aggregateRemaining = Math.max(0, (policy.aggregate_limit_usd ?? policy.max_payout_usd) - paidClaims(policy));
+  const remainingAggregate = aggregateRemaining(policy);
   const subLimit = (policy.sub_limits ?? []).find(item => item.peril_kind === peril)?.limit_usd;
   const policyLimit = Math.max(0, policy.max_payout_usd - policy.deductible_usd);
-  return Math.min(aggregateRemaining, subLimit ?? policyLimit, policyLimit);
+  return Math.min(remainingAggregate, subLimit ?? policyLimit, policyLimit);
+}
+
+function subLimitLabel(subLimit: IInsurancePolicy['sub_limits'][number]): string {
+  if (subLimit.peril_kind) return `Peril: ${humanize(subLimit.peril_kind)}`;
+  if (subLimit.counterparty_id) return `Counterparty: ${subLimit.counterparty_id}`;
+  return 'Unscoped';
 }
 
 export default async function InsurancePage({ params }: PageProps) {
@@ -78,12 +88,22 @@ export default async function InsurancePage({ params }: PageProps) {
     ...rawExposures.map(e => resolvePerilKind(e.alert_id ? alertMap.get(String(e.alert_id)) : undefined)),
     ...policies.flatMap(p => (p.sub_limits ?? []).map(item => item.peril_kind)),
     ...policies.flatMap(p => (p.exclusions ?? []).map(item => item.peril_kind)),
-  ])).sort();
+  ].filter((peril): peril is string => Boolean(peril)))).sort();
   const claimsLog = policies.flatMap(policy => (policy.claims_history ?? []).map(claim => ({
     ...claim,
     policy_id: policy.policy_id,
     insurer_name: policy.insurer_name,
   }))).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const subLimitRows = policies.flatMap(policy => (policy.sub_limits ?? []).map(subLimit => ({
+    ...subLimit,
+    policy_id: policy.policy_id,
+    insurer_name: policy.insurer_name,
+  })));
+  const exclusionRows = policies.flatMap(policy => (policy.exclusions ?? []).map(exclusion => ({
+    ...exclusion,
+    policy_id: policy.policy_id,
+    insurer_name: policy.insurer_name,
+  })));
 
   const chartData = rawExposures.map(exp => ({
     name: entityMap.get(String(exp.entity_id))?.name ?? String(exp.entity_id),
@@ -213,7 +233,7 @@ export default async function InsurancePage({ params }: PageProps) {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border-subtle">
-              {['Policy ID', 'Insurer', 'Type', 'Max Payout', 'Deductible', 'Expires', ''].map((h, i) => (
+              {['Policy ID', 'Insurer', 'Type', 'Max Payout', 'Aggregate Rem.', 'Deductible', 'Expires', ''].map((h, i) => (
                 <th
                   key={i}
                   className={`px-4 py-3 text-xs font-medium uppercase tracking-wider text-text-secondary ${i >= 3 ? 'text-right' : 'text-left'}`}
@@ -226,13 +246,15 @@ export default async function InsurancePage({ params }: PageProps) {
           <tbody>
             {policies.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-5 py-12 text-center text-sm text-text-muted">
+                <td colSpan={8} className="px-5 py-12 text-center text-sm text-text-muted">
                   No policies yet. Add your first insurance policy below.
                 </td>
               </tr>
             ) : (
               policies.map(p => {
                 const expired = new Date(p.expires_at) < new Date();
+                const remainingAggregate = aggregateRemaining(p);
+                const aggregatePct = Math.min(100, (remainingAggregate / Math.max(1, p.aggregate_limit_usd ?? p.max_payout_usd)) * 100);
                 return (
                   <tr
                     key={String(p._id)}
@@ -253,6 +275,17 @@ export default async function InsurancePage({ params }: PageProps) {
                     <td className="px-4 py-3 text-right text-sm font-mono text-text-primary">
                       {formatUsd(p.max_payout_usd)}
                     </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-sm font-mono text-text-primary">{formatUsd(remainingAggregate)}</span>
+                        <div className="h-1.5 w-24 overflow-hidden bg-bg-surface-3" style={{ borderRadius: radii.sm }}>
+                          <div
+                            className="h-full bg-success"
+                            style={{ width: `${aggregatePct}%` }}
+                          />
+                        </div>
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-right text-sm font-mono text-text-secondary">
                       {formatUsd(p.deductible_usd)}
                     </td>
@@ -268,6 +301,80 @@ export default async function InsurancePage({ params }: PageProps) {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Sub-limits */}
+      <div className="bg-bg-surface border border-border-subtle rounded-md overflow-hidden">
+        <div className="px-5 py-3 border-b border-border-subtle flex items-center gap-2">
+          <Shield size={14} className="text-accent" />
+          <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">Sub-limits</span>
+        </div>
+        {subLimitRows.length === 0 ? (
+          <div className="px-5 py-8 text-center text-sm text-text-muted">
+            No peril or counterparty sub-limits configured.
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border-subtle">
+                {['Policy', 'Insurer', 'Scope', 'Limit'].map((h, i) => (
+                  <th
+                    key={h}
+                    className={`px-4 py-3 text-xs font-medium uppercase tracking-wider text-text-secondary ${i === 3 ? 'text-right' : 'text-left'}`}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {subLimitRows.map(row => (
+                <tr key={`${row.policy_id}-${row.peril_kind ?? row.counterparty_id}`} className="border-b border-border-subtle">
+                  <td className="px-4 py-3 font-mono text-sm text-text-primary">{row.policy_id}</td>
+                  <td className="px-4 py-3 text-sm text-text-primary">{row.insurer_name}</td>
+                  <td className="px-4 py-3 text-sm text-text-secondary">{subLimitLabel(row)}</td>
+                  <td className="px-4 py-3 text-right font-mono text-sm text-text-primary">{formatUsd(row.limit_usd)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Exclusions */}
+      <div className="bg-bg-surface border border-border-subtle rounded-md overflow-hidden">
+        <div className="px-5 py-3 border-b border-border-subtle flex items-center gap-2">
+          <AlertTriangle size={14} className="text-severity-high" />
+          <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">Exclusions</span>
+        </div>
+        {exclusionRows.length === 0 ? (
+          <div className="px-5 py-8 text-center text-sm text-text-muted">No exclusions configured.</div>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border-subtle">
+                {['Policy', 'Insurer', 'Peril', 'Reason'].map(h => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {exclusionRows.map(row => (
+                <tr key={`${row.policy_id}-${row.peril_kind}`} className="border-b border-border-subtle">
+                  <td className="px-4 py-3 font-mono text-sm text-text-primary">{row.policy_id}</td>
+                  <td className="px-4 py-3 text-sm text-text-primary">{row.insurer_name}</td>
+                  <td className="px-4 py-3 text-sm capitalize text-text-secondary">{humanize(row.peril_kind)}</td>
+                  <td className="px-4 py-3 text-sm text-severity-critical">{row.reason}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Add policy form */}

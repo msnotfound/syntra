@@ -3,7 +3,8 @@ import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 export type CoverageType = 'marine' | 'cargo' | 'trade_credit' | 'political_risk' | 'other';
 
 export interface IPolicySubLimit {
-  peril_kind: string;
+  peril_kind?: string;
+  counterparty_id?: string;
   limit_usd: number;
 }
 
@@ -36,8 +37,9 @@ export interface IInsurancePolicy extends Document {
 }
 
 const PolicySubLimitSchema = new Schema<IPolicySubLimit>({
-  peril_kind: { type: String, required: true },
-  limit_usd:  { type: Number, required: true, min: 0 },
+  peril_kind:     { type: String, default: undefined },
+  counterparty_id: { type: String, default: undefined },
+  limit_usd:      { type: Number, required: true, min: 0 },
 }, { _id: false });
 
 const PolicyExclusionSchema = new Schema<IPolicyExclusion>({

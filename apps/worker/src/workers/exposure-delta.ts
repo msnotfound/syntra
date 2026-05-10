@@ -53,10 +53,16 @@ function chooseApplicablePolicy(
     const candidateCoverage = computePolicyCoverage({
       varUsd: exposure.var_value_usd,
       perilKind,
+      counterpartyId: String(exposure.entity_id),
       policy,
     }).coverage_actual_usd;
     const bestCoverage = best
-      ? computePolicyCoverage({ varUsd: exposure.var_value_usd, perilKind, policy: best }).coverage_actual_usd
+      ? computePolicyCoverage({
+        varUsd: exposure.var_value_usd,
+        perilKind,
+        counterpartyId: String(exposure.entity_id),
+        policy: best,
+      }).coverage_actual_usd
       : -1;
     return candidateCoverage > bestCoverage ? policy : best;
   }, null);
@@ -94,6 +100,7 @@ export function startExposureDeltaWorker() {
     const coverage = computePolicyCoverage({
       varUsd: current.var_value_usd,
       perilKind,
+      counterpartyId: String(current.entity_id),
       policy,
     });
 

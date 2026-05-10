@@ -14,7 +14,8 @@ export function computeDelta(currentVarUsd: number, previousVarUsd: number | nul
 }
 
 export interface PolicySubLimit {
-  peril_kind: string;
+  peril_kind?: string;
+  counterparty_id?: string;
   limit_usd: number;
 }
 
@@ -43,6 +44,7 @@ export interface CoveragePolicy {
 export interface PolicyCoverageInput {
   varUsd: number;
   perilKind: string;
+  counterpartyId?: string | null;
   policy: CoveragePolicy | null;
 }
 
@@ -51,6 +53,7 @@ export interface PolicyCoverageResult {
   gap_usd: number;
   insurance_coverage_pct: number;
   exclusion_reason: string | null;
+  aggregate_remaining_usd: number;
 }
 
 export function computePaidClaims(claims: PolicyClaim[] | null | undefined): number {
@@ -66,6 +69,7 @@ export function computePolicyCoverage(input: PolicyCoverageInput): PolicyCoverag
     gap_usd: varUsd,
     insurance_coverage_pct: 0,
     exclusion_reason: null,
+    aggregate_remaining_usd: 0,
   };
 
   if (!input.policy || varUsd === 0) return noCoverage;
@@ -82,11 +86,15 @@ export function computePolicyCoverage(input: PolicyCoverageInput): PolicyCoverag
   const aggregateLimit = input.policy.aggregate_limit_usd ?? input.policy.max_payout_usd;
   const paidClaims = computePaidClaims(input.policy.claims_history);
   const aggregateRemaining = Math.max(0, aggregateLimit - paidClaims);
-  const perilSubLimit = (input.policy.sub_limits ?? [])
-    .find(item => item.peril_kind === input.perilKind)?.limit_usd;
+  const matchingSubLimits = (input.policy.sub_limits ?? [])
+    .filter(item => (
+      item.peril_kind === input.perilKind ||
+      (input.counterpartyId && item.counterparty_id === input.counterpartyId)
+    ))
+    .map(item => Math.max(0, item.limit_usd));
   const policyLimit = Math.max(0, input.policy.max_payout_usd - input.policy.deductible_usd);
-  const perilLimit = Math.max(0, perilSubLimit ?? policyLimit);
-  const coverage_actual_usd = Math.min(varUsd, policyLimit, perilLimit, aggregateRemaining);
+  const subLimit = matchingSubLimits.length > 0 ? Math.min(...matchingSubLimits) : policyLimit;
+  const coverage_actual_usd = Math.min(varUsd, policyLimit, subLimit, aggregateRemaining);
   const gap_usd = Math.max(0, varUsd - coverage_actual_usd);
   const insurance_coverage_pct = varUsd > 0 ? Math.min(100, (coverage_actual_usd / varUsd) * 100) : 0;
 
@@ -95,5 +103,6 @@ export function computePolicyCoverage(input: PolicyCoverageInput): PolicyCoverag
     gap_usd,
     insurance_coverage_pct,
     exclusion_reason: null,
+    aggregate_remaining_usd: aggregateRemaining,
   };
 }
