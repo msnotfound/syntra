@@ -278,21 +278,21 @@ async function seedSupplierLinks(orgId: Types.ObjectId, entities: EntityDoc[]) {
     ['Aurobindo Pharma HQ', 'Dr Reddys Hyderabad', 1, 'manual'],
     ['Aurobindo Pharma HQ', 'Lupin Pune Plant', 2, 'extracted'],
     ['Cipla Goa Plant', 'Alkem Daman Plant', 1, 'manual'],
-    ['Cipla Goa Plant', 'Macleods Mumbai Plant', 2, 'imported'],
+    ['Cipla Goa Plant', 'Macleods Mumbai Plant', 2, 'imported_csv'],
     ['Dr Reddys Hyderabad', 'Strides Bangalore', 1, 'manual'],
     ['Dr Reddys Hyderabad', 'Intas Chennai Facility', 2, 'extracted'],
-    ['Mylan Nashik Facility', 'Sun Pharma Vadodara', 1, 'imported'],
+    ['Mylan Nashik Facility', 'Sun Pharma Vadodara', 1, 'imported_csv'],
     ['Torrent Ahmedabad', 'Zydus Ahmedabad R&D', 1, 'manual'],
     ['Lupin Pune Plant', 'Mylan Nashik Facility', 2, 'extracted'],
     ['Sun Pharma Vadodara', 'Torrent Ahmedabad', 2, 'manual'],
     ['Alkem Daman Plant', 'Cipla Goa Plant', 3, 'extracted'],
-    ['Zydus Ahmedabad R&D', 'Aurobindo Pharma HQ', 2, 'imported'],
+    ['Zydus Ahmedabad R&D', 'Aurobindo Pharma HQ', 2, 'imported_csv'],
     ['Intas Chennai Facility', 'Chennai Port', 1, 'manual'],
     ['Macleods Mumbai Plant', 'JNPT (Jawaharlal Nehru Port)', 1, 'manual'],
     ['Strides Bangalore', 'Cochin Port', 1, 'manual'],
-    ['JNPT (Jawaharlal Nehru Port)', 'India → East Africa via Suez', 2, 'imported'],
-    ['Mundra Port', 'India → Gulf via Persian Gulf', 2, 'imported'],
-    ['Cochin Port', 'India → Southern Africa direct', 2, 'imported'],
+    ['JNPT (Jawaharlal Nehru Port)', 'India → East Africa via Suez', 2, 'imported_csv'],
+    ['Mundra Port', 'India → Gulf via Persian Gulf', 2, 'imported_csv'],
+    ['Cochin Port', 'India → Southern Africa direct', 2, 'imported_csv'],
   ] as const;
 
   await SupplierLink.insertMany(edgeDefs.flatMap(([parentName, childName, tier, source]) => {
@@ -305,6 +305,7 @@ async function seedSupplierLinks(orgId: Types.ObjectId, entities: EntityDoc[]) {
       child_entity_id: objectId(child._id),
       tier_offset: tier,
       source,
+      confidence_pct: source === 'manual' ? 100 : source === 'imported_csv' ? 85 : 78,
     }];
   }));
   console.log('[seed] Supplier links: done');

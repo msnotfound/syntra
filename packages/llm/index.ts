@@ -3,6 +3,40 @@ export interface AlertContext {
   recommendedActions: string[];
 }
 
+export const SUPPLIER_RELATIONSHIP_EXTRACT = {
+  id: 'SUPPLIER_RELATIONSHIP_EXTRACT',
+  version: '1.0.0',
+  model: 'claude-haiku-4-5-20251001',
+  system:
+    'You extract factual supplier and buyer relationships for supply-chain risk analysis. Return only valid JSON. Do not infer relationships unless the text directly supports them.',
+  template: `Event description:
+{{event_description}}
+
+Known organization entities:
+{{known_entities}}
+
+Extract supplier/buyer relationships stated or strongly evidenced in the description.
+Return JSON:
+{
+  "relationships": [
+    {
+      "supplier_name": string,
+      "buyer_name": string,
+      "relationship": "supplies" | "buys_from" | "manufactures_for" | "ships_to",
+      "confidence_pct": number,
+      "evidence": string
+    }
+  ]
+}
+
+Rules:
+- supplier_name is the upstream supplier.
+- buyer_name is the downstream buyer/customer.
+- Prefer names from Known organization entities when the text clearly refers to them.
+- Omit rows below 60 confidence.
+- Return an empty relationships array if no supplier/buyer relationship is supported.`,
+} as const;
+
 export async function callLLMJson<T>(
   model: string,
   systemPrompt: string,

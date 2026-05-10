@@ -104,7 +104,8 @@ export async function POST(req: NextRequest) {
         parent_entity_id: parent._id,
         child_entity_id: child._id,
         tier_offset: tier,
-        source: 'imported',
+        source: 'imported_csv',
+        confidence_pct: 85,
       });
       created++;
     }

@@ -12,6 +12,7 @@ export interface GraphEdge {
   child_id: string;
   tier_offset: number;
   source: string;
+  confidence_pct: number;
 }
 
 export interface LinkRecord {
@@ -20,6 +21,7 @@ export interface LinkRecord {
   child_entity_id: Types.ObjectId | string;
   tier_offset: number;
   source: string;
+  confidence_pct?: number;
 }
 
 const MAX_DEPTH = 3;
@@ -69,6 +71,7 @@ export function bfsGraph(rootId: string, links: LinkRecord[]): {
           child_id: childId,
           tier_offset: link.tier_offset,
           source: link.source,
+          confidence_pct: link.confidence_pct ?? 100,
         });
       }
       if (!nodeIds.has(childId)) {
@@ -89,6 +92,7 @@ export function bfsGraph(rootId: string, links: LinkRecord[]): {
           child_id: currentId,
           tier_offset: link.tier_offset,
           source: link.source,
+          confidence_pct: link.confidence_pct ?? 100,
         });
       }
       if (!nodeIds.has(parentId)) {

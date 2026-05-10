@@ -34,6 +34,7 @@ export interface GraphEdgeData {
   child_id: string;
   tier_offset: number;
   source: string;
+  confidence_pct: number;
 }
 
 interface SupplierGraphProps {
@@ -52,18 +53,18 @@ const TYPE_ICONS: Record<string, string> = {
   asset: '📦',
 };
 
-const TIER_EDGE_COLORS: Record<number, string> = {
-  1: colors.severity.low,
-  2: colors.severity.medium,
-  3: colors.severity.high,
-};
-
 function varToSeverityColor(varUsd: number | null): string {
   if (varUsd === null) return colors.bg.surface2;
   if (varUsd >= 1_000_000) return colors.severity.critical;
   if (varUsd >= 500_000)   return colors.severity.high;
   if (varUsd >= 100_000)   return colors.severity.medium;
   return colors.severity.low;
+}
+
+function edgeStyleForConfidence(confidencePct: number): { stroke: string; strokeDasharray?: string } {
+  if (confidencePct >= 85) return { stroke: colors.accent.DEFAULT };
+  if (confidencePct >= 60) return { stroke: colors.text.muted };
+  return { stroke: colors.border.default, strokeDasharray: '6 4' };
 }
 
 function EntityNode({ data }: { data: GraphNodeData & { onClick: () => void } }) {
@@ -148,19 +149,22 @@ function layoutNodes(nodeData: GraphNodeData[], edgeData: GraphEdgeData[]): { rf
     data: n,
   }));
 
-  const rfEdges: Edge[] = edgeData.map(e => ({
-    id: e.id,
-    source: e.parent_id,
-    target: e.child_id,
-    style: {
-      stroke: TIER_EDGE_COLORS[e.tier_offset] ?? colors.text.muted,
-      strokeWidth: 2,
-    },
-    label: `T${e.tier_offset}`,
-    labelStyle: { fill: colors.text.muted, fontSize: 10 },
-    labelBgStyle: { fill: colors.bg.surface2 },
-    animated: false,
-  }));
+  const rfEdges: Edge[] = edgeData.map(e => {
+    const confidenceStyle = edgeStyleForConfidence(e.confidence_pct);
+    return {
+      id: e.id,
+      source: e.parent_id,
+      target: e.child_id,
+      style: {
+        ...confidenceStyle,
+        strokeWidth: 2,
+      },
+      label: `T${e.tier_offset} ${e.confidence_pct}%`,
+      labelStyle: { fill: colors.text.muted, fontSize: 10 },
+      labelBgStyle: { fill: colors.bg.surface2 },
+      animated: false,
+    };
+  });
 
   return { rfNodes, rfEdges };
 }

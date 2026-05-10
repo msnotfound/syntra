@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
+import { Sparkles } from 'lucide-react';
 import type { GraphNodeData, GraphEdgeData } from '@/components/graph/SupplierGraph';
 import { colors } from '@syntra/ui/tokens';
 
@@ -29,6 +30,8 @@ function formatUsd(v: number | null): string {
 export default function SupplyGraphClient({ nodes, edges, orgSlug, rootEntityId, entityOptions }: Props) {
   const [selected, setSelected] = useState<GraphNodeData | null>(null);
   const [activeEntityId, setActiveEntityId] = useState(rootEntityId);
+  const [isProposing, setIsProposing] = useState(false);
+  const [proposalMessage, setProposalMessage] = useState<string | null>(null);
 
   const tierCounts = [1, 2, 3].map(t => ({
     tier: t,
@@ -38,6 +41,31 @@ export default function SupplyGraphClient({ nodes, edges, orgSlug, rootEntityId,
   const handleEntityChange = (id: string) => {
     setActiveEntityId(id);
     window.location.href = `/app/${orgSlug}/supply-graph?entityId=${id}`;
+  };
+
+  const handlePropose = async () => {
+    const targetEntityId = selected?.id ?? activeEntityId;
+    setIsProposing(true);
+    setProposalMessage(null);
+    try {
+      const res = await fetch('/api/v1/supplier-graph/propose', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ orgSlug, entityId: targetEntityId }),
+      });
+      const payload = await res.json() as {
+        data?: { created: number; updated: number; skipped: number };
+        error?: { message: string };
+      };
+      if (!res.ok) throw new Error(payload.error?.message ?? 'Unable to propose suppliers');
+      const data = payload.data ?? { created: 0, updated: 0, skipped: 0 };
+      setProposalMessage(`${data.created} proposed · ${data.updated} updated · ${data.skipped} unchanged`);
+      if (data.created > 0 || data.updated > 0) window.location.reload();
+    } catch (err) {
+      setProposalMessage(err instanceof Error ? err.message : 'Unable to propose suppliers');
+    } finally {
+      setIsProposing(false);
+    }
   };
 
   return (
@@ -94,6 +122,40 @@ export default function SupplyGraphClient({ nodes, edges, orgSlug, rootEntityId,
               </span>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={handlePropose}
+            disabled={isProposing}
+            style={{
+              height: 30,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              background: colors.bg.surface,
+              border: `1px solid ${colors.border.default}`,
+              borderRadius: '6px',
+              color: isProposing ? colors.text.disabled : colors.text.secondary,
+              fontSize: 13,
+              fontWeight: 500,
+              padding: '0 10px',
+              cursor: isProposing ? 'not-allowed' : 'pointer',
+            }}
+          >
+            <Sparkles size={14} />
+            {isProposing ? 'Proposing...' : 'Propose tier-2 suppliers'}
+          </button>
+          {proposalMessage && (
+            <span style={{
+              fontSize: 11,
+              color: colors.text.muted,
+              background: colors.bg.surface,
+              border: `1px solid ${colors.border.subtle}`,
+              borderRadius: 4,
+              padding: '2px 6px',
+            }}>
+              {proposalMessage}
+            </span>
+          )}
         </div>
 
         <SupplierGraph
@@ -156,6 +218,7 @@ export default function SupplyGraphClient({ nodes, edges, orgSlug, rootEntityId,
                   return parent ? (
                     <div key={e.id} style={{ fontSize: 12, color: colors.text.secondary, padding: '3px 0' }}>
                       {TYPE_ICONS[parent.type]} {parent.name}
+                      <span style={{ color: colors.text.muted, marginLeft: 6 }}>{e.confidence_pct}%</span>
                     </div>
                   ) : null;
                 })}
@@ -175,6 +238,7 @@ export default function SupplyGraphClient({ nodes, edges, orgSlug, rootEntityId,
                   return child ? (
                     <div key={e.id} style={{ fontSize: 12, color: colors.text.secondary, padding: '3px 0' }}>
                       {TYPE_ICONS[child.type]} {child.name}
+                      <span style={{ color: colors.text.muted, marginLeft: 6 }}>{e.confidence_pct}%</span>
                     </div>
                   ) : null;
                 })}

@@ -53,8 +53,10 @@
       "^@syntra/db/(.+)\\.js$": "<rootDir>/../../packages/db/$1.ts",
       "^@syntra/db/(.*)$": "<rootDir>/../../packages/db/$1.ts",
       "^@syntra/shared$": "<rootDir>/../../packages/shared/index.ts",
+      "^@syntra/shared/utils/intel-provenance$": "<rootDir>/../../packages/shared/utils/intel-provenance.ts",
       "^@syntra/shared/(.+)\\.js$": "<rootDir>/../../packages/shared/$1.ts",
       "^@syntra/shared/(.*)$": "<rootDir>/../../packages/shared/$1.ts",
+      "^@syntra/llm$": "<rootDir>/../../packages/llm/index.ts",
       "^(\\.{1,2}/.*)\\.js$": "$1"
     }
   }

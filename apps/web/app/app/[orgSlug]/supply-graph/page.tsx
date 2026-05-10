@@ -86,6 +86,7 @@ export default async function SupplyGraphPage({ params, searchParams }: PageProp
     child_id: e.child_id,
     tier_offset: e.tier_offset,
     source: e.source,
+    confidence_pct: e.confidence_pct,
   }));
 
   const tierCounts = [1, 2, 3].map(t => nodes.filter(n => n.supplier_tier === t).length);
