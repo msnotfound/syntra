@@ -54,7 +54,7 @@ describe('supplier relationship extraction helpers', () => {
     });
 
     expect(decision.action).toBe('skip');
-    expect(decision.reason).toBe('manual_existing');
+    if (decision.action === 'skip') expect(decision.reason).toBe('manual_existing');
   });
 
   test('non-manual links can be upgraded when a higher confidence candidate arrives', () => {

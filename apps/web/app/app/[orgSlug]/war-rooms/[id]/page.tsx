@@ -49,7 +49,7 @@ export default async function WarRoomDetailPage({ params }: PageProps) {
     body:        m.body,
     attachments: m.attachments,
     msg_type:    (m as unknown as { msg_type?: string }).msg_type ?? 'chat',
-    poll:        (m as unknown as { poll?: unknown }).poll ?? null,
+    poll:        ((m as unknown as { poll?: { question: string; votes: { user_id: string; vote: 'yes' | 'no' | 'abstain' }[] } }).poll) ?? null,
     created_at:  m.created_at,
   }));
 

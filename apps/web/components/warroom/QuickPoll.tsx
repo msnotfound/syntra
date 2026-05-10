@@ -3,22 +3,24 @@
 import { useState } from 'react';
 import { BarChart2, Send } from 'lucide-react';
 
-interface PollVote {
+export interface PollVote {
   user_id: string;
   vote: 'yes' | 'no' | 'abstain';
 }
 
-interface Poll {
+export interface Poll {
   question: string;
   votes: PollVote[];
 }
 
-interface Message {
+export interface Message {
   id: string;
-  msg_type: string;
-  body: string;
-  poll?: Poll | null;
+  war_room_id: string;
   user_id: string;
+  body: string;
+  attachments: string[];
+  msg_type?: string;
+  poll?: Poll | null;
   created_at: Date | string;
 }
 

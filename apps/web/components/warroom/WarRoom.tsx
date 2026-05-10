@@ -3,33 +3,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, Users, X, CheckCircle, AlertTriangle, Bookmark } from 'lucide-react';
 import { TimeAgo } from '@syntra/ui/components/TimeAgo';
-import { QuickPoll, PollMessage } from './QuickPoll';
+import { QuickPoll, PollMessage, type Message, type Poll, type PollVote } from './QuickPoll';
 
 interface Participant {
   id: string;
   name: string;
   email: string;
-}
-
-interface PollVote {
-  user_id: string;
-  vote: 'yes' | 'no' | 'abstain';
-}
-
-interface Poll {
-  question: string;
-  votes: PollVote[];
-}
-
-interface Message {
-  id: string;
-  war_room_id: string;
-  user_id: string;
-  body: string;
-  attachments: string[];
-  msg_type?: string;
-  poll?: Poll | null;
-  created_at: Date | string;
 }
 
 interface DecisionForm {

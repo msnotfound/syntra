@@ -219,6 +219,9 @@ importers:
 
   packages/db:
     dependencies:
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.6.1
       mongodb-memory-server:
         specifier: ^10.0.0
         version: 10.4.3

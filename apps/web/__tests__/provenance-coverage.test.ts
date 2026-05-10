@@ -155,14 +155,14 @@ describe('Alert detail page — provenance coverage of LLM context', () => {
   });
 
   test('wraps why_matters with <Provenance>', () => {
-    expect(src).toMatch(/<Provenance.*claims={provenanceClaims}/s);
+    expect(src).toMatch(/<Provenance[\s\S]*claims={provenanceClaims}/);
     expect(src).toMatch(/why_matters/);
   });
 
   test('wraps recommended_actions with <Provenance>', () => {
     expect(src).toMatch(/recommended_actions\.map/);
     // Each action should be wrapped
-    expect(src).toMatch(/Provenance.*Recommended action/s);
+    expect(src).toMatch(/Provenance[\s\S]*Recommended action/);
   });
 
   test('renders ProvenanceTrail section', () => {
