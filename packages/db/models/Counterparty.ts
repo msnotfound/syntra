@@ -9,6 +9,7 @@ export interface ICounterparty extends Document {
   risk_score: number;
   relationship_value_usd: number;
   contract_id: Types.ObjectId | null;
+  parent_entity_id: Types.ObjectId | null;
   active: boolean;
   created_at: Date;
   updated_at: Date;
@@ -21,12 +22,14 @@ const CounterpartySchema = new Schema<ICounterparty>({
   risk_score:            { type: Number, required: true, min: 0, max: 100 },
   relationship_value_usd: { type: Number, required: true, min: 0 },
   contract_id:           { type: Schema.Types.ObjectId, ref: 'Contract', default: null },
+  parent_entity_id:      { type: Schema.Types.ObjectId, ref: 'WatchlistEntity', default: null },
   active:                { type: Boolean, default: true },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 CounterpartySchema.index({ org_id: 1, active: 1 });
 CounterpartySchema.index({ org_id: 1, role: 1 });
 CounterpartySchema.index({ org_id: 1, entity_id: 1 });
+CounterpartySchema.index({ org_id: 1, parent_entity_id: 1 });
 CounterpartySchema.index({ org_id: 1, risk_score: -1 });
 
 export const Counterparty: Model<ICounterparty> =

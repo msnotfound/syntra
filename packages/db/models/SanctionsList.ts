@@ -5,6 +5,7 @@ export interface ISanctionsEntry {
   aliases: string[];
   country: string | null;
   dob: string | null;
+  address?: string | null;
   id_numbers: string[];
   programs: string[];
   source_url: string;
@@ -24,6 +25,7 @@ const SanctionsEntrySchema = new Schema<ISanctionsEntry>(
     aliases:    { type: [String], default: [] },
     country:    { type: String, default: null },
     dob:        { type: String, default: null },
+    address:    { type: String, default: null },
     id_numbers: { type: [String], default: [] },
     programs:   { type: [String], default: [] },
     source_url: { type: String, required: true },

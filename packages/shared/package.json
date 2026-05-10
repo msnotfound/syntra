@@ -15,6 +15,7 @@
     "./mocks/slack.js": "./mocks/slack.ts",
     "./schemas": "./schemas/index.ts",
     "./utils": "./utils/index.ts",
+    "./utils/sanctions-match": "./utils/sanctions-match.ts",
     "./token-encrypt": "./token-encrypt.ts",
     "./utils/intel-provenance": "./utils/intel-provenance.ts",
     "./utils/var-table": "./utils/var-table.ts"

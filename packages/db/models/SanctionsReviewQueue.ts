@@ -30,6 +30,7 @@ const SanctionsReviewQueueSchema = new Schema<ISanctionsReviewQueue>(
       aliases:    { type: [String], default: [] },
       country:    { type: String, default: null },
       dob:        { type: String, default: null },
+      address:    { type: String, default: null },
       id_numbers: { type: [String], default: [] },
       programs:   { type: [String], default: [] },
       source_url: { type: String, required: true },

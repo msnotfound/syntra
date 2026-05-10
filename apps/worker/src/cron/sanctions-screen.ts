@@ -1,16 +1,19 @@
-import { connectDb, WatchlistEntity, Alert, SanctionsList, SanctionsReviewQueue } from '@syntra/db';
-import type { IWatchlistEntity, ISanctionsEntry } from '@syntra/db';
-import { bestMatchScore } from '@syntra/shared';
+import { connectDb, WatchlistEntity, Alert, SanctionsList, SanctionsReviewQueue, SupplierLink, Counterparty } from '@syntra/db';
+import type { IWatchlistEntity, ISanctionsEntry, ISanctionsList } from '@syntra/db';
+import { compositeSanctionsMatch } from '@syntra/shared/utils/sanctions-match';
 import { ofacProvider } from '../feeds/ofac-provider.js';
 import { Types } from 'mongoose';
 
+type SanctionsListName = ISanctionsList['list_name'];
+
 // ---------------------------------------------------------------------------
-// Alert creation for confirmed sanctions hits (score >= 95)
+// Alert creation for confirmed sanctions hits (score >= 90)
 // ---------------------------------------------------------------------------
 
 async function createSanctionsAlert(
   orgId: Types.ObjectId,
   entity: IWatchlistEntity,
+  upstreamEntities: IWatchlistEntity[],
   entry: ISanctionsEntry,
   listName: string,
   matchedName: string,
@@ -24,10 +27,15 @@ async function createSanctionsAlert(
   });
   if (existing) return; // idempotent
 
+  const impactedEntities = [entity, ...upstreamEntities];
+  const upstreamText = upstreamEntities.length > 0
+    ? ` Upstream relationship impact: ${[entity.name, ...upstreamEntities.map(e => e.name)].join(' -> ')}.`
+    : '';
+
   await Alert.create({
     org_id: orgId,
     event_id: new Types.ObjectId(), // synthetic — no geopolitical event backing this
-    watchlist_entity_ids: [entity._id],
+    watchlist_entity_ids: impactedEntities.map(e => e._id),
     severity: 'critical',
     subtype: 'sanctions_match',
     match_reasons: [],
@@ -37,7 +45,7 @@ async function createSanctionsAlert(
         `Entity "${entity.name}" matched sanctions list entry "${entry.name}" ` +
         `on ${listName} with score ${matchScore}/100. ` +
         `Programs: ${entry.programs.join(', ')}. ` +
-        `Matched on: "${matchedName}".`,
+        `Matched on: "${matchedName}".${upstreamText}`,
       location: { lat: entity.latitude ?? 0, lng: entity.longitude ?? 0 },
       country: entity.country_code ?? '',
       country_code: entity.country_code ?? '',
@@ -55,7 +63,7 @@ async function createSanctionsAlert(
 }
 
 // ---------------------------------------------------------------------------
-// Review queue upsert for borderline hits (80-94)
+// Review queue upsert for review/audit hits (70-89 pending, >=90 confirmed)
 // ---------------------------------------------------------------------------
 
 async function upsertReviewQueue(
@@ -66,6 +74,7 @@ async function upsertReviewQueue(
   listVersion: string,
   matchedName: string,
   matchScore: number,
+  status: 'pending' | 'confirmed' = 'pending',
 ): Promise<void> {
   await SanctionsReviewQueue.findOneAndUpdate(
     { entity_id: entity._id, list_name: listName },
@@ -81,12 +90,13 @@ async function upsertReviewQueue(
         aliases: entry.aliases,
         country: entry.country,
         dob: entry.dob,
+        address: entry.address,
         id_numbers: entry.id_numbers,
         programs: entry.programs,
         source_url: entry.source_url,
       },
       screened_at: new Date(),
-      status: 'pending',
+      status,
     },
     { upsert: true, new: true },
   );
@@ -97,7 +107,7 @@ async function upsertReviewQueue(
 // ---------------------------------------------------------------------------
 
 async function refreshSanctionsList(
-  listName: 'ofac_sdn',
+  listName: SanctionsListName,
   entries: ISanctionsEntry[],
 ): Promise<{ version: string }> {
   const version = new Date().toISOString().slice(0, 10);
@@ -107,6 +117,83 @@ async function refreshSanctionsList(
     { upsert: true, new: true },
   );
   return { version };
+}
+
+async function latestPersistedSanctionsLists(
+  refreshed: Array<{ list_name: SanctionsListName; version: string; entries: ISanctionsEntry[] }>,
+): Promise<Array<{ list_name: SanctionsListName; version: string; entries: ISanctionsEntry[] }>> {
+  const latestByName = new Map<SanctionsListName, { list_name: SanctionsListName; version: string; entries: ISanctionsEntry[] }>();
+  for (const list of refreshed) latestByName.set(list.list_name, list);
+
+  const lists = await SanctionsList.find({})
+    .sort({ list_name: 1, updated_at: -1 })
+    .lean() as unknown as ISanctionsList[];
+
+  for (const list of lists) {
+    if (!latestByName.has(list.list_name)) {
+      latestByName.set(list.list_name, {
+        list_name: list.list_name,
+        version: list.version,
+        entries: list.entries,
+      });
+    }
+  }
+
+  return [...latestByName.values()];
+}
+
+async function upstreamRelationshipMatches(
+  orgId: Types.ObjectId,
+  entity: IWatchlistEntity,
+): Promise<IWatchlistEntity[]> {
+  const seen = new Set<string>([String(entity._id)]);
+  const upstream: IWatchlistEntity[] = [];
+  let frontier = [entity._id as Types.ObjectId];
+
+  for (let depth = 0; depth < 10 && frontier.length > 0; depth++) {
+    const [links, counterparties] = await Promise.all([
+      SupplierLink.find({
+        org_id: orgId,
+        child_entity_id: { $in: frontier },
+      }).lean(),
+      Counterparty.find({
+        org_id: orgId,
+        entity_id: { $in: frontier },
+        active: true,
+        parent_entity_id: { $ne: null },
+      }).lean(),
+    ]);
+
+    const parentIds: Types.ObjectId[] = [];
+    for (const link of links) {
+      const parentId = link.parent_entity_id as Types.ObjectId;
+      const key = String(parentId);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      parentIds.push(parentId);
+    }
+    for (const counterparty of counterparties) {
+      const parentId = counterparty.parent_entity_id as Types.ObjectId | null;
+      if (!parentId) continue;
+      const key = String(parentId);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      parentIds.push(parentId);
+    }
+
+    if (parentIds.length === 0) break;
+
+    const parents = await WatchlistEntity.find({
+      _id: { $in: parentIds },
+      org_id: orgId,
+      active: true,
+    }).lean() as unknown as IWatchlistEntity[];
+
+    upstream.push(...parents);
+    frontier = parents.map(parent => parent._id as Types.ObjectId);
+  }
+
+  return upstream;
 }
 
 // ---------------------------------------------------------------------------
@@ -124,6 +211,9 @@ export async function runSanctionsScreeningCycle(): Promise<SanctionsScreenResul
 
   const ofacEntries = await ofacProvider.fetch({}, { org_id: 'system' });
   const { version: ofacVersion } = await refreshSanctionsList('ofac_sdn', ofacEntries);
+  const sanctionsLists = await latestPersistedSanctionsLists([
+    { list_name: 'ofac_sdn', version: ofacVersion, entries: ofacEntries },
+  ]);
 
   const entities = await WatchlistEntity.find({ active: true }).lean() as unknown as IWatchlistEntity[];
 
@@ -131,50 +221,57 @@ export async function runSanctionsScreeningCycle(): Promise<SanctionsScreenResul
   let reviewQueueEntries = 0;
 
   for (const entity of entities) {
-    const entityNames = [entity.name];
-    const meta = entity.metadata as Record<string, unknown>;
-    if (Array.isArray(meta.aliases)) {
-      for (const a of meta.aliases) {
-        if (typeof a === 'string') entityNames.push(a);
+    for (const list of sanctionsLists) {
+      let topScore = 0;
+      let topMatchedName = '';
+      let topEntry = list.entries[0];
+
+      for (const entry of list.entries) {
+        const result = compositeSanctionsMatch(entity, entry);
+        if (result.score > topScore) {
+          topScore = result.score;
+          topMatchedName = result.matchedSanctionsName;
+          topEntry = entry;
+        }
       }
-    }
 
-    let topScore = 0;
-    let topMatchedName = '';
-    let topEntry = ofacEntries[0];
+      if (!topEntry) continue;
 
-    for (const entry of ofacEntries) {
-      const { score, matchedName } = bestMatchScore(entityNames, entry);
-      if (score > topScore) {
-        topScore = score;
-        topMatchedName = matchedName;
-        topEntry = entry;
+      const orgId = entity.org_id as unknown as Types.ObjectId;
+      if (topScore >= 90) {
+        const upstreamEntities = await upstreamRelationshipMatches(orgId, entity);
+        await createSanctionsAlert(
+          orgId,
+          entity,
+          upstreamEntities,
+          topEntry,
+          list.list_name,
+          topMatchedName,
+          topScore,
+        );
+        await upsertReviewQueue(
+          orgId,
+          entity,
+          topEntry,
+          list.list_name,
+          list.version,
+          topMatchedName,
+          topScore,
+          'confirmed',
+        );
+        autoAlerts++;
+      } else if (topScore >= 70) {
+        await upsertReviewQueue(
+          orgId,
+          entity,
+          topEntry,
+          list.list_name,
+          list.version,
+          topMatchedName,
+          topScore,
+        );
+        reviewQueueEntries++;
       }
-    }
-
-    if (!topEntry) continue;
-
-    if (topScore >= 95) {
-      await createSanctionsAlert(
-        entity.org_id as unknown as Types.ObjectId,
-        entity,
-        topEntry,
-        'ofac_sdn',
-        topMatchedName,
-        topScore,
-      );
-      autoAlerts++;
-    } else if (topScore >= 80) {
-      await upsertReviewQueue(
-        entity.org_id as unknown as Types.ObjectId,
-        entity,
-        topEntry,
-        'ofac_sdn',
-        ofacVersion,
-        topMatchedName,
-        topScore,
-      );
-      reviewQueueEntries++;
     }
   }
 
