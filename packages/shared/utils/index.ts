@@ -287,10 +287,16 @@ export type { ScoredAlert, GroupedScoredAlert } from './risk-score.js';
 export {
   drawTriangular,
   getDisruptionDistribution,
+  simulatePortfolioVarMonteCarlo,
   simulateVarMonteCarlo,
 } from './var-monte-carlo.js';
 export type {
+  PortfolioLossBands,
   TriangularDistribution,
+  VarDistributionShape,
   VarMonteCarloInput,
+  VarMonteCarloExposureInput,
+  VarMonteCarloPortfolioInput,
+  VarMonteCarloPortfolioResult,
   VarMonteCarloResult,
 } from './var-monte-carlo.js';

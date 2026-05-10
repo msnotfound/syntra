@@ -3,7 +3,7 @@ import { connectDb, disconnectDb } from '../connection.js';
 import { Alert } from '../models/Alert.js';
 import { Exposure } from '../models/Exposure.js';
 import { WatchlistEntity } from '../models/WatchlistEntity.js';
-import { simulateVarMonteCarlo, type AlertKind, type AlertSeverity } from '@syntra/shared';
+import { simulatePortfolioVarMonteCarlo, type AlertKind, type AlertSeverity } from '@syntra/shared';
 
 const BATCH_SIZE = 200;
 
@@ -20,6 +20,7 @@ async function migrateExposureMonteCarlo() {
   let processed = 0;
   let skipped = 0;
   const ops = [];
+  const exposuresByAlertId = new Map<string, typeof exposures>();
 
   for (const exposure of exposures) {
     if (!exposure.alert_id) {
@@ -27,46 +28,75 @@ async function migrateExposureMonteCarlo() {
       continue;
     }
 
-    const [alert, entity] = await Promise.all([
-      Alert.findById(exposure.alert_id).lean(),
-      WatchlistEntity.findById(exposure.entity_id).lean(),
-    ]);
+    const alertId = String(exposure.alert_id);
+    const groupedExposures = exposuresByAlertId.get(alertId) ?? [];
+    groupedExposures.push(exposure);
+    exposuresByAlertId.set(alertId, groupedExposures);
+  }
 
-    if (!alert || !entity) {
-      skipped += 1;
+  for (const [alertId, alertExposures] of exposuresByAlertId) {
+    const alert = await Alert.findById(alertId).lean();
+    if (!alert) {
+      skipped += alertExposures.length;
       continue;
     }
+
+    const entityIds = alertExposures.map((exposure) => exposure.entity_id);
+    const entities = await WatchlistEntity.find({ _id: { $in: entityIds } }).lean();
+    const entityById = new Map(entities.map((entity) => [String(entity._id), entity]));
 
     const kind = resolveKind(
       (alert as unknown as Record<string, unknown>).subtype as string | undefined,
       alert.event_snapshot?.event_type,
     );
     const severity = alert.severity as AlertSeverity;
-    const simulation = simulateVarMonteCarlo({
-      annualRevenueUsd: entity.annual_revenue_usd ?? null,
-      contributionPct: entity.contribution_pct ?? null,
-      kind,
-      severity,
-    });
+    const simulatableExposures = alertExposures
+      .map((exposure) => {
+        const entity = entityById.get(String(exposure.entity_id));
+        if (!entity) return null;
 
-    ops.push({
-      updateOne: {
-        filter: { _id: exposure._id },
-        update: {
-          $set: {
-            simulation: {
-              ...simulation,
-              computed_at: exposure.computed_at ?? new Date(),
+        return {
+          id: String(exposure._id),
+          annualRevenueUsd: entity.annual_revenue_usd ?? null,
+          contributionPct: entity.contribution_pct ?? null,
+          kind,
+          severity,
+        };
+      })
+      .filter((exposure) => exposure !== null);
+    const portfolioSimulation = simulatePortfolioVarMonteCarlo({
+      exposures: simulatableExposures,
+    });
+    const simulationByExposureId = new Map(
+      portfolioSimulation.exposures.map((simulation) => [simulation.id, simulation]),
+    );
+
+    for (const exposure of alertExposures) {
+      const simulation = simulationByExposureId.get(String(exposure._id));
+      if (!simulation) {
+        skipped += 1;
+        continue;
+      }
+
+      ops.push({
+        updateOne: {
+          filter: { _id: exposure._id },
+          update: {
+            $set: {
+              simulation: {
+                ...simulation,
+                computed_at: exposure.computed_at ?? new Date(),
+              },
             },
           },
         },
-      },
-    });
-    processed += 1;
+      });
+      processed += 1;
 
-    if (ops.length >= BATCH_SIZE) {
-      await Exposure.bulkWrite(ops);
-      ops.length = 0;
+      if (ops.length >= BATCH_SIZE) {
+        await Exposure.bulkWrite(ops);
+        ops.length = 0;
+      }
     }
   }
 

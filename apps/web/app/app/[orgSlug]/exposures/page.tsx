@@ -24,7 +24,14 @@ function getBands(exp: IExposure) {
     p75: exp.simulation?.var_at_75 ?? exp.var_value_usd,
     p95: exp.simulation?.var_at_95 ?? exp.var_value_usd,
     p99: exp.simulation?.var_at_99 ?? exp.var_value_usd,
+    expectedLoss: exp.simulation?.expected_loss_usd ?? exp.var_value_usd,
+    stdDev: exp.simulation?.std_dev_usd ?? 0,
   };
+}
+
+function getBandWidth(value: number, max: number): string {
+  if (max <= 0) return '0%';
+  return `${Math.max(4, Math.min(100, (value / max) * 100)).toFixed(0)}%`;
 }
 
 export default async function ExposuresPage({ params }: PageProps) {
@@ -51,12 +58,14 @@ export default async function ExposuresPage({ params }: PageProps) {
         p75: sum.p75 + bands.p75,
         p95: sum.p95 + bands.p95,
         p99: sum.p99 + bands.p99,
+        expectedLoss: sum.expectedLoss + bands.expectedLoss,
+        stdDev: Math.sqrt((sum.stdDev * sum.stdDev) + (bands.stdDev * bands.stdDev)),
       };
     },
-    { p75: 0, p95: 0, p99: 0 },
+    { p75: 0, p95: 0, p99: 0, expectedLoss: 0, stdDev: 0 },
   );
   const simulationTooltip =
-    'Simulation uses 10,000 Monte Carlo draws from a triangular disruption-factor distribution selected by alert type and severity. Percentiles show estimated value-at-risk bands across those draws.';
+    'Simulation uses 10,000 Monte Carlo draws from alert-specific disruption-factor distributions with correlated exposure shocks. Percentiles show estimated value-at-risk bands; EL is expected loss and SD is standard deviation.';
 
   return (
     <div className="space-y-6">
@@ -106,7 +115,7 @@ export default async function ExposuresPage({ params }: PageProps) {
               ))}
             </div>
             <div className="text-sm text-text-secondary mt-2">
-              Total portfolio exposure · {rawExposures.length} entities · simulated percentile bands
+              EL {formatUsd(totals.expectedLoss)} · SD {formatUsd(totals.stdDev)} · {rawExposures.length} entities
             </div>
           </div>
         </div>
@@ -187,8 +196,25 @@ export default async function ExposuresPage({ params }: PageProps) {
                           </div>
                         ))}
                       </div>
-                      <div className="mt-1 text-xs font-mono text-text-muted">
-                        P99 {formatInrCr(bands.p99)}
+                      <div className="mt-2 space-y-1" aria-hidden="true">
+                        {[
+                          ['P75', bands.p75],
+                          ['P95', bands.p95],
+                          ['P99', bands.p99],
+                        ].map(([label, value]) => (
+                          <div key={label} className="flex items-center justify-end gap-2">
+                            <span className="w-6 text-[10px] font-mono text-text-muted">{label}</span>
+                            <span className="inline-block h-1.5 w-24 bg-bg-surface-3">
+                              <span
+                                className="block h-1.5 bg-accent"
+                                style={{ width: getBandWidth(value as number, bands.p99) }}
+                              />
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-2 text-xs font-mono text-text-muted">
+                        EL {formatUsd(bands.expectedLoss)} · SD {formatUsd(bands.stdDev)} · P99 {formatInrCr(bands.p99)}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right text-xs font-mono text-text-muted">

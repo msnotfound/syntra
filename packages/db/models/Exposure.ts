@@ -4,12 +4,15 @@ export interface IExposureSimulation {
   var_at_75: number;
   var_at_95: number;
   var_at_99: number;
+  expected_loss_usd: number;
+  std_dev_usd: number;
   iterations: number;
   distribution: {
     min: number;
     mode: number;
     max: number;
   };
+  distribution_shape?: string;
   methodology: string;
   computed_at: Date;
 }

@@ -1,7 +1,7 @@
 import { Queue, Worker } from 'bullmq';
 import { connectDb, Alert, WatchlistEntity, Exposure } from '@syntra/db';
 import type { IAlert } from '@syntra/db';
-import { getDisruptionFactor, computeVarUsd, simulateVarMonteCarlo, USD_TO_INR } from '@syntra/shared';
+import { getDisruptionFactor, computeVarUsd, simulatePortfolioVarMonteCarlo, USD_TO_INR } from '@syntra/shared';
 import type { AlertKind, AlertSeverity } from '@syntra/shared';
 import { getExposureDeltaQueue } from './exposure-delta.js';
 
@@ -38,6 +38,20 @@ export function startVarComputeWorker() {
     }).lean();
 
     const now = new Date();
+    const portfolioSimulation = mode === 'simulation'
+      ? simulatePortfolioVarMonteCarlo({
+          exposures: entities.map((entity) => ({
+            id: String(entity._id),
+            annualRevenueUsd: entity.annual_revenue_usd ?? null,
+            contributionPct: entity.contribution_pct ?? null,
+            kind,
+            severity,
+          })),
+        })
+      : null;
+    const simulationByEntityId = new Map(
+      portfolioSimulation?.exposures.map((simulation) => [simulation.id, simulation]) ?? [],
+    );
 
     const deltaJobs: Array<{ entityId: string; newVarUsd: number }> = [];
     const ops = entities.map((entity) => {
@@ -46,14 +60,7 @@ export function startVarComputeWorker() {
         entity.contribution_pct ?? null,
         disruption_factor,
       );
-      const simulation = mode === 'simulation'
-        ? simulateVarMonteCarlo({
-            annualRevenueUsd: entity.annual_revenue_usd ?? null,
-            contributionPct: entity.contribution_pct ?? null,
-            kind,
-            severity,
-          })
-        : null;
+      const simulation = simulationByEntityId.get(String(entity._id)) ?? null;
 
       const var_value_usd = simulation?.var_at_95 ?? fastVarUsd;
       const var_value_inr = var_value_usd * USD_TO_INR;
