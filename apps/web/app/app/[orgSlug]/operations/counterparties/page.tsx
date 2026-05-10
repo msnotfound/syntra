@@ -11,7 +11,7 @@ function RiskBar({ score }: { score: number }) {
   const color = score >= 70 ? '#EF4444' : score >= 40 ? '#F97316' : '#60A5FA';
   return (
     <div className="flex items-center gap-2">
-      <div className="w-16 h-1.5 bg-[#262C36] rounded-full overflow-hidden">
+      <div className="w-16 h-1.5 bg-bg-surface-3 rounded-full overflow-hidden">
         <div className="h-full rounded-full" style={{ width: `${score}%`, backgroundColor: color }} />
       </div>
       <span className="text-xs font-mono" style={{ color }}>{score}</span>
@@ -38,57 +38,57 @@ export default async function CounterpartiesPage({ params, searchParams }: PageP
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <div className="flex items-center gap-2 text-sm text-[#64748B] mb-1">
-            <Link href={base} className="hover:text-[#94A3B8] transition-colors duration-[150ms]">Operations</Link>
+          <div className="flex items-center gap-2 text-sm text-text-muted mb-1">
+            <Link href={base} className="hover:text-text-secondary transition-colors duration-[150ms]">Operations</Link>
             <span>/</span>
-            <span className="text-[#94A3B8]">Counterparties</span>
+            <span className="text-text-secondary">Counterparties</span>
           </div>
-          <h1 className="text-xl font-semibold text-[#FAFAFA]">Counterparty Risk Center</h1>
-          <p className="text-sm text-[#94A3B8] mt-1">{cps.length} counterparties · sorted by risk score</p>
+          <h1 className="text-xl font-semibold text-text-primary">Counterparty Risk Center</h1>
+          <p className="text-sm text-text-secondary mt-1">{cps.length} counterparties · sorted by risk score</p>
         </div>
-        <button className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-[#3B82F6] text-white hover:bg-blue-500 transition-colors duration-[150ms] ease-out active:scale-95">
+        <button className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
           <Plus size={14} /> Add counterparty
         </button>
       </div>
 
       <div className="flex items-center gap-1">
-        <Link href={`${base}/counterparties`} className={`px-3 py-1.5 rounded text-xs ${!searchParams.role ? 'bg-[#1E2530] text-[#FAFAFA]' : 'text-[#94A3B8] hover:text-[#FAFAFA]'} transition-colors duration-[150ms]`}>All</Link>
+        <Link href={`${base}/counterparties`} className={`px-3 py-1.5 rounded text-xs ${!searchParams.role ? 'bg-bg-surface-2 text-text-primary' : 'text-text-secondary hover:text-text-primary'} transition-colors duration-[150ms]`}>All</Link>
         {ROLES.map(r => (
-          <Link key={r} href={`${base}/counterparties?role=${r}`} className={`px-3 py-1.5 rounded text-xs capitalize ${searchParams.role === r ? 'bg-[#1E2530] text-[#FAFAFA]' : 'text-[#94A3B8] hover:text-[#FAFAFA]'} transition-colors duration-[150ms]`}>{r}</Link>
+          <Link key={r} href={`${base}/counterparties?role=${r}`} className={`px-3 py-1.5 rounded text-xs capitalize ${searchParams.role === r ? 'bg-bg-surface-2 text-text-primary' : 'text-text-secondary hover:text-text-primary'} transition-colors duration-[150ms]`}>{r}</Link>
         ))}
       </div>
 
-      <div className="bg-[#151921] border border-[#1E2530] rounded-md overflow-hidden">
+      <div className="bg-bg-surface border border-border-subtle rounded-md overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[#1E2530]">
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#94A3B8]">Entity</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#94A3B8]">Role</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#94A3B8]">Risk Score</th>
-              <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-[#94A3B8]">Relationship (USD)</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#94A3B8]">Contract</th>
+            <tr className="border-b border-border-subtle">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Entity</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Role</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Risk Score</th>
+              <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-text-secondary">Relationship (USD)</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Contract</th>
             </tr>
           </thead>
           <tbody>
             {cps.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-12 text-center text-sm text-[#64748B]">No counterparties found.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-12 text-center text-sm text-text-muted">No counterparties found.</td></tr>
             ) : cps.map(c => {
               const entity = entityMap[String(c.entity_id)] as { name: string; country_code: string | null } | undefined;
               return (
-                <tr key={String(c._id)} className="border-b border-[#1E2530] hover:bg-[#1E2530] transition-colors duration-[150ms]">
+                <tr key={String(c._id)} className="border-b border-border-subtle hover:bg-bg-surface-2 transition-colors duration-[150ms]">
                   <td className="px-4 py-3">
-                    <Link href={`${base}/counterparties/${String(c._id)}`} className="text-sm font-medium text-[#FAFAFA] hover:text-[#3B82F6] transition-colors duration-[150ms]">
+                    <Link href={`${base}/counterparties/${String(c._id)}`} className="text-sm font-medium text-text-primary hover:text-accent transition-colors duration-[150ms]">
                       {entity?.name ?? '—'}
                     </Link>
-                    {entity?.country_code && <span className="ml-2 text-xs text-[#64748B] font-mono">{entity.country_code}</span>}
+                    {entity?.country_code && <span className="ml-2 text-xs text-text-muted font-mono">{entity.country_code}</span>}
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#94A3B8] capitalize">{c.role}</td>
+                  <td className="px-4 py-3 text-sm text-text-secondary capitalize">{c.role}</td>
                   <td className="px-4 py-3"><RiskBar score={c.risk_score} /></td>
-                  <td className="px-4 py-3 text-sm text-[#FAFAFA] font-mono text-right">${c.relationship_value_usd.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-sm text-text-primary font-mono text-right">${c.relationship_value_usd.toLocaleString()}</td>
                   <td className="px-4 py-3 text-sm">
                     {c.contract_id
-                      ? <Link href={`${base}/contracts/${String(c.contract_id)}`} className="text-[#3B82F6] font-mono text-xs hover:underline">{String(c.contract_id).slice(-8)}</Link>
-                      : <span className="text-[#475569] text-xs">—</span>}
+                      ? <Link href={`${base}/contracts/${String(c.contract_id)}`} className="text-accent font-mono text-xs hover:underline">{String(c.contract_id).slice(-8)}</Link>
+                      : <span className="text-text-disabled text-xs">—</span>}
                   </td>
                 </tr>
               );

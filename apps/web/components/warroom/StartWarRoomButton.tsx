@@ -39,15 +39,7 @@ export function StartWarRoomButton({ alertId, alertTitle, orgSlug }: StartWarRoo
     <button
       onClick={handleClick}
       disabled={loading}
-      className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium border transition-all active:scale-95"
-      style={{
-        backgroundColor: '#151921',
-        borderColor: '#EF4444',
-        color: '#EF4444',
-        borderRadius: '6px',
-        transitionDuration: '150ms',
-        opacity: loading ? 0.6 : 1,
-      }}
+      className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium border border-severity-critical bg-bg-surface text-severity-critical transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-60"
     >
       <Shield size={14} />
       {loading ? 'Opening…' : 'Start War Room'}

@@ -4,11 +4,11 @@ import { clsx } from 'clsx';
 type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info';
 
 const SEVERITY_STYLES: Record<Severity, { bg: string; text: string; dot: string }> = {
-  critical: { bg: 'bg-[#EF4444]/15', text: 'text-[#EF4444]', dot: 'bg-[#EF4444]' },
-  high:     { bg: 'bg-[#F97316]/15', text: 'text-[#F97316]', dot: 'bg-[#F97316]' },
-  medium:   { bg: 'bg-[#EAB308]/15', text: 'text-[#EAB308]', dot: 'bg-[#EAB308]' },
-  low:      { bg: 'bg-[#60A5FA]/15', text: 'text-[#60A5FA]', dot: 'bg-[#60A5FA]' },
-  info:     { bg: 'bg-[#94A3B8]/15', text: 'text-[#94A3B8]', dot: 'bg-[#94A3B8]' },
+  critical: { bg: 'bg-severity-critical/15', text: 'text-severity-critical', dot: 'bg-severity-critical' },
+  high:     { bg: 'bg-severity-high/15', text: 'text-severity-high', dot: 'bg-severity-high' },
+  medium:   { bg: 'bg-severity-medium/15', text: 'text-severity-medium', dot: 'bg-severity-medium' },
+  low:      { bg: 'bg-severity-low/15', text: 'text-severity-low', dot: 'bg-severity-low' },
+  info:     { bg: 'bg-text-secondary/15', text: 'text-text-secondary', dot: 'bg-text-secondary' },
 };
 
 interface SeverityBadgeProps {
@@ -23,13 +23,13 @@ export function SeverityBadge({ severity, className }: SeverityBadgeProps) {
       className={clsx(
         'inline-flex items-center gap-1.5 px-2 h-5',
         'text-[11px] font-medium uppercase tracking-wider',
-        'rounded-[4px]',
+        'rounded-sm',
         styles.bg,
         styles.text,
         className
       )}
     >
-      <span className={clsx('w-1.5 h-1.5 rounded-full flex-shrink-0', styles.dot)} />
+      <span className={clsx('w-1.5 h-1.5 rounded-sm flex-shrink-0', styles.dot)} />
       {severity}
     </span>
   );

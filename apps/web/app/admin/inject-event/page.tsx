@@ -10,7 +10,7 @@ const PRESETS = [
     description: 'MSC Tavita takes hit; Suez corridor suspended',
     severity: 'CRITICAL',
     region: 'Yemen · Red Sea',
-    color: 'text-[#EF4444]',
+    color: 'text-severity-critical',
   },
   {
     id: 'mombasa_closure',
@@ -18,7 +18,7 @@ const PRESETS = [
     description: 'All container berths suspended; vessels to Dar es Salaam',
     severity: 'HIGH',
     region: 'Kenya · East Africa',
-    color: 'text-[#F97316]',
+    color: 'text-severity-high',
   },
   {
     id: 'india_cyclone',
@@ -26,7 +26,7 @@ const PRESETS = [
     description: 'IMD upgrades to Very Severe; 5–7 day delay minimum',
     severity: 'HIGH',
     region: 'India · Bay of Bengal',
-    color: 'text-[#F97316]',
+    color: 'text-severity-high',
   },
   {
     id: 'nigeria_strike',
@@ -34,7 +34,7 @@ const PRESETS = [
     description: 'NPA force majeure; 14+ day delays expected',
     severity: 'MEDIUM',
     region: 'Nigeria · Lagos',
-    color: 'text-[#EAB308]',
+    color: 'text-severity-medium',
   },
 ];
 
@@ -100,11 +100,11 @@ export default function InjectEventPage() {
                 <button
                   onClick={() => inject(p.id)}
                   disabled={!!loading || !!done}
-                  className="flex items-center gap-1.5 px-4 h-9 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-4 h-9 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50"
                 >
                   {loading === p.id ? (
                     <>
-                      <span className="animate-spin inline-block w-3.5 h-3.5 border border-white border-t-transparent rounded-full" />
+                      <span className="animate-spin inline-block w-3.5 h-3.5 border border-text-primary border-t-transparent rounded-full" />
                       Injecting…
                     </>
                   ) : (

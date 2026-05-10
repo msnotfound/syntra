@@ -15,7 +15,7 @@ export default function OnboardingWatchlistPage() {
         </div>
         <div className="h-1 bg-bg-surface-2 rounded-full overflow-hidden">
           <div
-            className="h-full bg-accent rounded-full transition-all duration-300 ease-out"
+            className="h-full bg-accent rounded-full transition-colors duration-300 ease-out"
             style={{ width: `${(STEP / TOTAL) * 100}%` }}
           />
         </div>
@@ -66,7 +66,7 @@ export default function OnboardingWatchlistPage() {
             </Link>
             <Link
               href="/onboarding/alerts-prefs"
-              className="flex items-center gap-1.5 px-4 h-8 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95"
+              className="flex items-center gap-1.5 px-4 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95"
             >
               Continue
               <ChevronRight size={14} />

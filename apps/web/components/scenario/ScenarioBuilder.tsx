@@ -33,12 +33,12 @@ const KIND_LABELS: Record<AlertKind, string> = {
   compliance:      'Compliance',
 };
 
-const SEV_COLORS: Record<AlertSeverity, string> = {
-  critical: '#EF4444',
-  high:     '#F97316',
-  medium:   '#F59E0B',
-  low:      '#3B82F6',
-  info:     '#64748B',
+const SEV_TEXT_CLASS: Record<AlertSeverity, string> = {
+  critical: 'text-severity-critical',
+  high:     'text-severity-high',
+  medium:   'text-severity-medium',
+  low:      'text-severity-low',
+  info:     'text-text-muted',
 };
 
 function formatUsd(val: number) {
@@ -126,15 +126,13 @@ export function ScenarioBuilder({
     <div className="space-y-6">
       {/* Hypothesis Events */}
       <section
-        className="rounded-md border p-5"
-        style={{ borderColor: '#1E2530', backgroundColor: '#151921' }}
+        className="rounded-md border border-border-subtle bg-bg-surface p-5"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold" style={{ color: '#FAFAFA' }}>Hypothesis Events</h2>
+          <h2 className="text-sm font-semibold text-text-primary">Hypothesis Events</h2>
           <button
             onClick={addEvent}
-            className="flex items-center gap-1 text-xs px-2.5 h-7 rounded-md transition-all active:scale-95"
-            style={{ backgroundColor: '#1E2530', color: '#94A3B8', borderRadius: '6px' }}
+            className="flex items-center gap-1 text-xs px-2.5 h-7 rounded-md bg-bg-surface-2 text-text-secondary transition-colors duration-[150ms] ease-out active:scale-95"
           >
             <Plus size={12} />
             Add event
@@ -142,7 +140,7 @@ export function ScenarioBuilder({
         </div>
 
         {events.length === 0 && (
-          <p className="text-xs py-6 text-center" style={{ color: '#475569' }}>
+          <p className="text-xs py-6 text-center text-text-disabled">
             No events yet. Add one to model a hypothetical disruption.
           </p>
         )}
@@ -158,8 +156,7 @@ export function ScenarioBuilder({
               <select
                 value={ev.type}
                 onChange={e => updateEvent(idx, { type: e.target.value as AlertKind })}
-                className="text-xs h-8 px-2 rounded-md border bg-transparent"
-                style={{ borderColor: '#1E2530', color: '#FAFAFA', backgroundColor: '#0B0E14', borderRadius: '6px' }}
+                className="text-xs h-8 px-2 rounded-md border border-border-subtle bg-bg-base text-text-primary transition-colors duration-[150ms] ease-out"
               >
                 <option value="physical_risk">Physical Risk</option>
                 <option value="sanctions_match">Sanctions Match</option>
@@ -172,16 +169,14 @@ export function ScenarioBuilder({
                 placeholder="Country / region"
                 value={ev.geo}
                 onChange={e => updateEvent(idx, { geo: e.target.value })}
-                className="text-xs h-8 px-2 rounded-md border bg-transparent"
-                style={{ borderColor: '#1E2530', color: '#FAFAFA', backgroundColor: '#0B0E14', borderRadius: '6px' }}
+                className="text-xs h-8 px-2 rounded-md border border-border-subtle bg-bg-base text-text-primary transition-colors duration-[150ms] ease-out"
               />
 
               {/* Severity */}
               <select
                 value={ev.severity}
                 onChange={e => updateEvent(idx, { severity: e.target.value as AlertSeverity })}
-                className="text-xs h-8 px-2 rounded-md border bg-transparent"
-                style={{ borderColor: '#1E2530', color: SEV_COLORS[ev.severity], backgroundColor: '#0B0E14', borderRadius: '6px' }}
+                className={`text-xs h-8 px-2 rounded-md border border-border-subtle bg-bg-base transition-colors duration-[150ms] ease-out ${SEV_TEXT_CLASS[ev.severity]}`}
               >
                 {(['critical', 'high', 'medium', 'low', 'info'] as AlertSeverity[]).map(s => (
                   <option key={s} value={s}>{s}</option>
@@ -191,8 +186,7 @@ export function ScenarioBuilder({
               {/* Remove */}
               <button
                 onClick={() => removeEvent(idx)}
-                className="flex items-center justify-center w-8 h-8 rounded-md transition-all"
-                style={{ color: '#64748B', borderRadius: '6px' }}
+                className="flex items-center justify-center w-8 h-8 rounded-md text-text-muted transition-colors duration-[150ms] ease-out active:scale-95"
               >
                 <Trash2 size={14} />
               </button>
@@ -201,15 +195,14 @@ export function ScenarioBuilder({
         </div>
 
         {error && (
-          <p className="mt-3 text-xs" style={{ color: '#EF4444' }}>{error}</p>
+          <p className="mt-3 text-xs text-severity-critical">{error}</p>
         )}
 
         <div className="flex justify-end mt-4">
           <button
             onClick={runCompute}
             disabled={running || events.length === 0}
-            className="flex items-center gap-1.5 px-4 h-8 rounded-md text-sm font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: '#3B82F6', color: '#FAFAFA', borderRadius: '6px', transitionDuration: '150ms' }}
+            className="flex items-center gap-1.5 px-4 h-8 rounded-md text-sm font-medium bg-accent text-text-primary transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {running ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
             {running ? 'Computing…' : 'Run scenario'}
@@ -220,40 +213,37 @@ export function ScenarioBuilder({
       {/* VaR Summary */}
       <section className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
         <div
-          className="rounded-md border p-4"
-          style={{ borderColor: '#1E2530', backgroundColor: '#151921' }}
+          className="rounded-md border border-border-subtle bg-bg-surface p-4"
         >
-          <div className="text-xs" style={{ color: '#64748B' }}>Scenario VaR</div>
+          <div className="text-xs text-text-muted">Scenario VaR</div>
           <div
-            className="text-2xl font-mono font-semibold mt-1"
-            style={{ color: varTotal !== null ? '#F59E0B' : '#475569' }}
+            className={`text-2xl font-mono font-semibold mt-1 ${varTotal !== null ? 'text-severity-medium' : 'text-text-disabled'}`}
           >
             {varTotal !== null ? formatUsd(varTotal) : '—'}
           </div>
         </div>
 
         <div
-          className="rounded-md border p-4"
-          style={{ borderColor: '#1E2530', backgroundColor: '#151921' }}
+          className="rounded-md border border-border-subtle bg-bg-surface p-4"
         >
-          <div className="text-xs" style={{ color: '#64748B' }}>Baseline VaR</div>
-          <div className="text-2xl font-mono font-semibold mt-1" style={{ color: '#94A3B8' }}>
+          <div className="text-xs text-text-muted">Baseline VaR</div>
+          <div className="text-2xl font-mono font-semibold mt-1 text-text-secondary">
             {formatUsd(baselineVarUsd)}
           </div>
         </div>
 
         <div
-          className="rounded-md border p-4"
-          style={{ borderColor: '#1E2530', backgroundColor: '#151921' }}
+          className="rounded-md border border-border-subtle bg-bg-surface p-4"
         >
-          <div className="text-xs" style={{ color: '#64748B' }}>Delta vs baseline</div>
+          <div className="text-xs text-text-muted">Delta vs baseline</div>
           <div
-            className="text-2xl font-mono font-semibold mt-1"
-            style={{
-              color: deltaDir === 'worse' ? '#EF4444'
-                   : deltaDir === 'better' ? '#22C55E'
-                   : '#475569',
-            }}
+            className={`text-2xl font-mono font-semibold mt-1 ${
+              deltaDir === 'worse'
+                ? 'text-severity-critical'
+                : deltaDir === 'better'
+                  ? 'text-severity-low'
+                  : 'text-text-disabled'
+            }`}
           >
             {delta !== null ? `${delta > 0 ? '+' : ''}${formatUsd(delta)}` : '—'}
           </div>
@@ -263,14 +253,12 @@ export function ScenarioBuilder({
       {/* Affected Entities */}
       {sortedEntities.length > 0 && (
         <section
-          className="rounded-md border"
-          style={{ borderColor: '#1E2530', backgroundColor: '#151921' }}
+          className="rounded-md border border-border-subtle bg-bg-surface"
         >
           <div
-            className="flex items-center justify-between px-4 py-3 border-b"
-            style={{ borderColor: '#1E2530' }}
+            className="flex items-center justify-between px-4 py-3 border-b border-border-subtle"
           >
-            <h2 className="text-sm font-semibold" style={{ color: '#FAFAFA' }}>
+            <h2 className="text-sm font-semibold text-text-primary">
               Affected Entities ({sortedEntities.length})
             </h2>
             <div className="flex gap-2">
@@ -278,12 +266,9 @@ export function ScenarioBuilder({
                 <button
                   key={k}
                   onClick={() => setSortKey(k)}
-                  className="text-xs px-2 h-6 rounded-sm"
-                  style={{
-                    backgroundColor: sortKey === k ? '#1E2530' : 'transparent',
-                    color: sortKey === k ? '#94A3B8' : '#64748B',
-                    borderRadius: '4px',
-                  }}
+                  className={`text-xs px-2 h-6 rounded-sm transition-colors duration-[150ms] ease-out active:scale-95 ${
+                    sortKey === k ? 'bg-bg-surface-2 text-text-secondary' : 'text-text-muted'
+                  }`}
                 >
                   {k === 'varUsd' ? 'By impact' : 'By name'}
                 </button>
@@ -291,16 +276,16 @@ export function ScenarioBuilder({
             </div>
           </div>
 
-          <div className="divide-y" style={{ borderColor: '#1E2530' }}>
+          <div className="divide-y divide-border-subtle">
             {sortedEntities.map(entity => (
               <div
                 key={entity.id}
                 className="flex items-center justify-between px-4 py-2.5"
               >
-                <div className="text-sm font-mono" style={{ color: '#94A3B8' }}>
+                <div className="text-sm font-mono text-text-secondary">
                   {entity.name !== entity.id ? entity.name : entity.id.slice(-8)}
                 </div>
-                <div className="text-sm font-mono font-medium" style={{ color: '#F59E0B' }}>
+                <div className="text-sm font-mono font-medium text-severity-medium">
                   {formatUsd(entity.varUsd)}
                 </div>
               </div>

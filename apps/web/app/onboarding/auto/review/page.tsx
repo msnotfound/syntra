@@ -144,7 +144,7 @@ export default function OnboardingAutoReviewPage() {
         </div>
         <div className="h-1 bg-bg-surface-2 rounded-full overflow-hidden">
           <div
-            className="h-full bg-accent rounded-full transition-all duration-300 ease-out"
+            className="h-full bg-accent rounded-full transition-colors duration-300 ease-out"
             style={{ width: `${(STEP / TOTAL) * 100}%` }}
           />
         </div>
@@ -192,9 +192,9 @@ export default function OnboardingAutoReviewPage() {
                 <div
                   key={idx}
                   onClick={() => toggleEntity(idx)}
-                  className={`p-3 rounded-md border cursor-pointer transition-all duration-150 ease-out ${
+                  className={`p-3 rounded-md border cursor-pointer transition-colors duration-[150ms] ease-out ${
                     selectedIndices.has(idx)
-                      ? 'bg-blue-900/40 border-accent'
+                      ? 'bg-accent-muted/40 border-accent'
                       : 'bg-bg-surface-2 border-border-default hover:border-accent/50'
                   }`}
                 >
@@ -231,7 +231,7 @@ export default function OnboardingAutoReviewPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-4 h-8 rounded-md text-sm font-medium text-text-secondary hover:bg-bg-surface-2 transition-colors duration-150 ease-out"
+            className="px-4 h-8 rounded-md text-sm font-medium text-text-secondary hover:bg-bg-surface-2 transition-colors duration-[150ms] ease-out"
           >
             Back
           </button>
@@ -239,7 +239,7 @@ export default function OnboardingAutoReviewPage() {
             type="button"
             onClick={handleCreate}
             disabled={loading || selectedIndices.size === 0}
-            className="flex items-center gap-1.5 px-4 h-8 rounded-md text-sm font-medium bg-accent text-white hover:bg-blue-400 transition-colors duration-150 ease-out active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50"
           >
             {loading ? 'Creating…' : 'Create org'}
             {!loading && <ChevronRight size={14} />}

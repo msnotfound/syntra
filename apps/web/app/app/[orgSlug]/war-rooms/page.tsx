@@ -34,7 +34,7 @@ export default async function WarRoomsPage({ params }: PageProps) {
         </div>
         <Link
           href={`/app/${params.orgSlug}/war-rooms/new`}
-          className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium transition-all active:scale-95"
+          className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium transition-colors active:scale-95"
           style={{
             backgroundColor: '#3B82F6',
             color: '#FAFAFA',

@@ -119,7 +119,7 @@ export default async function IntegrationsPage({ params }: PageProps) {
                 ) : (
                   <a
                     href={intg.installHref}
-                    className="px-3 h-7 rounded-md text-xs font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 inline-flex items-center"
+                    className="px-3 h-7 rounded-md text-xs font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 inline-flex items-center"
                   >
                     Connect
                   </a>

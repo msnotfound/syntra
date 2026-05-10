@@ -55,7 +55,7 @@ export default async function SettingsPage({ params }: PageProps) {
                 ].map(ch => (
                   <div key={ch.id} className="flex items-center gap-4">
                     <div className={`w-9 h-5 rounded-full relative cursor-pointer transition-colors duration-[150ms] ease-out ${ch.enabled ? 'bg-accent' : 'bg-bg-surface-3'}`}>
-                      <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-[150ms] ease-out ${ch.enabled ? 'left-[18px]' : 'left-0.5'}`} />
+                      <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-colors duration-[150ms] ease-out ${ch.enabled ? 'left-[18px]' : 'left-0.5'}`} />
                     </div>
                     <div className="flex-1">
                       <div className="text-sm font-medium text-text-primary">{ch.label}</div>
@@ -99,7 +99,7 @@ export default async function SettingsPage({ params }: PageProps) {
               <p className="text-xs text-text-muted mb-4">Alerts will be queued and delivered after quiet hours end.</p>
               <div className="flex items-center gap-3 mb-4">
                 <div className={`w-9 h-5 rounded-full relative cursor-pointer transition-colors duration-[150ms] ease-out ${org.settings.quiet_hours_start ? 'bg-accent' : 'bg-bg-surface-3'}`}>
-                  <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-[150ms] ${org.settings.quiet_hours_start ? 'left-[18px]' : 'left-0.5'}`} />
+                  <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-colors duration-[150ms] ${org.settings.quiet_hours_start ? 'left-[18px]' : 'left-0.5'}`} />
                 </div>
                 <span className="text-sm text-text-primary">Enable quiet hours</span>
               </div>
@@ -122,7 +122,7 @@ export default async function SettingsPage({ params }: PageProps) {
             </div>
 
             <div className="px-6 py-4 border-t border-border-subtle flex justify-end">
-              <button className="px-3 h-8 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
+              <button className="px-3 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
                 Save changes
               </button>
             </div>

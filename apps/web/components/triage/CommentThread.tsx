@@ -103,7 +103,7 @@ export function CommentThread({ alertId, orgSlug, initialComments }: CommentThre
             <button
               type="submit"
               disabled={!body.trim() || submitting}
-              className="flex items-center gap-1.5 px-3 h-7 rounded-sm text-xs font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6]"
+              className="flex items-center gap-1.5 px-3 h-7 rounded-sm text-xs font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent"
             >
               <Send size={12} />
               {submitting ? 'Posting…' : 'Post'}

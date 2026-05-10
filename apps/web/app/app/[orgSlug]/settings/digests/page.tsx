@@ -124,7 +124,7 @@ export default function DigestsSettingsPage() {
                   onClick={() => setPrefs(p => ({ ...p, enabled: !p.enabled }))}
                   className={`w-9 h-5 rounded-full relative transition-colors duration-[150ms] ease-out ${prefs.enabled ? 'bg-accent' : 'bg-bg-surface-3'}`}
                 >
-                  <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-[150ms] ease-out ${prefs.enabled ? 'left-[18px]' : 'left-0.5'}`} />
+                  <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-colors duration-[150ms] ease-out ${prefs.enabled ? 'left-[18px]' : 'left-0.5'}`} />
                 </button>
                 <div>
                   <div className="text-sm font-medium text-text-primary">Enable risk digests</div>
@@ -176,7 +176,7 @@ export default function DigestsSettingsPage() {
                         onClick={() => toggleChannel(ch.id)}
                         className={`w-9 h-5 rounded-full relative transition-colors duration-[150ms] ease-out ${on ? 'bg-accent' : 'bg-bg-surface-3'}`}
                       >
-                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-[150ms] ease-out ${on ? 'left-[18px]' : 'left-0.5'}`} />
+                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-colors duration-[150ms] ease-out ${on ? 'left-[18px]' : 'left-0.5'}`} />
                       </button>
                       <span className="text-sm text-text-primary">{ch.label}</span>
                     </div>
@@ -233,7 +233,7 @@ export default function DigestsSettingsPage() {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-4 h-8 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50"
+                  className="px-4 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save'}
                 </button>

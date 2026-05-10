@@ -4,12 +4,12 @@ import { clsx } from 'clsx';
 type MarkerType = 'event' | 'watchlist' | 'affected';
 type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info';
 
-const EVENT_COLORS: Record<Severity, string> = {
-  critical: '#EF4444',
-  high:     '#F97316',
-  medium:   '#EAB308',
-  low:      '#60A5FA',
-  info:     '#94A3B8',
+const EVENT_BG_CLASS: Record<Severity, string> = {
+  critical: 'bg-severity-critical',
+  high:     'bg-severity-high',
+  medium:   'bg-severity-medium',
+  low:      'bg-severity-low',
+  info:     'bg-text-secondary',
 };
 
 interface MapMarkerProps {
@@ -23,25 +23,23 @@ export function MapMarker({ type, severity = 'info', pulse = false, className }:
   if (type === 'watchlist') {
     return (
       <div
-        className={clsx('w-3 h-3 rounded-full border-2 border-white bg-[#3B82F6]', className)}
+        className={clsx('w-3 h-3 rounded-sm border-2 border-text-primary bg-accent', className)}
       />
     );
   }
 
-  const color = EVENT_COLORS[severity];
+  const colorClass = EVENT_BG_CLASS[severity];
 
   if (type === 'event') {
     return (
       <div className={clsx('relative flex items-center justify-center', className)}>
         {pulse && (
           <span
-            className="absolute inline-flex rounded-full opacity-75 animate-ping"
-            style={{ width: 24, height: 24, backgroundColor: color }}
+            className={clsx('absolute inline-flex w-6 h-6 rounded-sm opacity-75 animate-ping', colorClass)}
           />
         )}
         <span
-          className="relative inline-flex rounded-full"
-          style={{ width: 12, height: 12, backgroundColor: color }}
+          className={clsx('relative inline-flex w-3 h-3 rounded-sm', colorClass)}
         />
       </div>
     );
@@ -50,8 +48,7 @@ export function MapMarker({ type, severity = 'info', pulse = false, className }:
   // affected
   return (
     <div
-      className={clsx('w-3 h-3 rounded-sm border border-white', className)}
-      style={{ backgroundColor: EVENT_COLORS.high }}
+      className={clsx('w-3 h-3 rounded-sm border border-text-primary bg-severity-high', className)}
     />
   );
 }

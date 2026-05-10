@@ -75,7 +75,7 @@ export default function OnboardingAutoPage() {
         </div>
         <div className="h-1 bg-bg-surface-2 rounded-full overflow-hidden">
           <div
-            className="h-full bg-accent rounded-full transition-all duration-300 ease-out"
+            className="h-full bg-accent rounded-full transition-colors duration-300 ease-out"
             style={{ width: `${(STEP / TOTAL) * 100}%` }}
           />
         </div>
@@ -105,7 +105,7 @@ export default function OnboardingAutoPage() {
                   setError('');
                 }}
                 disabled={loading}
-                className="w-full h-10 px-3 rounded-md bg-bg-surface-2 border border-border-default text-sm text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-accent transition-colors duration-150 ease-out disabled:opacity-50"
+                className="w-full h-10 px-3 rounded-md bg-bg-surface-2 border border-border-default text-sm text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-accent transition-colors duration-[150ms] ease-out disabled:opacity-50"
               />
               {error && (
                 <p className="text-xs text-red-500 mt-1.5">{error}</p>
@@ -116,14 +116,14 @@ export default function OnboardingAutoPage() {
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="px-4 h-8 rounded-md text-sm font-medium text-text-secondary hover:bg-bg-surface-2 transition-colors duration-150 ease-out"
+                className="px-4 h-8 rounded-md text-sm font-medium text-text-secondary hover:bg-bg-surface-2 transition-colors duration-[150ms] ease-out"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={loading || !url.trim()}
-                className="flex items-center gap-1.5 px-4 h-8 rounded-md text-sm font-medium bg-accent text-white hover:bg-blue-400 transition-colors duration-150 ease-out active:scale-95 disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50"
               >
                 {loading ? 'Extracting…' : 'Extract'}
                 {!loading && <ChevronRight size={14} />}

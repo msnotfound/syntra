@@ -107,7 +107,7 @@ export function LogDecisionModal({ alertId, orgSlug, onSuccess }: LogDecisionMod
                 <select
                   value={type}
                   onChange={e => setType(e.target.value as DecisionType)}
-                  className="w-full h-8 px-2 rounded-md text-sm bg-bg-surface-2 border border-border-default text-text-primary focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6]"
+                  className="w-full h-8 px-2 rounded-md text-sm bg-bg-surface-2 border border-border-default text-text-primary focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent"
                 >
                   {DECISION_TYPES.map(dt => (
                     <option key={dt.value} value={dt.value}>{dt.label}</option>
@@ -125,7 +125,7 @@ export function LogDecisionModal({ alertId, orgSlug, onSuccess }: LogDecisionMod
                   onChange={e => setText(e.target.value)}
                   placeholder="Describe the decision taken..."
                   rows={3}
-                  className="w-full px-3 py-2 rounded-md text-sm bg-bg-surface-2 border border-border-default text-text-primary placeholder:text-text-muted resize-none focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6]"
+                  className="w-full px-3 py-2 rounded-md text-sm bg-bg-surface-2 border border-border-default text-text-primary placeholder:text-text-muted resize-none focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent"
                 />
               </div>
 
@@ -139,7 +139,7 @@ export function LogDecisionModal({ alertId, orgSlug, onSuccess }: LogDecisionMod
                   onChange={e => setJustification(e.target.value)}
                   placeholder="Why was this decision made? (optional)"
                   rows={2}
-                  className="w-full px-3 py-2 rounded-md text-sm bg-bg-surface-2 border border-border-default text-text-primary placeholder:text-text-muted resize-none focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6]"
+                  className="w-full px-3 py-2 rounded-md text-sm bg-bg-surface-2 border border-border-default text-text-primary placeholder:text-text-muted resize-none focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent"
                 />
               </div>
 
@@ -158,7 +158,7 @@ export function LogDecisionModal({ alertId, orgSlug, onSuccess }: LogDecisionMod
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-4 h-8 rounded-md text-sm font-medium bg-accent text-white hover:opacity-90 transition-opacity duration-[150ms] ease-out active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:opacity-90 transition-opacity duration-[150ms] ease-out active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {saving ? 'Saving…' : 'Save'}
                 </button>

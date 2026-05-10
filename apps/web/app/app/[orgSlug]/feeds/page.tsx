@@ -9,9 +9,9 @@ interface PageProps {
 
 function StatusPill({ status }: { status: IDataFeed['last_sync_status'] }) {
   const styles: Record<IDataFeed['last_sync_status'], string> = {
-    ok: 'bg-[#60A5FA26] border-severity-low text-severity-low',
-    degraded: 'bg-[#EAB30826] border-severity-medium text-severity-medium',
-    failed: 'bg-[#EF444426] border-severity-critical text-severity-critical',
+    ok: 'bg-severity-low/15 border-severity-low text-severity-low',
+    degraded: 'bg-severity-medium/15 border-severity-medium text-severity-medium',
+    failed: 'bg-severity-critical/15 border-severity-critical text-severity-critical',
   };
   return (
     <span className={`inline-flex items-center px-2 h-5 rounded-sm text-xs font-medium border ${styles[status]}`}>
@@ -23,8 +23,8 @@ function StatusPill({ status }: { status: IDataFeed['last_sync_status'] }) {
 function CostBadge({ model }: { model: IDataFeed['cost_model'] }) {
   const styles: Record<IDataFeed['cost_model'], string> = {
     free: 'bg-bg-surface-3 text-text-muted border-border-default',
-    freemium: 'bg-[#EAB30826] border-severity-medium text-severity-medium',
-    paid: 'bg-[#F9731626] border-severity-high text-severity-high',
+    freemium: 'bg-severity-medium/15 border-severity-medium text-severity-medium',
+    paid: 'bg-severity-high/15 border-severity-high text-severity-high',
   };
   return (
     <span className={`inline-flex items-center px-2 h-5 rounded-sm text-xs font-mono border ${styles[model]}`}>

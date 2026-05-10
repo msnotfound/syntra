@@ -27,18 +27,18 @@ export function EntityChip({ type, name, location, onClick, className }: EntityC
     <span
       className={clsx(
         'inline-flex items-center gap-1.5 px-2 py-1',
-        'text-[13px] text-[#FAFAFA]',
-        'bg-[#1E2530] border border-[#1E2530]',
+        'text-[13px] text-text-primary',
+        'bg-bg-surface-2 border border-border-subtle',
         'rounded-[4px]',
         'transition-colors duration-[150ms] ease-out',
-        onClick && 'cursor-pointer hover:bg-[#262C36]',
+        onClick && 'cursor-pointer hover:bg-bg-surface-3',
         className
       )}
       onClick={onClick}
     >
-      <Icon size={14} className="text-[#94A3B8] flex-shrink-0" />
+      <Icon size={14} className="text-text-secondary flex-shrink-0" />
       <span>{name}</span>
-      {location && <span className="text-[#64748B]">{location}</span>}
+      {location && <span className="text-text-muted">{location}</span>}
     </span>
   );
 }

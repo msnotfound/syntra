@@ -31,11 +31,18 @@ const SUB_NAV = [
   { label: 'Billing',        href: '/billing' },
 ];
 
-const SEV_COLOR: Record<Threshold, string> = {
-  critical: '#EF4444',
-  high:     '#F97316',
-  medium:   '#EAB308',
-  low:      '#60A5FA',
+const SEV_TEXT_CLASS: Record<Threshold, string> = {
+  critical: 'text-severity-critical',
+  high:     'text-severity-high',
+  medium:   'text-severity-medium',
+  low:      'text-severity-low',
+};
+
+const SEV_BG_CLASS: Record<Threshold, string> = {
+  critical: 'bg-severity-critical',
+  high:     'bg-severity-high',
+  medium:   'bg-severity-medium',
+  low:      'bg-severity-low',
 };
 
 const THRESHOLDS: Threshold[] = ['critical', 'high', 'medium', 'low'];
@@ -151,7 +158,7 @@ export default function SeverityRulesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold" style={{ color: '#FAFAFA' }}>Settings</h1>
+        <h1 className="text-xl font-semibold text-text-primary">Settings</h1>
       </div>
 
       <div className="flex gap-8">
@@ -161,14 +168,11 @@ export default function SeverityRulesPage() {
             <Link
               key={item.href}
               href={`/app/${orgSlug}/settings${item.href}`}
-              className={`block px-3 py-2 rounded-md text-sm font-medium border-l-2 transition-colors`}
-              style={{
-                transitionDuration: '150ms',
-                transitionTimingFunction: 'ease-out',
-                borderColor: item.href === '/severity-rules' ? '#3B82F6' : 'transparent',
-                backgroundColor: item.href === '/severity-rules' ? '#1E2530' : 'transparent',
-                color: item.href === '/severity-rules' ? '#FAFAFA' : '#94A3B8',
-              }}
+              className={`block px-3 py-2 rounded-md text-sm font-medium border-l-2 transition-colors duration-[150ms] ease-out active:scale-95 ${
+                item.href === '/severity-rules'
+                  ? 'border-accent bg-bg-surface-2 text-text-primary'
+                  : 'border-transparent text-text-secondary'
+              }`}
             >
               {item.label}
             </Link>
@@ -180,20 +184,13 @@ export default function SeverityRulesPage() {
           {/* Header row */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs" style={{ color: '#64748B' }}>
+              <p className="text-xs text-text-muted">
                 Override auto-computed severity per entity, event type, or geography.
               </p>
             </div>
             <button
               onClick={openCreate}
-              className="px-3 h-8 rounded-md text-sm font-medium transition-colors active:scale-95"
-              style={{
-                backgroundColor: '#3B82F6',
-                color: '#FAFAFA',
-                transitionDuration: '150ms',
-                transitionTimingFunction: 'ease-out',
-                borderRadius: '6px',
-              }}
+              className="px-3 h-8 rounded-md text-sm font-medium bg-accent text-text-primary transition-colors duration-[150ms] ease-out active:scale-95"
             >
               New rule
             </button>
@@ -202,32 +199,20 @@ export default function SeverityRulesPage() {
           {/* Create / Edit form */}
           {showForm && (
             <div
-              className="border p-5 rounded-md space-y-4"
-              style={{
-                backgroundColor: '#151921',
-                borderColor: '#262C36',
-                borderRadius: '6px',
-              }}
+              className="border border-border-default bg-bg-surface p-5 rounded-md space-y-4"
             >
-              <h2 className="text-xs font-medium uppercase tracking-wider" style={{ color: '#94A3B8' }}>
+              <h2 className="text-xs font-medium uppercase tracking-wider text-text-secondary">
                 {editId ? 'Edit Rule' : 'New Rule'}
               </h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Entity */}
                 <div className="space-y-1">
-                  <label className="text-xs" style={{ color: '#94A3B8' }}>Watchlist entity</label>
+                  <label className="text-xs text-text-secondary">Watchlist entity</label>
                   <select
                     required
                     value={form.entity_id}
                     onChange={e => setForm(f => ({ ...f, entity_id: e.target.value }))}
-                    className="w-full h-9 px-3 rounded-md text-sm transition-colors"
-                    style={{
-                      backgroundColor: '#1E2530',
-                      borderWidth: '1px',
-                      borderColor: '#262C36',
-                      color: '#FAFAFA',
-                      borderRadius: '6px',
-                    }}
+                    className="w-full h-9 px-3 rounded-md border border-border-default bg-bg-surface-2 text-sm text-text-primary transition-colors duration-[150ms] ease-out"
                   >
                     <option value="">Select entity…</option>
                     {entities.map(e => (
@@ -238,22 +223,18 @@ export default function SeverityRulesPage() {
 
                 {/* Condition type */}
                 <div className="space-y-1">
-                  <label className="text-xs" style={{ color: '#94A3B8' }}>Condition</label>
+                  <label className="text-xs text-text-secondary">Condition</label>
                   <div className="flex gap-2">
                     {CONDITION_TYPES.map(ct => (
                       <button
                         key={ct}
                         type="button"
                         onClick={() => setForm(f => ({ ...f, condition_type: ct }))}
-                        className="px-3 h-7 text-xs font-medium border transition-colors active:scale-95"
-                        style={{
-                          borderRadius: '6px',
-                          transitionDuration: '150ms',
-                          transitionTimingFunction: 'ease-out',
-                          backgroundColor: form.condition_type === ct ? '#262C36' : '#1E2530',
-                          borderColor: form.condition_type === ct ? '#3B82F6' : '#262C36',
-                          color: form.condition_type === ct ? '#FAFAFA' : '#94A3B8',
-                        }}
+                        className={`px-3 h-7 rounded-md text-xs font-medium border transition-colors duration-[150ms] ease-out active:scale-95 ${
+                          form.condition_type === ct
+                            ? 'bg-bg-surface-3 border-accent text-text-primary'
+                            : 'bg-bg-surface-2 border-border-default text-text-secondary'
+                        }`}
                       >
                         {ct}
                       </button>
@@ -264,21 +245,14 @@ export default function SeverityRulesPage() {
                 {/* Event kind (shown unless 'always') */}
                 {form.condition_type !== 'always' && (
                   <div className="space-y-1">
-                    <label className="text-xs" style={{ color: '#94A3B8' }}>Event kind</label>
+                    <label className="text-xs text-text-secondary">Event kind</label>
                     <input
                       type="text"
                       required
                       value={form.event_kind}
                       onChange={e => setForm(f => ({ ...f, event_kind: e.target.value }))}
                       placeholder="e.g. conflict, flood, strike"
-                      className="w-full h-9 px-3 rounded-md text-sm font-mono"
-                      style={{
-                        backgroundColor: '#1E2530',
-                        borderWidth: '1px',
-                        borderColor: '#262C36',
-                        color: '#FAFAFA',
-                        borderRadius: '6px',
-                      }}
+                      className="w-full h-9 px-3 rounded-md border border-border-default bg-bg-surface-2 text-sm font-mono text-text-primary transition-colors duration-[150ms] ease-out"
                     />
                   </div>
                 )}
@@ -286,7 +260,7 @@ export default function SeverityRulesPage() {
                 {/* Geo country code (shown for event_kind+geo only) */}
                 {form.condition_type === 'event_kind+geo' && (
                   <div className="space-y-1">
-                    <label className="text-xs" style={{ color: '#94A3B8' }}>Country code (ISO-2)</label>
+                    <label className="text-xs text-text-secondary">Country code (ISO-2)</label>
                     <input
                       type="text"
                       required
@@ -294,40 +268,28 @@ export default function SeverityRulesPage() {
                       value={form.geo_country_code}
                       onChange={e => setForm(f => ({ ...f, geo_country_code: e.target.value.toUpperCase() }))}
                       placeholder="e.g. IN, YE"
-                      className="w-24 h-9 px-3 rounded-md text-sm font-mono uppercase"
-                      style={{
-                        backgroundColor: '#1E2530',
-                        borderWidth: '1px',
-                        borderColor: '#262C36',
-                        color: '#FAFAFA',
-                        borderRadius: '6px',
-                      }}
+                      className="w-24 h-9 px-3 rounded-md border border-border-default bg-bg-surface-2 text-sm font-mono uppercase text-text-primary transition-colors duration-[150ms] ease-out"
                     />
                   </div>
                 )}
 
                 {/* Threshold */}
                 <div className="space-y-1">
-                  <label className="text-xs" style={{ color: '#94A3B8' }}>Override severity</label>
+                  <label className="text-xs text-text-secondary">Override severity</label>
                   <div className="flex gap-2">
                     {THRESHOLDS.map(t => (
                       <button
                         key={t}
                         type="button"
                         onClick={() => setForm(f => ({ ...f, threshold: t }))}
-                        className="flex items-center gap-1.5 px-3 h-7 text-xs font-medium border transition-colors active:scale-95"
-                        style={{
-                          borderRadius: '6px',
-                          transitionDuration: '150ms',
-                          transitionTimingFunction: 'ease-out',
-                          backgroundColor: form.threshold === t ? '#262C36' : '#1E2530',
-                          borderColor: form.threshold === t ? '#3B82F6' : '#262C36',
-                          color: form.threshold === t ? '#FAFAFA' : '#94A3B8',
-                        }}
+                        className={`flex items-center gap-1.5 px-3 h-7 rounded-md text-xs font-medium border transition-colors duration-[150ms] ease-out active:scale-95 ${
+                          form.threshold === t
+                            ? 'bg-bg-surface-3 border-accent text-text-primary'
+                            : 'bg-bg-surface-2 border-border-default text-text-secondary'
+                        }`}
                       >
                         <span
-                          className="w-1.5 h-1.5 rounded-full"
-                          style={{ backgroundColor: SEV_COLOR[t], borderRadius: '4px' }}
+                          className={`w-1.5 h-1.5 rounded-sm ${SEV_BG_CLASS[t]}`}
                         />
                         {t}
                       </button>
@@ -337,7 +299,7 @@ export default function SeverityRulesPage() {
 
                 {/* Notification channels */}
                 <div className="space-y-1">
-                  <label className="text-xs" style={{ color: '#94A3B8' }}>Notify via (optional)</label>
+                  <label className="text-xs text-text-secondary">Notify via (optional)</label>
                   <div className="flex gap-3">
                     {(['email', 'whatsapp', 'webhook'] as Channel[]).map(ch => {
                       const on = form.notification_channels.includes(ch);
@@ -346,14 +308,11 @@ export default function SeverityRulesPage() {
                           key={ch}
                           type="button"
                           onClick={() => toggleChannel(ch)}
-                          className="flex items-center gap-1.5 px-3 h-7 text-xs border transition-colors"
-                          style={{
-                            borderRadius: '6px',
-                            transitionDuration: '150ms',
-                            backgroundColor: on ? '#1E2530' : 'transparent',
-                            borderColor: on ? '#3B82F6' : '#262C36',
-                            color: on ? '#FAFAFA' : '#94A3B8',
-                          }}
+                          className={`flex items-center gap-1.5 px-3 h-7 rounded-md text-xs border transition-colors duration-[150ms] ease-out active:scale-95 ${
+                            on
+                              ? 'bg-bg-surface-2 border-accent text-text-primary'
+                              : 'border-border-default text-text-secondary'
+                          }`}
                         >
                           {ch}
                         </button>
@@ -367,26 +326,14 @@ export default function SeverityRulesPage() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="px-4 h-8 rounded-md text-sm font-medium transition-colors active:scale-95 disabled:opacity-50"
-                    style={{
-                      backgroundColor: '#3B82F6',
-                      color: '#FAFAFA',
-                      borderRadius: '6px',
-                      transitionDuration: '150ms',
-                    }}
+                    className="px-4 h-8 rounded-md text-sm font-medium bg-accent text-text-primary transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50"
                   >
                     {saving ? 'Saving…' : editId ? 'Update rule' : 'Create rule'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowForm(false)}
-                    className="px-4 h-8 rounded-md text-sm font-medium border transition-colors"
-                    style={{
-                      borderColor: '#262C36',
-                      color: '#94A3B8',
-                      borderRadius: '6px',
-                      transitionDuration: '150ms',
-                    }}
+                    className="px-4 h-8 rounded-md text-sm font-medium border border-border-default text-text-secondary transition-colors duration-[150ms] ease-out active:scale-95"
                   >
                     Cancel
                   </button>
@@ -397,24 +344,22 @@ export default function SeverityRulesPage() {
 
           {/* Rules list */}
           <div
-            className="border rounded-md overflow-hidden"
-            style={{ backgroundColor: '#151921', borderColor: '#1E2530', borderRadius: '6px' }}
+            className="border border-border-subtle bg-bg-surface rounded-md overflow-hidden"
           >
             {loading ? (
-              <div className="p-6 text-center text-xs" style={{ color: '#64748B' }}>Loading…</div>
+              <div className="p-6 text-center text-xs text-text-muted">Loading…</div>
             ) : rules.length === 0 ? (
-              <div className="p-6 text-center text-xs" style={{ color: '#64748B' }}>
+              <div className="p-6 text-center text-xs text-text-muted">
                 No custom severity rules. Create one to override auto-computed severity per entity.
               </div>
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr style={{ borderBottom: '1px solid #1E2530' }}>
+                  <tr className="border-b border-border-subtle">
                     {['Entity', 'Condition', 'Override', 'Channels', ''].map(h => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                        style={{ color: '#64748B' }}
+                        className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-muted"
                       >
                         {h}
                       </th>
@@ -423,40 +368,33 @@ export default function SeverityRulesPage() {
                 </thead>
                 <tbody>
                   {rules.map((rule, i) => (
-                    <tr
-                      key={rule.id}
-                      style={{
-                        borderTop: i > 0 ? '1px solid #1E2530' : undefined,
-                      }}
-                    >
+                    <tr key={rule.id} className={i > 0 ? 'border-t border-border-subtle' : undefined}>
                       <td className="px-4 py-3">
-                        <div style={{ color: '#FAFAFA' }}>{rule.entity_name ?? '—'}</div>
-                        <div className="text-xs font-mono" style={{ color: '#64748B' }}>
+                        <div className="text-text-primary">{rule.entity_name ?? '—'}</div>
+                        <div className="text-xs font-mono text-text-muted">
                           {rule.entity_id}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-xs" style={{ color: '#94A3B8' }}>
+                      <td className="px-4 py-3 text-xs text-text-secondary">
                         <div>{rule.condition_type}</div>
                         {rule.event_kind && (
-                          <div className="font-mono" style={{ color: '#64748B' }}>{rule.event_kind}</div>
+                          <div className="font-mono text-text-muted">{rule.event_kind}</div>
                         )}
                         {rule.geo_country_code && (
-                          <div className="font-mono" style={{ color: '#64748B' }}>{rule.geo_country_code}</div>
+                          <div className="font-mono text-text-muted">{rule.geo_country_code}</div>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className="flex items-center gap-1.5 text-xs font-medium w-fit px-2 h-5 rounded"
-                          style={{ borderRadius: '4px', color: SEV_COLOR[rule.threshold], backgroundColor: '#1E2530' }}
+                          className={`flex items-center gap-1.5 text-xs font-medium w-fit px-2 h-5 rounded-sm bg-bg-surface-2 ${SEV_TEXT_CLASS[rule.threshold]}`}
                         >
                           <span
-                            className="w-1.5 h-1.5 rounded-full"
-                            style={{ backgroundColor: SEV_COLOR[rule.threshold], borderRadius: '4px' }}
+                            className={`w-1.5 h-1.5 rounded-sm ${SEV_BG_CLASS[rule.threshold]}`}
                           />
                           {rule.threshold}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs" style={{ color: '#64748B' }}>
+                      <td className="px-4 py-3 text-xs text-text-muted">
                         {rule.notification_channels.length > 0
                           ? rule.notification_channels.join(', ')
                           : '—'}
@@ -465,26 +403,14 @@ export default function SeverityRulesPage() {
                         <div className="flex items-center gap-2 justify-end">
                           <button
                             onClick={() => openEdit(rule)}
-                            className="px-2 h-6 rounded text-xs border transition-colors"
-                            style={{
-                              borderColor: '#262C36',
-                              color: '#94A3B8',
-                              borderRadius: '4px',
-                              transitionDuration: '150ms',
-                            }}
+                            className="px-2 h-6 rounded-sm text-xs border border-border-default text-text-secondary transition-colors duration-[150ms] ease-out active:scale-95"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(rule.id)}
                             disabled={deletingId === rule.id}
-                            className="px-2 h-6 rounded text-xs border transition-colors disabled:opacity-40"
-                            style={{
-                              borderColor: '#262C36',
-                              color: '#EF4444',
-                              borderRadius: '4px',
-                              transitionDuration: '150ms',
-                            }}
+                            className="px-2 h-6 rounded-sm text-xs border border-border-default text-severity-critical transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-40"
                           >
                             {deletingId === rule.id ? '…' : 'Delete'}
                           </button>

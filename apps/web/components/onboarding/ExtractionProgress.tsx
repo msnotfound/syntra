@@ -28,7 +28,7 @@ export default function ExtractionProgress({ stage }: ExtractionProgressProps) {
         done
           ? 'bg-green-900 text-green-200'
           : active
-            ? 'bg-accent text-white animate-pulse'
+            ? 'bg-accent text-text-primary animate-pulse'
             : 'bg-bg-surface-2 text-text-muted'
       }`}>
         {done ? '✓' : active ? '◆' : '◇'}

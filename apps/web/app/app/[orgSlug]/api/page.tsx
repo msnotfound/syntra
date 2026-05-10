@@ -36,7 +36,7 @@ export default async function ApiPage({ params }: PageProps) {
           <h1 className="text-xl font-semibold text-text-primary">API</h1>
           <p className="text-sm text-text-secondary mt-1">Programmatic access to alerts and events</p>
         </div>
-        <button className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
+        <button className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
           <Plus size={14} />
           Create API key
         </button>

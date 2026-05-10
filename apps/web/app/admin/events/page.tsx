@@ -7,11 +7,11 @@ export default async function AdminEventsPage() {
   const events = await Event.find().sort({ created_at: -1 }).limit(50).lean() as unknown as IEvent[];
 
   const SEV_COLOR: Record<string, string> = {
-    critical: 'text-[#EF4444]',
-    high: 'text-[#F97316]',
-    medium: 'text-[#EAB308]',
-    low: 'text-[#60A5FA]',
-    info: 'text-[#94A3B8]',
+    critical: 'text-severity-critical',
+    high: 'text-severity-high',
+    medium: 'text-severity-medium',
+    low: 'text-severity-low',
+    info: 'text-text-secondary',
   };
 
   return (

@@ -18,7 +18,7 @@ export default function LandingPage() {
             <Link href="/onboarding/org" className="px-3 h-8 rounded-md text-sm font-medium text-text-secondary hover:bg-bg-surface-2 hover:text-text-primary transition-colors duration-[150ms] ease-out active:scale-95">
               Sign in
             </Link>
-            <Link href="/onboarding/org" className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
+            <Link href="/onboarding/org" className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
               Start trial
             </Link>
           </div>
@@ -37,7 +37,7 @@ export default function LandingPage() {
             Email, WhatsApp, API. ₹15,000/month.
           </p>
           <div className="flex items-center gap-3">
-            <Link href="/onboarding/org" className="flex items-center gap-1.5 px-4 h-10 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
+            <Link href="/onboarding/org" className="flex items-center gap-1.5 px-4 h-10 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
               Start free trial
             </Link>
             <Link href="/app/sundaram-pharma" className="flex items-center gap-1.5 px-4 h-10 rounded-md text-sm font-medium bg-bg-surface-2 border border-border-default text-text-primary hover:bg-bg-surface-3 transition-colors duration-[150ms] ease-out active:scale-95">
@@ -143,7 +143,7 @@ export default function LandingPage() {
                   href="/onboarding/org"
                   className={`block w-full text-center px-4 h-9 rounded-md text-sm font-medium transition-colors duration-[150ms] ease-out active:scale-95 ${
                     plan.highlight
-                      ? 'bg-accent text-white hover:bg-accent-hover'
+                      ? 'bg-accent text-text-primary hover:bg-accent-hover'
                       : 'bg-bg-surface-2 border border-border-default text-text-primary hover:bg-bg-surface-3'
                   } flex items-center justify-center`}
                 >
@@ -232,7 +232,7 @@ export default function LandingPage() {
           <h2 className="text-xl font-semibold text-text-primary mb-3">Know first. Act first.</h2>
           <p className="text-sm text-text-secondary mb-6">14-day free trial. No credit card. Setup in 5 minutes.</p>
           <div className="flex items-center justify-center gap-3">
-            <Link href="/onboarding/org" className="flex items-center gap-1.5 px-4 h-10 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
+            <Link href="/onboarding/org" className="flex items-center gap-1.5 px-4 h-10 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
               Start free trial
             </Link>
             <Link href="/app/sundaram-pharma" className="flex items-center gap-1.5 px-4 h-10 rounded-md text-sm font-medium bg-bg-surface border border-border-default text-text-primary hover:bg-bg-surface-2 transition-colors duration-[150ms] ease-out active:scale-95">

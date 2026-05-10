@@ -31,9 +31,9 @@ const TYPE_LABELS: Record<SourceType, string> = {
 };
 
 const STATUS_STYLES: Record<SourceStatus, string> = {
-  active: 'bg-[#60A5FA26] border-severity-low text-severity-low',
+  active: 'bg-severity-low/15 border-severity-low text-severity-low',
   paused: 'bg-bg-surface-3 border-border-default text-text-muted',
-  failed: 'bg-[#EF444426] border-severity-critical text-severity-critical',
+  failed: 'bg-severity-critical/15 border-severity-critical text-severity-critical',
 };
 
 function formatRelative(iso: string | null): string {
@@ -177,7 +177,7 @@ function AddSourceForm({ apiKey, orgSlug, onCreated, onCancel }: AddSourceFormPr
           <button
             type="submit"
             disabled={saving}
-            className="h-8 px-4 rounded-sm bg-accent text-white text-sm font-medium hover:opacity-90 transition-opacity active:scale-95 disabled:opacity-50"
+            className="h-8 px-4 rounded-sm bg-accent text-text-primary text-sm font-medium hover:opacity-90 transition-opacity active:scale-95 disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Add Source'}
           </button>
@@ -274,7 +274,7 @@ export default function SourcesPage() {
         {apiKey && !showAdd && (
           <button
             onClick={() => setShowAdd(true)}
-            className="h-8 px-4 rounded-sm bg-accent text-white text-sm font-medium hover:opacity-90 transition-opacity active:scale-95"
+            className="h-8 px-4 rounded-sm bg-accent text-text-primary text-sm font-medium hover:opacity-90 transition-opacity active:scale-95"
           >
             + Add Source
           </button>

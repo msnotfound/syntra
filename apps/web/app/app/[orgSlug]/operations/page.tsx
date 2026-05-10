@@ -38,8 +38,8 @@ export default async function OperationsPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-[#FAFAFA]">Operations</h1>
-        <p className="text-sm text-[#94A3B8] mt-1">Operational data layer — assets, shipments, orders, counterparties, contracts.</p>
+        <h1 className="text-xl font-semibold text-text-primary">Operations</h1>
+        <p className="text-sm text-text-secondary mt-1">Operational data layer — assets, shipments, orders, counterparties, contracts.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -49,13 +49,13 @@ export default async function OperationsPage({ params }: PageProps) {
             <Link
               key={card.href}
               href={card.href}
-              className="bg-[#151921] border border-[#1E2530] rounded-md p-5 hover:bg-[#1E2530] transition-colors duration-[150ms] ease-out active:scale-95 group"
+              className="bg-bg-surface border border-border-subtle rounded-md p-5 hover:bg-bg-surface-2 transition-colors duration-[150ms] ease-out active:scale-95 group"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-[#64748B]">{card.label}</p>
-                  <p className="mt-2 text-3xl font-semibold text-[#FAFAFA] font-mono">{card.count}</p>
-                  <p className="mt-1 text-sm text-[#94A3B8]">{card.sub}</p>
+                  <p className="text-xs font-medium uppercase tracking-wider text-text-muted">{card.label}</p>
+                  <p className="mt-2 text-3xl font-semibold text-text-primary font-mono">{card.count}</p>
+                  <p className="mt-1 text-sm text-text-secondary">{card.sub}</p>
                 </div>
                 <Icon size={20} className={`${card.color} opacity-70 group-hover:opacity-100 transition-opacity duration-[150ms]`} />
               </div>
@@ -64,14 +64,14 @@ export default async function OperationsPage({ params }: PageProps) {
         })}
       </div>
 
-      <div className="bg-[#151921] border border-[#1E2530] rounded-md p-4">
-        <h2 className="text-sm font-semibold text-[#FAFAFA] mb-3">Quick navigation</h2>
+      <div className="bg-bg-surface border border-border-subtle rounded-md p-4">
+        <h2 className="text-sm font-semibold text-text-primary mb-3">Quick navigation</h2>
         <div className="grid grid-cols-2 gap-2">
           {cards.map(card => (
             <Link
               key={card.href}
               href={card.href}
-              className="flex items-center gap-2 px-3 py-2 rounded text-sm text-[#94A3B8] hover:bg-[#1E2530] hover:text-[#FAFAFA] transition-colors duration-[150ms] ease-out"
+              className="flex items-center gap-2 px-3 py-2 rounded text-sm text-text-secondary hover:bg-bg-surface-2 hover:text-text-primary transition-colors duration-[150ms] ease-out"
             >
               <card.icon size={14} className={card.color} />
               {card.label}
