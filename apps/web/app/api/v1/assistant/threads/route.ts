@@ -6,7 +6,7 @@ import type { IIntelClaim } from '@syntra/db';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: NextRequest) {
+export async function GET(req: NextRequest): Promise<NextResponse> {
   const session = await getServerAuth();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   // Pre-fetch all IntelClaims cited across turns so the client can render Provenance
   const allClaimIds = [...new Set(thread.turns.flatMap(t => t.cited_claim_ids))];
   const claims: IIntelClaim[] = allClaimIds.length > 0
-    ? await IntelClaim.find({ _id: { $in: allClaimIds } }).lean()
+    ? (await IntelClaim.find({ _id: { $in: allClaimIds } }).lean()) as unknown as IIntelClaim[]
     : [];
 
   const claimsById = new Map(claims.map(c => [String(c._id), c]));
