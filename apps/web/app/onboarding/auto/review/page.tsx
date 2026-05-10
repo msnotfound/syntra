@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, AlertCircle } from 'lucide-react';
+import type { EnrichedFieldEntry, EnrichmentSourceStatus } from '@/app/api/onboarding/auto/extract/route';
 
 const STEP = 2;
 const TOTAL = 3;
@@ -20,13 +21,39 @@ interface Candidate {
 interface ExtractionResult {
   source_url: string;
   source_type: 'webpage' | 'annual_report';
+  fetch_strategy?: string;
   company_name: string | null;
   sector: string | null;
   country: string | null;
   region: string | null;
   candidates: Candidate[];
+  enrichment_sources?: EnrichmentSourceStatus[];
+  enriched_fields?: Record<string, EnrichedFieldEntry>;
   prompt_id: string;
   prompt_version: string;
+}
+
+const SOURCE_BADGE: Record<string, { label: string; className: string }> = {
+  extraction: { label: 'extracted', className: 'bg-accent/20 text-accent' },
+  linkedin: { label: 'LinkedIn', className: 'bg-blue-900/50 text-blue-300' },
+  crunchbase: { label: 'Crunchbase', className: 'bg-orange-900/50 text-orange-300' },
+  'companies-house': { label: 'Co. House', className: 'bg-purple-900/50 text-purple-300' },
+  gst: { label: 'GST', className: 'bg-green-900/50 text-green-300' },
+};
+
+function FieldRow({ label, value, source }: { label: string; value: string | null | undefined; source?: string }) {
+  if (!value) return null;
+  const badge = source ? (SOURCE_BADGE[source] ?? { label: source, className: 'bg-bg-surface-3 text-text-secondary' }) : null;
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <p className="text-xs text-text-secondary">{label}: <span className="text-text-primary">{value}</span></p>
+      {badge && (
+        <span className={`text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap flex-shrink-0 ${badge.className}`}>
+          {badge.label}
+        </span>
+      )}
+    </div>
+  );
 }
 
 export default function OnboardingAutoReviewPage() {
@@ -36,7 +63,6 @@ export default function OnboardingAutoReviewPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Load extraction result from sessionStorage on mount
   useEffect(() => {
     const stored = sessionStorage.getItem('extraction_result');
     if (!stored) {
@@ -47,7 +73,6 @@ export default function OnboardingAutoReviewPage() {
     try {
       const data = JSON.parse(stored) as ExtractionResult;
       setResult(data);
-      // Auto-select high-confidence entities (>0.75)
       const autoSelected = new Set<number>();
       data.candidates.forEach((c, idx) => {
         if (c.confidence > 0.75) autoSelected.add(idx);
@@ -59,13 +84,10 @@ export default function OnboardingAutoReviewPage() {
   }, [router]);
 
   const toggleEntity = (idx: number) => {
-    const newSelected = new Set(selectedIndices);
-    if (newSelected.has(idx)) {
-      newSelected.delete(idx);
-    } else {
-      newSelected.add(idx);
-    }
-    setSelectedIndices(newSelected);
+    const next = new Set(selectedIndices);
+    if (next.has(idx)) next.delete(idx);
+    else next.add(idx);
+    setSelectedIndices(next);
   };
 
   const handleCreate = async () => {
@@ -73,18 +95,14 @@ export default function OnboardingAutoReviewPage() {
       setError('Select at least one entity');
       return;
     }
-
     if (!result) return;
-
     setLoading(true);
     setError('');
-
     try {
-      // Prepare watchlist entities to create
       const entitiesToCreate = Array.from(selectedIndices)
         .map(idx => result.candidates[idx])
         .map(candidate => ({
-          type: candidate.type === 'company' ? 'supplier' : (candidate.type === 'customer' ? 'supplier' : 'supplier'), // Normalize types for watchlist
+          type: 'supplier' as const,
           name: candidate.name,
           country_code: candidate.country,
           region: candidate.region,
@@ -97,13 +115,8 @@ export default function OnboardingAutoReviewPage() {
           },
         }));
 
-      // Store the entities to create in session
       sessionStorage.setItem('entities_to_create', JSON.stringify(entitiesToCreate));
-
-      // Clear extraction result
       sessionStorage.removeItem('extraction_result');
-
-      // Navigate to org page to complete setup
       router.push('/onboarding/org');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to process entities';
@@ -131,8 +144,14 @@ export default function OnboardingAutoReviewPage() {
 
   const confidenceBadge = (confidence: number) => {
     const pct = Math.round(confidence * 100);
-    return pct === 100 ? 'High confidence' : pct < 60 ? 'Low confidence' : 'Medium confidence';
+    if (pct >= 90) return 'High';
+    if (pct >= 60) return 'Medium';
+    return 'Low';
   };
+
+  // Field-level source attribution from enriched_fields
+  const ef = result.enriched_fields ?? {};
+  const fieldSource = (key: string) => ef[key]?.source;
 
   return (
     <div className="w-full max-w-2xl">
@@ -150,7 +169,6 @@ export default function OnboardingAutoReviewPage() {
         </div>
       </div>
 
-      {/* Card */}
       <div className="bg-bg-surface border border-border-subtle rounded-md p-8 space-y-6">
         <div>
           <h1 className="text-xl font-semibold text-text-primary mb-2">Review extracted entities</h1>
@@ -168,15 +186,30 @@ export default function OnboardingAutoReviewPage() {
           </div>
         )}
 
-        {/* Company summary */}
+        {/* Company summary with per-field source badges */}
         {result.company_name && (
           <div className="bg-bg-surface-2 border border-border-default rounded-md p-4">
-            <h3 className="text-sm font-medium text-text-primary mb-2">Organization Info</h3>
-            <div className="space-y-1.5 text-xs text-text-secondary">
-              {result.company_name && <p>Name: {result.company_name}</p>}
-              {result.sector && <p>Sector: {result.sector}</p>}
-              {result.region && <p>Region: {result.region}</p>}
-              {result.country && <p>Country: {result.country}</p>}
+            <h3 className="text-sm font-medium text-text-primary mb-3">Organization Info</h3>
+            <div className="space-y-2">
+              <FieldRow label="Name" value={result.company_name} source={fieldSource('company_name')} />
+              <FieldRow label="Sector" value={result.sector} source={fieldSource('industry')} />
+              <FieldRow label="Region" value={result.region} source={fieldSource('headquarters')} />
+              <FieldRow label="Country" value={result.country} source={fieldSource('country')} />
+              {ef.description && (
+                <FieldRow label="Description" value={String(ef.description.value)} source={ef.description.source} />
+              )}
+              {ef.employee_count && (
+                <FieldRow label="Employees" value={String(ef.employee_count.value)} source={ef.employee_count.source} />
+              )}
+              {ef.founded_year && (
+                <FieldRow label="Founded" value={String(ef.founded_year.value)} source={ef.founded_year.source} />
+              )}
+              {ef.gstin && (
+                <FieldRow label="GSTIN" value={String(ef.gstin.value)} source={ef.gstin.source} />
+              )}
+              {ef.registration_number && (
+                <FieldRow label="Reg. No." value={String(ef.registration_number.value)} source={ef.registration_number.source} />
+              )}
             </div>
           </div>
         )}
@@ -211,6 +244,7 @@ export default function OnboardingAutoReviewPage() {
                         <span className={`text-xs px-1.5 py-0.5 rounded whitespace-nowrap ${confidenceColor(candidate.confidence)}`}>
                           {confidenceBadge(candidate.confidence)}
                         </span>
+                        <span className="text-xs text-text-muted capitalize">{candidate.type}</span>
                       </div>
                       {candidate.excerpt && (
                         <p className="text-xs text-text-muted line-clamp-2">"{candidate.excerpt}"</p>
@@ -226,7 +260,6 @@ export default function OnboardingAutoReviewPage() {
           )}
         </div>
 
-        {/* Actions */}
         <div className="flex justify-end gap-3 pt-2 border-t border-border-subtle">
           <button
             type="button"

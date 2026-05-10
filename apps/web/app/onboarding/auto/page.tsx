@@ -3,9 +3,25 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import ExtractionProgress from '@/components/onboarding/ExtractionProgress';
+import type { EnrichmentSourceStatus } from '@/app/api/onboarding/auto/extract/route';
+import type { FetchStrategy } from '@/lib/onboarding/fetch';
 
 const STEP = 1;
 const TOTAL = 3;
+
+const STRATEGY_LABEL: Record<FetchStrategy, string> = {
+  html: 'HTML',
+  playwright: 'JS render',
+  pdf: 'PDF',
+  ocr: 'OCR',
+};
+
+const SOURCE_LABEL: Record<string, string> = {
+  linkedin: 'LinkedIn',
+  crunchbase: 'Crunchbase',
+  'companies-house': 'Companies House',
+  gst: 'GST',
+};
 
 export default function OnboardingAutoPage() {
   const router = useRouter();
@@ -13,6 +29,8 @@ export default function OnboardingAutoPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState<'idle' | 'fetching' | 'extracting' | 'done'>('idle');
+  const [fetchStrategy, setFetchStrategy] = useState<FetchStrategy | null>(null);
+  const [enrichmentSources, setEnrichmentSources] = useState<EnrichmentSourceStatus[]>([]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,7 +41,6 @@ export default function OnboardingAutoPage() {
       return;
     }
 
-    // Validate URL format
     try {
       new URL(url);
     } catch {
@@ -48,13 +65,13 @@ export default function OnboardingAutoPage() {
       }
 
       const data = await res.json();
+      setFetchStrategy(data.fetch_strategy ?? null);
+      setEnrichmentSources(data.enrichment_sources ?? []);
       setProgress('done');
 
-      // Store extraction result in sessionStorage for the review page
       sessionStorage.setItem('extraction_result', JSON.stringify(data));
 
-      // Brief delay to show completion state
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 900));
       router.push('/onboarding/auto/review');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Extraction failed';
@@ -89,7 +106,40 @@ export default function OnboardingAutoPage() {
         </p>
 
         {progress !== 'idle' ? (
-          <ExtractionProgress stage={progress} />
+          <div className="space-y-4">
+            <ExtractionProgress stage={progress} />
+
+            {progress === 'done' && (fetchStrategy || enrichmentSources.length > 0) && (
+              <div className="bg-bg-surface-2 border border-border-default rounded-md p-3 space-y-2">
+                {fetchStrategy && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-text-muted">Fetched via</span>
+                    <span className="text-xs px-2 py-0.5 rounded bg-accent/20 text-accent font-medium">
+                      {STRATEGY_LABEL[fetchStrategy]}
+                    </span>
+                  </div>
+                )}
+                {enrichmentSources.length > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-text-muted">Enriched from</span>
+                    {enrichmentSources.map(s => (
+                      <span
+                        key={s.source}
+                        className={`text-xs px-2 py-0.5 rounded font-medium ${
+                          s.hit
+                            ? 'bg-green-900/50 text-green-300'
+                            : 'bg-bg-surface-3 text-text-disabled'
+                        }`}
+                      >
+                        {SOURCE_LABEL[s.source] ?? s.source}
+                        {s.used_mock && ' (mock)'}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
