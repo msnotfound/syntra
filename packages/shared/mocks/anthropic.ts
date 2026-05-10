@@ -96,6 +96,39 @@ export async function extractCompanyMetadata(
       { name: 'Shipping Partner XYZ', type: 'partner', confidence: 0.75, excerpt: 'Logistics and shipping partner' },
       { name: 'Component Supplier A', type: 'supplier', confidence: 0.7, excerpt: 'Strategic component supplier' },
     ],
+export interface AltRouteSuggestionOutput {
+  alternatives: Array<{
+    route_name: string;
+    via: string;
+    extra_days: number;
+    cost_delta_pct: number | null;
+    risk_notes: string;
+  }>;
+  narrative: string;
+}
+
+export async function generateAltRouteSuggestion(
+  _eventTitle: string,
+): Promise<AltRouteSuggestionOutput> {
+  await delay(80);
+  return {
+    alternatives: [
+      {
+        route_name: 'Cape of Good Hope routing',
+        via: 'Cape Town',
+        extra_days: 12,
+        cost_delta_pct: 18,
+        risk_notes: 'Longer transit adds inventory carrying cost; weather risk in southern Atlantic.',
+      },
+      {
+        route_name: 'Trans-Pacific alternative',
+        via: 'Singapore → Los Angeles',
+        extra_days: 7,
+        cost_delta_pct: 12,
+        risk_notes: 'Capacity constraints on TPEB lanes; book 4–6 weeks in advance.',
+      },
+    ],
+    narrative: 'Primary route disruption detected. Cape routing adds 12 days but avoids the affected corridor. Trans-Pacific option available for Asia-origin cargo with shorter delay.',
   };
 }
 
