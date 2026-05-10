@@ -7,11 +7,22 @@ export interface INLConversationTurn {
   created_at: Date;
 }
 
+export interface INLFilterSnapshot {
+  active_filter: Record<string, unknown> | null;
+  excluded_filters: Record<string, unknown>[];
+  entity_ids: string[];
+}
+
+export interface INLConversationState extends INLFilterSnapshot {
+  filter_history: INLFilterSnapshot[];
+}
+
 export interface INLConversation extends Document {
   org_id: Types.ObjectId;
   user_id: string;
   conversation_id: string;
   turns: INLConversationTurn[];
+  state: INLConversationState;
   created_at: Date;
   updated_at: Date;
 }
@@ -23,11 +34,25 @@ const NLConversationTurnSchema = new Schema<INLConversationTurn>({
   created_at: { type: Date, default: Date.now },
 }, { _id: false });
 
+const NLFilterSnapshotSchema = new Schema<INLFilterSnapshot>({
+  active_filter:    { type: Schema.Types.Mixed, default: null },
+  excluded_filters: [Schema.Types.Mixed],
+  entity_ids:       { type: [String], default: [] },
+}, { _id: false });
+
+const NLConversationStateSchema = new Schema<INLConversationState>({
+  active_filter:    { type: Schema.Types.Mixed, default: null },
+  excluded_filters: [Schema.Types.Mixed],
+  entity_ids:       { type: [String], default: [] },
+  filter_history:   { type: [NLFilterSnapshotSchema], default: [] },
+}, { _id: false });
+
 const NLConversationSchema = new Schema<INLConversation>({
   org_id:          { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
   user_id:         { type: String, required: true },
   conversation_id: { type: String, required: true },
   turns:           { type: [NLConversationTurnSchema], default: [] },
+  state:           { type: NLConversationStateSchema, default: () => ({}) },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 NLConversationSchema.index({ org_id: 1, user_id: 1, conversation_id: 1 }, { unique: true });

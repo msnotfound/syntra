@@ -73,11 +73,11 @@ describe('deriveActions — REMOVE intent', () => {
 
   test('removes only entities matching the filter', () => {
     const actions = deriveActions('Remove all suppliers in India', FIXTURE_PARSE_OUTPUT, FIXTURE_ENTITIES);
-    // Only type=supplier AND country_code=IN entities should appear
-    // FIXTURE: id1 (supplier/IN), id3 (supplier/IN) match; id2 (port/IN), id4 (port/SG) do not
-    expect(actions.remove).toHaveLength(2);
+    // Only type=supplier AND country_code=IN entities should appear.
+    expect(actions.remove).toHaveLength(3);
     expect(actions.remove.map(e => e.id)).toContain('id1');
     expect(actions.remove.map(e => e.id)).toContain('id3');
+    expect(actions.remove.map(e => e.id)).toContain('id5');
   });
 
   test('"stop tracking" triggers remove intent', () => {
@@ -328,5 +328,152 @@ describe('deriveConversationalPlan', () => {
     expect(plan.actions.map(action => action.intent)).toEqual(['add', 'add', 'remove']);
     expect(plan.actions).toHaveLength(3);
     expect(plan.actions[2].entity_ids).toEqual(['id4']);
+  });
+
+  test('follow-up "show me also" extends the previous active filter', () => {
+    const previousState = {
+      active_filter: FIXTURE_PARSE_OUTPUT,
+      excluded_filters: [],
+      entity_ids: ['id1', 'id3'],
+      filter_history: [],
+    };
+
+    const plan = deriveConversationalPlan(
+      'show me also ports in Singapore',
+      [{
+        entity_types: ['port'],
+        countries: ['SG'],
+        regions: [],
+        keywords: [],
+        severity_threshold: null,
+        summary: 'Also include ports in Singapore',
+        confidence: 0.9,
+      }],
+      FIXTURE_ENTITIES,
+      [],
+      previousState,
+    );
+
+    expect(plan.status).toBe('ready');
+    expect(plan.actions[0].entity_ids).toEqual(['id1', 'id3', 'id4']);
+    expect(plan.state.entity_ids).toEqual(['id1', 'id3', 'id4']);
+  });
+
+  test('follow-up "just" narrows the previous active filter', () => {
+    const previousState = {
+      active_filter: {
+        ...FIXTURE_PARSE_OUTPUT,
+        keywords: ['Mumbai'],
+      },
+      excluded_filters: [],
+      entity_ids: ['id5'],
+      filter_history: [],
+    };
+
+    const plan = deriveConversationalPlan(
+      'just the tier 1 ones',
+      [{
+        entity_types: [],
+        countries: [],
+        regions: [],
+        keywords: [],
+        severity_threshold: null,
+        supplier_tiers: [1],
+        summary: 'Only tier 1',
+        confidence: 0.9,
+      }],
+      FIXTURE_ENTITIES,
+      [],
+      previousState,
+    );
+
+    expect(plan.status).toBe('ready');
+    expect(plan.actions[0].intent).toBe('filter');
+    expect(plan.actions[0].entity_ids).toEqual(['id5']);
+    expect(plan.state.filter_history).toHaveLength(1);
+  });
+
+  test('remove that restores the previous filter state', () => {
+    const plan = deriveConversationalPlan(
+      'remove that',
+      [{
+        entity_types: [],
+        countries: [],
+        regions: [],
+        keywords: [],
+        severity_threshold: null,
+        summary: 'Remove the last filter',
+        confidence: 0.9,
+      }],
+      FIXTURE_ENTITIES,
+      [],
+      {
+        active_filter: {
+          ...FIXTURE_PARSE_OUTPUT,
+          supplier_tiers: [1],
+        },
+        excluded_filters: [],
+        entity_ids: ['id5'],
+        filter_history: [{
+          active_filter: FIXTURE_PARSE_OUTPUT,
+          excluded_filters: [],
+          entity_ids: ['id1', 'id3'],
+        }],
+      },
+    );
+
+    expect(plan.status).toBe('ready');
+    expect(plan.actions[0].intent).toBe('filter');
+    expect(plan.actions[0].entity_ids).toEqual(['id1', 'id3']);
+    expect(plan.state.entity_ids).toEqual(['id1', 'id3']);
+    expect(plan.state.filter_history).toHaveLength(0);
+  });
+
+  test('remove that falls back to previous turn ids instead of matching everything', () => {
+    const plan = deriveConversationalPlan(
+      'remove that',
+      [{
+        entity_types: [],
+        countries: [],
+        regions: [],
+        keywords: [],
+        severity_threshold: null,
+        summary: 'Remove the last filter',
+        confidence: 0.9,
+      }],
+      FIXTURE_ENTITIES,
+      [{ role: 'assistant', text: 'Showing suppliers in India', entity_ids: ['id1', 'id3'] }],
+    );
+
+    expect(plan.status).toBe('ready');
+    expect(plan.actions[0].intent).toBe('filter');
+    expect(plan.actions[0].entity_ids).toEqual(['id1', 'id3']);
+    expect(plan.state.entity_ids).toEqual(['id1', 'id3']);
+  });
+
+  test('but not excludes matching entities from the active filter', () => {
+    const plan = deriveConversationalPlan(
+      'add suppliers in India but not tier 1',
+      [
+        FIXTURE_PARSE_OUTPUT,
+        {
+          entity_types: [],
+          countries: [],
+          regions: [],
+          keywords: [],
+          severity_threshold: null,
+          supplier_tiers: [1],
+          summary: 'Exclude tier 1',
+          confidence: 0.9,
+        },
+      ],
+      FIXTURE_ENTITIES,
+      [],
+    );
+
+    expect(plan.status).toBe('ready');
+    expect(plan.actions.at(-1)?.entity_ids).toEqual(['id1', 'id3']);
+    expect(plan.state.entity_ids).toEqual(['id1', 'id3']);
+    expect(plan.state.excluded_filters).toHaveLength(1);
   });
 });

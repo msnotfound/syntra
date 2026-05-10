@@ -19,6 +19,7 @@ const config: Config = {
   },
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^@syntra/shared/mocks/(.*)\\.js$': '<rootDir>/../../packages/shared/mocks/$1.ts',
     '^@/(.*)$': '<rootDir>/$1',
     '^@syntra/llm$': '<rootDir>/../../packages/llm/index.ts',
     '^@syntra/shared$': '<rootDir>/../../packages/shared/index.ts',

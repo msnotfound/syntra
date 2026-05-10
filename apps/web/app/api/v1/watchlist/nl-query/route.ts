@@ -9,6 +9,7 @@ import {
   deriveConversationalPlan,
   splitActionSegments,
   type MatchableEntity,
+  type NLConversationState,
   type NLConversationTurn,
   type NLWatchlistParsed,
 } from '@/lib/watchlist/nl-actions';
@@ -50,6 +51,21 @@ function serializeTurn(turn: {
 
 function unique(values: string[]): string[] {
   return [...new Set(values)];
+}
+
+function serializeState(state: unknown): NLConversationState | null {
+  if (!state || typeof state !== 'object') return null;
+  const source = state as Partial<NLConversationState>;
+  return {
+    active_filter: source.active_filter ?? null,
+    excluded_filters: Array.isArray(source.excluded_filters) ? source.excluded_filters : [],
+    entity_ids: Array.isArray(source.entity_ids) ? source.entity_ids : [],
+    filter_history: Array.isArray(source.filter_history) ? source.filter_history.map(snapshot => ({
+      active_filter: snapshot.active_filter ?? null,
+      excluded_filters: Array.isArray(snapshot.excluded_filters) ? snapshot.excluded_filters : [],
+      entity_ids: Array.isArray(snapshot.entity_ids) ? snapshot.entity_ids : [],
+    })) : [],
+  };
 }
 
 async function parseSegments(query: string): Promise<NLWatchlistParsed[]> {
@@ -137,6 +153,7 @@ export async function POST(req: NextRequest) {
     parsedSegments,
     currentEntities as unknown as MatchableEntity[],
     previousTurns,
+    serializeState(conversation?.state),
   );
 
   const entityIds = unique(plan.actions.flatMap(action => action.entity_ids));
@@ -151,7 +168,7 @@ export async function POST(req: NextRequest) {
 
   await NLConversation.updateOne(
     { org_id: org._id, user_id: session.userId, conversation_id: conversationId },
-    { $set: { turns: storedTurns } },
+    { $set: { turns: storedTurns, state: plan.state } },
     { upsert: true },
   );
 
@@ -164,6 +181,7 @@ export async function POST(req: NextRequest) {
       parsed_segments: parsedSegments,
       actions: plan.legacy_actions,
       plan: plan.actions,
+      state: plan.state,
       clarification: plan.clarification,
       promptId: 'NL_WATCHLIST_PARSE',
       promptVersion: '1.0.0',
