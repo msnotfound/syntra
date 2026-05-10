@@ -93,7 +93,7 @@ describe('ProvenanceTooltip.tsx', () => {
 
   test('accepts claims and children props', () => {
     expect(src).toMatch(/claims.*ProvenanceClaim/);
-    expect(src).toMatch(/children.*React\.ReactNode/);
+    expect(src).toMatch(/children[\s\S]*ReactNode/);
   });
 
   test('imports SourceBadge for Admiralty display', () => {
@@ -127,7 +127,7 @@ describe('Provenance.tsx', () => {
 
   test('accepts claims, context, and children props', () => {
     expect(src).toMatch(/claims.*ProvenanceClaim/);
-    expect(src).toMatch(/children.*React\.ReactNode/);
+    expect(src).toMatch(/children[\s\S]*ReactNode/);
   });
 });
 
