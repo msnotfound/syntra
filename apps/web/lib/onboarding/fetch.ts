@@ -61,7 +61,7 @@ async function strategyPlaywright(url: string): Promise<FetchedContent> {
   try {
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
-    const text = (await page.evaluate(() => document.body.innerText)) as string;
+    const text = (await page.evaluate('document.body.innerText')) as string;
     const title = await page.title();
     const isAnnual =
       title.toLowerCase().includes('annual report') ||
