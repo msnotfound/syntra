@@ -84,7 +84,9 @@ export type { IWarRoomActionItem, ActionItemStatus } from './models/WarRoomActio
 export type { IWarRoomMessage, WarRoomMsgType, IPoll, IPollVote } from './models/WarRoomMessage.js';
 
 export { Forecast } from './models/Forecast.js';
+export { ForecastPrior } from './models/ForecastPrior.js';
 export { LeadingIndicator, seedLeadingIndicators, INDICATOR_SEEDS } from './models/LeadingIndicator.js';
 
-export type { IForecast, ForecastIndicatorType, ForecastOutcome } from './models/Forecast.js';
+export type { IForecast, ForecastEvidenceEvent, ForecastIndicatorType, ForecastOutcome } from './models/Forecast.js';
+export type { IForecastPrior } from './models/ForecastPrior.js';
 export type { ILeadingIndicator, ThresholdBreach } from './models/LeadingIndicator.js';

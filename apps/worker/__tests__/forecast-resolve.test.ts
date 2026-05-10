@@ -2,6 +2,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose, { Types } from 'mongoose';
 import { Forecast } from '../../../packages/db/models/Forecast';
 import { Alert } from '../../../packages/db/models/Alert';
+import { ForecastPrior } from '../../../packages/db/models/ForecastPrior';
 import { computeBrierScore, runForecastResolveCycle } from '../src/workers/forecast-resolve';
 
 jest.mock('../../../packages/db/connection', () => ({
@@ -24,6 +25,7 @@ afterAll(async () => {
 afterEach(async () => {
   await Forecast.deleteMany({});
   await Alert.deleteMany({});
+  await ForecastPrior.deleteMany({});
 });
 
 const ORG = new Types.ObjectId();
@@ -102,6 +104,11 @@ describe('runForecastResolveCycle — outcome resolution', () => {
     expect(doc?.actual_outcome).toBe('occurred');
     // Brier: (0.65 - 1)^2 = 0.1225
     expect(doc?.brier_score).toBeCloseTo(0.1225);
+
+    const prior = await ForecastPrior.findOne({ indicator_type: 'port-congestion' }).lean();
+    expect(prior?.base_rate).toBeCloseTo(1);
+    expect(prior?.sample_count).toBe(1);
+    expect(prior?.brier_score_avg).toBeCloseTo(0.1225);
   });
 
   it('resolves as "did_not_occur" when no matching alert', async () => {
@@ -114,6 +121,11 @@ describe('runForecastResolveCycle — outcome resolution', () => {
     expect(doc?.actual_outcome).toBe('did_not_occur');
     // Brier: (0.40 - 0)^2 = 0.16
     expect(doc?.brier_score).toBeCloseTo(0.16);
+
+    const prior = await ForecastPrior.findOne({ indicator_type: 'sanctions-likelihood' }).lean();
+    expect(prior?.base_rate).toBeCloseTo(0);
+    expect(prior?.sample_count).toBe(1);
+    expect(prior?.brier_score_avg).toBeCloseTo(0.16);
   });
 
   it('does not resolve forecasts that have not yet expired', async () => {
