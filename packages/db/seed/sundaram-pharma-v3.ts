@@ -20,6 +20,7 @@ import { Shipment } from '../models/Shipment.js';
 import { PurchaseOrder } from '../models/PurchaseOrder.js';
 import { Counterparty } from '../models/Counterparty.js';
 import { Contract } from '../models/Contract.js';
+import { ContractExtractionRun } from '../models/ContractExtractionRun.js';
 import { DigestPreference } from '../models/DigestPreference.js';
 import { NotificationChannel } from '../models/NotificationChannel.js';
 import { CustomSource } from '../models/CustomSource.js';
@@ -606,6 +607,109 @@ async function seedCommercialCollections(orgId: Types.ObjectId, entities: Entity
       { upsert: true, new: true },
     );
     await Counterparty.updateOne({ _id: counterparty._id }, { $set: { contract_id: contract._id } });
+  }
+
+  const extractedCounterparty = counterparties.find(cp => cp.role === 'supplier') ?? counterparties[0];
+  const inProgressCounterparty = counterparties.find(cp => cp.role === 'logistics') ?? counterparties[1] ?? counterparties[0];
+  const buyerEntity = entities.find(e => e.name === 'Sundaram Pharma HQ') ?? entities[0];
+  if (extractedCounterparty && buyerEntity) {
+    const sellerEntity = entities.find(e => String(e._id) === String(extractedCounterparty.entity_id)) ?? buyerEntity;
+    const extractedRun = await ContractExtractionRun.findOneAndUpdate(
+      { org_id: orgId, doc_url: 'https://syntra.demo/contracts/sundaram-kandla-api-supply.pdf' },
+      {
+        $set: {
+          input_doc_hash: 'demo_kandla_api_supply_hash',
+          llm_tokens_used: 1840,
+          status: 'completed',
+          success: true,
+          error: null,
+          latency_ms: 4200,
+          completed_at: now,
+        },
+      },
+      { upsert: true, new: true },
+    );
+    const extractedContract = await Contract.findOneAndUpdate(
+      { org_id: orgId, ref: 'SP-CON-EXTRACTED-001' },
+      {
+        $set: {
+          counterparty_id: objectId(extractedCounterparty._id),
+          type: 'supply',
+          value_usd: 1_200_000,
+          expires_at: daysFromNow(420, now),
+          terms_summary: 'Extracted API supply contract with monthly obligations, renewal notice, force majeure, and India exclusivity.',
+          force_majeure_clauses: ['Force majeure includes port closure, epidemic controls, war, and export restrictions.'],
+          source_doc_url: 'https://syntra.demo/contracts/sundaram-kandla-api-supply.pdf',
+          source_doc_hash: 'demo_kandla_api_supply_hash',
+          extraction_run_id: String(extractedRun._id),
+          extraction_confidence_pct: 91,
+          extracted_at: now,
+          extracted: {
+            counterparties: [
+              { name: 'Sundaram Pharma Ltd', role: 'buyer', entity_id: objectId(buyerEntity._id) },
+              { name: sellerEntity.name, role: 'seller', entity_id: objectId(sellerEntity._id) },
+            ],
+            obligations: [
+              { party: sellerEntity.name, description: 'Deliver validated monthly API batches under cold-chain controls.', due_date: daysFromNow(45, now), status: 'pending' },
+              { party: 'Sundaram Pharma Ltd', description: 'Send renewal notice before the contractual notice deadline.', due_date: daysFromNow(300, now), status: 'pending' },
+            ],
+            key_dates: [
+              { label: 'Effective Date', date: new Date('2026-04-01'), type: 'effective' },
+              { label: 'Renewal Notice Deadline', date: daysFromNow(300, now), type: 'renewal' },
+              { label: 'Expiry Date', date: daysFromNow(420, now), type: 'expiry' },
+            ],
+            value_clauses: [
+              { description: 'Annual committed purchase volume for API supply.', amount_usd: 1_200_000, currency: 'USD', trigger: 'minimum annual volume' },
+            ],
+            force_majeure: { covered: true, excerpt: 'Force majeure includes port closure, epidemic controls, war, and export restrictions.' },
+            exclusivity: { exclusive: true, scope: 'Exclusive API supply rights for West India production lines.', geographies: ['India'] },
+          },
+          active: true,
+        },
+      },
+      { upsert: true, new: true },
+    );
+    await ContractExtractionRun.updateOne({ _id: extractedRun._id }, { $set: { contract_id: extractedContract._id } });
+    await Counterparty.updateOne({ _id: extractedCounterparty._id }, { $set: { contract_id: extractedContract._id } });
+  }
+
+  if (inProgressCounterparty) {
+    const inProgressRun = await ContractExtractionRun.findOneAndUpdate(
+      { org_id: orgId, doc_url: 'https://syntra.demo/reports/sundaram-annual-report-2026.pdf' },
+      {
+        $set: {
+          input_doc_hash: null,
+          llm_tokens_used: 0,
+          status: 'running',
+          success: false,
+          error: null,
+          latency_ms: 0,
+          completed_at: null,
+        },
+      },
+      { upsert: true, new: true },
+    );
+    const inProgressContract = await Contract.findOneAndUpdate(
+      { org_id: orgId, ref: 'SP-AR-INGEST-2026' },
+      {
+        $set: {
+          counterparty_id: objectId(inProgressCounterparty._id),
+          type: 'other',
+          value_usd: 0,
+          expires_at: null,
+          terms_summary: 'Annual report ingestion queued for operational clause extraction.',
+          force_majeure_clauses: [],
+          source_doc_url: 'https://syntra.demo/reports/sundaram-annual-report-2026.pdf',
+          source_doc_hash: null,
+          extraction_run_id: String(inProgressRun._id),
+          extraction_confidence_pct: 0,
+          extracted_at: null,
+          active: true,
+        },
+      },
+      { upsert: true, new: true },
+    );
+    await ContractExtractionRun.updateOne({ _id: inProgressRun._id }, { $set: { contract_id: inProgressContract._id } });
   }
 
   const suppliers = entities.filter(e => e.type === 'supplier');

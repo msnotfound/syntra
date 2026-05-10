@@ -34,6 +34,7 @@ export { VesselPosition } from './models/VesselPosition.js';
 export { PurchaseOrder } from './models/PurchaseOrder.js';
 export { Counterparty } from './models/Counterparty.js';
 export { Contract } from './models/Contract.js';
+export { ContractExtractionRun } from './models/ContractExtractionRun.js';
 export { MitigationSuggestion } from './models/MitigationSuggestion.js';
 export { WarRoomActionItem } from './models/WarRoomActionItem.js';
 export { NLConversation } from './models/NLConversation.js';
@@ -80,7 +81,22 @@ export type { IShipment, ShipmentStatus } from './models/Shipment.js';
 export type { IVesselPosition } from './models/VesselPosition.js';
 export type { IPurchaseOrder, IPOItem, POStatus } from './models/PurchaseOrder.js';
 export type { ICounterparty, CounterpartyRole } from './models/Counterparty.js';
-export type { IContract, ContractType } from './models/Contract.js';
+export type {
+  IContract,
+  ContractType,
+  IContractExtracted,
+  IExtractedCounterparty,
+  IExtractedObligation,
+  IExtractedKeyDate,
+  IExtractedValueClause,
+  ExtractedCounterpartyRole,
+  ExtractedObligationStatus,
+  ExtractedKeyDateType,
+} from './models/Contract.js';
+export type {
+  IContractExtractionRun,
+  ContractExtractionRunStatus,
+} from './models/ContractExtractionRun.js';
 export type { IMitigationSuggestion, MitigationSuggestionType, MitigationStatus } from './models/MitigationSuggestion.js';
 export type { IWarRoomActionItem, ActionItemStatus } from './models/WarRoomActionItem.js';
 export type { IWarRoomMessage, WarRoomMsgType, IPoll, IPollVote } from './models/WarRoomMessage.js';

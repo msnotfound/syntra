@@ -21,6 +21,12 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     ref: contract.ref, type: contract.type, value_usd: contract.value_usd,
     expires_at: contract.expires_at, terms_summary: contract.terms_summary,
     force_majeure_clauses: contract.force_majeure_clauses,
+    source_doc_url: contract.source_doc_url,
+    source_doc_hash: contract.source_doc_hash,
+    extraction_run_id: contract.extraction_run_id,
+    extraction_confidence_pct: contract.extraction_confidence_pct,
+    extracted_at: contract.extracted_at,
+    extracted: contract.extracted,
     created_at: contract.created_at, updated_at: contract.updated_at,
     _links: {
       counterparty: counterparty ? { id: String(counterparty._id), role: counterparty.role, risk_score: counterparty.risk_score, entity_id: String(counterparty.entity_id) } : null,

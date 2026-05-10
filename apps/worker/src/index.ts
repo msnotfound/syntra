@@ -14,6 +14,7 @@ import { startDecisionRecordWorker } from './workers/decision-record.js';
 import { runCommunityPollCycle } from './workers/community-poller.js';
 import { startGraphExtractWorker } from './workers/graph-extract.js';
 import { startWarRoomStateSyncWorker } from './workers/warroom-state-sync.js';
+import { startContractExtractWorker } from './workers/contract-extract.js';
 
 async function main() {
   console.log('[worker] Starting Syntra worker...');
@@ -31,6 +32,9 @@ async function main() {
 
   startGraphExtractWorker();
   console.log('[worker] Graph extract worker started');
+
+  startContractExtractWorker();
+  console.log('[worker] Contract extract worker started');
 
   startWarRoomStateSyncWorker();
   console.log('[worker] War room state sync worker started');

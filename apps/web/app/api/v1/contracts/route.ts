@@ -18,7 +18,14 @@ export async function GET(req: NextRequest) {
     id: String(c._id), counterparty_id: String(c.counterparty_id),
     ref: c.ref, type: c.type, value_usd: c.value_usd,
     expires_at: c.expires_at, terms_summary: c.terms_summary,
-    force_majeure_clauses: c.force_majeure_clauses, created_at: c.created_at,
+    force_majeure_clauses: c.force_majeure_clauses,
+    source_doc_url: c.source_doc_url,
+    source_doc_hash: c.source_doc_hash,
+    extraction_run_id: c.extraction_run_id,
+    extraction_confidence_pct: c.extraction_confidence_pct,
+    extracted_at: c.extracted_at,
+    extracted: c.extracted,
+    created_at: c.created_at,
   }))));
 }
 

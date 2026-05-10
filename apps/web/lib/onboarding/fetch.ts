@@ -2,6 +2,7 @@ export type FetchStrategy = 'html' | 'playwright' | 'pdf' | 'ocr';
 
 export interface FetchedContent {
   text: string;
+  binary?: Buffer;
   source: 'webpage' | 'annual_report';
   url: string;
   strategy: FetchStrategy;
@@ -51,7 +52,7 @@ async function strategyHtml(url: string): Promise<FetchedContent | null> {
   const stripped = stripHtml(raw).substring(0, MAX_CHARS);
   if (stripped.length < SPA_TEXT_THRESHOLD) return null;
   const isAnnual = raw.toLowerCase().includes('annual report');
-  return { text: stripped, source: isAnnual ? 'annual_report' : 'webpage', url, strategy: 'html' };
+  return { text: stripped, binary: buf, source: isAnnual ? 'annual_report' : 'webpage', url, strategy: 'html' };
 }
 
 async function strategyPlaywright(url: string): Promise<FetchedContent> {
@@ -83,6 +84,7 @@ async function strategyPdf(url: string): Promise<FetchedContent> {
   const data = await pdfParse(buf);
   return {
     text: data.text.substring(0, MAX_CHARS),
+    binary: buf,
     source: 'annual_report',
     url,
     strategy: 'pdf',

@@ -70,12 +70,13 @@ export default async function ContractsPage({ params, searchParams }: PageProps)
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Type</th>
               <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-text-secondary">Value (USD)</th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Expires</th>
-              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-text-secondary">FM Clauses</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Extraction</th>
+              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-text-secondary">Risk Clauses</th>
             </tr>
           </thead>
           <tbody>
             {contracts.length === 0 ? (
-              <tr><td colSpan={6} className="px-4 py-12 text-center text-sm text-text-muted">No contracts found.</td></tr>
+              <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-text-muted">No contracts found.</td></tr>
             ) : contracts.map(c => {
               const cp = cpMap[String(c.counterparty_id)] as { entity_id: unknown } | undefined;
               const entityName = cp ? entityMap[String(cp.entity_id)] : undefined;
@@ -101,9 +102,12 @@ export default async function ContractsPage({ params, searchParams }: PageProps)
                       ? <span className={expired ? 'text-severity-critical' : 'text-text-muted'}>{new Date(c.expires_at).toLocaleDateString()}</span>
                       : <span className="text-text-disabled">—</span>}
                   </td>
+                  <td className="px-4 py-3">
+                    <ExtractionChip contract={c} />
+                  </td>
                   <td className="px-4 py-3 text-sm text-text-secondary font-mono text-center">
-                    {c.force_majeure_clauses.length > 0
-                      ? <span className="text-amber-400">{c.force_majeure_clauses.length}</span>
+                    {(c.extracted?.force_majeure?.covered || c.extracted?.exclusivity?.exclusive || c.force_majeure_clauses.length > 0)
+                      ? <span className="text-amber-400">{Number(Boolean(c.extracted?.force_majeure?.covered)) + Number(Boolean(c.extracted?.exclusivity?.exclusive)) || c.force_majeure_clauses.length}</span>
                       : <span className="text-text-disabled">0</span>}
                   </td>
                 </tr>
@@ -113,5 +117,27 @@ export default async function ContractsPage({ params, searchParams }: PageProps)
         </table>
       </div>
     </div>
+  );
+}
+
+function ExtractionChip({ contract }: { contract: IContract }) {
+  if (contract.extracted_at) {
+    return (
+      <span className="inline-flex items-center rounded border border-severity-low/30 px-2 py-0.5 text-xs text-severity-low">
+        Extracted · {contract.extraction_confidence_pct}%
+      </span>
+    );
+  }
+  if (contract.extraction_run_id) {
+    return (
+      <span className="inline-flex items-center rounded border border-amber-400/30 px-2 py-0.5 text-xs text-amber-400">
+        In progress
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center rounded border border-border-subtle px-2 py-0.5 text-xs text-text-muted">
+      Manual
+    </span>
   );
 }
