@@ -1,11 +1,16 @@
-import { deriveActions, matchesFilter } from '../lib/watchlist/nl-actions';
-import type { NLWatchlistParsed } from '../lib/watchlist/nl-actions';
+import {
+  deriveActions,
+  deriveConversationalPlan,
+  matchesFilter,
+  splitActionSegments,
+} from '../lib/watchlist/nl-actions';
+import type { NLConversationTurn, NLWatchlistParsed } from '../lib/watchlist/nl-actions';
 
 const FIXTURE_PARSE_OUTPUT: NLWatchlistParsed = {
   entity_types: ['supplier'],
   countries: ['IN'],
   regions: [],
-  keywords: ['pharma'],
+  keywords: [],
   severity_threshold: null,
   summary: 'Track pharma suppliers in India',
   confidence: 0.9,
@@ -16,6 +21,7 @@ const FIXTURE_ENTITIES = [
   { _id: 'id2', name: 'Mumbai Port', type: 'port', country_code: 'IN', region: null },
   { _id: 'id3', name: 'Chennai Supplier', type: 'supplier', country_code: 'IN', region: null },
   { _id: 'id4', name: 'Singapore Hub', type: 'port', country_code: 'SG', region: null },
+  { _id: 'id5', name: 'Mumbai API Supplier', type: 'supplier', country_code: 'IN', region: null, supplier_tier: 1 },
 ];
 
 describe('deriveActions — ADD intent', () => {
@@ -167,5 +173,160 @@ describe('matchesFilter', () => {
     expect(result.countries).toContain('IN');
     expect(typeof result.confidence).toBe('number');
     expect(result.confidence).toBeGreaterThan(0);
+  });
+});
+
+describe('splitActionSegments', () => {
+  test('splits conjunctions into ordered intents', () => {
+    const segments = splitActionSegments('add pharma suppliers and ports in India, remove Singapore Hub');
+
+    expect(segments).toEqual([
+      { intent: 'add', text: 'add pharma suppliers' },
+      { intent: 'add', text: 'ports in India' },
+      { intent: 'remove', text: 'remove Singapore Hub' },
+    ]);
+  });
+
+  test('treats BUT clauses as filter refinements', () => {
+    const segments = splitActionSegments('add suppliers in Mumbai BUT only Tier 1');
+
+    expect(segments).toEqual([
+      { intent: 'add', text: 'add suppliers in Mumbai' },
+      { intent: 'filter', text: 'only Tier 1' },
+    ]);
+  });
+});
+
+describe('deriveConversationalPlan', () => {
+  test('turns add-plus-filter conjunctions into a two-step plan', () => {
+    const parsed: NLWatchlistParsed[] = [
+      {
+        entity_types: ['supplier'],
+        countries: [],
+        regions: [],
+        keywords: ['Mumbai'],
+        severity_threshold: null,
+        summary: 'Add suppliers matching Mumbai',
+        confidence: 0.9,
+      },
+      {
+        entity_types: [],
+        countries: [],
+        regions: [],
+        keywords: [],
+        severity_threshold: null,
+        supplier_tiers: [1],
+        summary: 'Only Tier 1 suppliers',
+        confidence: 0.92,
+      },
+    ];
+
+    const plan = deriveConversationalPlan(
+      'add suppliers in Mumbai BUT only Tier 1',
+      parsed,
+      FIXTURE_ENTITIES,
+      [],
+    );
+
+    expect(plan.status).toBe('ready');
+    expect(plan.actions).toHaveLength(2);
+    expect(plan.actions.map(action => action.intent)).toEqual(['add', 'filter']);
+    expect(plan.actions[0].entity_ids).toEqual(['id5']);
+    expect(plan.actions[1].criteria.supplier_tiers).toEqual([1]);
+  });
+
+  test('returns clarification when parse confidence is below 70 percent', () => {
+    const plan = deriveConversationalPlan(
+      'track the usual risky ones',
+      [{ ...FIXTURE_PARSE_OUTPUT, confidence: 0.62 }],
+      FIXTURE_ENTITIES,
+      [],
+    );
+
+    expect(plan.status).toBe('clarification');
+    expect(plan.clarification?.question).toMatch(/clarify/i);
+    expect(plan.actions).toHaveLength(0);
+  });
+
+  test('returns clarification when a location has multiple matching interpretations', () => {
+    const plan = deriveConversationalPlan(
+      'add Mumbai',
+      [{
+        entity_types: [],
+        countries: [],
+        regions: [],
+        keywords: ['Mumbai'],
+        severity_threshold: null,
+        summary: 'Add Mumbai',
+        confidence: 0.91,
+      }],
+      FIXTURE_ENTITIES,
+      [],
+    );
+
+    expect(plan.status).toBe('clarification');
+    expect(plan.clarification?.question).toContain('Mumbai');
+    expect(plan.clarification?.options).toContain('Mumbai Port');
+    expect(plan.clarification?.options).toContain('Mumbai API Supplier');
+  });
+
+  test('follow-up updates reuse entity ids from the previous turn', () => {
+    const previousTurns: NLConversationTurn[] = [{
+      role: 'assistant',
+      text: 'Added Mumbai suppliers',
+      entity_ids: ['id5'],
+    }];
+
+    const plan = deriveConversationalPlan(
+      'now make those critical-only',
+      [{
+        entity_types: [],
+        countries: [],
+        regions: [],
+        keywords: [],
+        severity_threshold: 'critical',
+        summary: 'Make those critical only',
+        confidence: 0.88,
+      }],
+      FIXTURE_ENTITIES,
+      previousTurns,
+    );
+
+    expect(plan.status).toBe('ready');
+    expect(plan.actions).toHaveLength(1);
+    expect(plan.actions[0]).toMatchObject({
+      intent: 'update',
+      entity_ids: ['id5'],
+      updates: [{ field: 'severity_threshold', from: 'current', to: 'critical' }],
+    });
+  });
+
+  test('multi-action prompts return one ordered plan item per action', () => {
+    const plan = deriveConversationalPlan(
+      'add pharma suppliers and ports in India, remove Singapore Hub',
+      [
+        { ...FIXTURE_PARSE_OUTPUT, summary: 'Add pharma suppliers in India' },
+        {
+          ...FIXTURE_PARSE_OUTPUT,
+          entity_types: ['port'],
+          keywords: [],
+          summary: 'Add ports in India',
+        },
+        {
+          ...FIXTURE_PARSE_OUTPUT,
+          entity_types: ['port'],
+          countries: ['SG'],
+          keywords: ['Singapore Hub'],
+          summary: 'Remove Singapore Hub',
+        },
+      ],
+      FIXTURE_ENTITIES,
+      [],
+    );
+
+    expect(plan.status).toBe('ready');
+    expect(plan.actions.map(action => action.intent)).toEqual(['add', 'add', 'remove']);
+    expect(plan.actions).toHaveLength(3);
+    expect(plan.actions[2].entity_ids).toEqual(['id4']);
   });
 });

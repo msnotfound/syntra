@@ -35,6 +35,7 @@ export { PurchaseOrder } from './models/PurchaseOrder.js';
 export { Counterparty } from './models/Counterparty.js';
 export { Contract } from './models/Contract.js';
 export { MitigationSuggestion } from './models/MitigationSuggestion.js';
+export { NLConversation } from './models/NLConversation.js';
 
 export type { IOrganization } from './models/Organization.js';
 export type { IUser } from './models/User.js';
@@ -73,6 +74,7 @@ export type { IPurchaseOrder, IPOItem, POStatus } from './models/PurchaseOrder.j
 export type { ICounterparty, CounterpartyRole } from './models/Counterparty.js';
 export type { IContract, ContractType } from './models/Contract.js';
 export type { IMitigationSuggestion, MitigationSuggestionType, MitigationStatus } from './models/MitigationSuggestion.js';
+export type { INLConversation, INLConversationTurn } from './models/NLConversation.js';
 
 export { Forecast } from './models/Forecast.js';
 export { LeadingIndicator, seedLeadingIndicators, INDICATOR_SEEDS } from './models/LeadingIndicator.js';
