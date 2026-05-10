@@ -2,14 +2,14 @@ import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 
 export interface IUsageEvent extends Document {
   org_id: Types.ObjectId;
-  type: 'alert_sent' | 'api_call' | 'watchlist_added';
+  type: 'alert_sent' | 'api_call' | 'watchlist_added' | 'assistant_query';
   metadata: Record<string, unknown>;
   created_at: Date;
 }
 
 const UsageEventSchema = new Schema<IUsageEvent>({
   org_id: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
-  type:   { type: String, enum: ['alert_sent','api_call','watchlist_added'], required: true },
+  type:   { type: String, enum: ['alert_sent','api_call','watchlist_added','assistant_query'], required: true },
   metadata: { type: Schema.Types.Mixed, default: {} },
 }, { timestamps: { createdAt: 'created_at', updatedAt: false } });
 
