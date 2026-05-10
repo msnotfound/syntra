@@ -15,6 +15,7 @@
     "seed": "tsx seed/index.ts"
   },
   "dependencies": {
+    "@syntra/shared": "workspace:*",
     "mongoose": "^8.5.1",
     "mongodb-memory-server": "^10.0.0"
   },

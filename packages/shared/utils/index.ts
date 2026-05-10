@@ -283,3 +283,14 @@ export {
   computeBySeverity,
 } from './risk-score.js';
 export type { ScoredAlert, GroupedScoredAlert } from './risk-score.js';
+
+export {
+  drawTriangular,
+  getDisruptionDistribution,
+  simulateVarMonteCarlo,
+} from './var-monte-carlo.js';
+export type {
+  TriangularDistribution,
+  VarMonteCarloInput,
+  VarMonteCarloResult,
+} from './var-monte-carlo.js';

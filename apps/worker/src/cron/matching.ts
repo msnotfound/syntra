@@ -142,7 +142,8 @@ async function enqueueDispatch(alertId: string): Promise<void> {
 async function enqueueVarCompute(alertId: string): Promise<void> {
   try {
     const { getVarComputeQueue } = await import('../workers/var-compute.js');
-    await getVarComputeQueue().add('var-compute', { alertId }, { jobId: `var_compute:${alertId}` });
+    const mode = process.env.VAR_COMPUTE_MODE === 'simulation' ? 'simulation' : 'fast';
+    await getVarComputeQueue().add('var-compute', { alertId, mode }, { jobId: `var_compute:${alertId}` });
   } catch {
     console.warn('[matching] Could not enqueue var-compute for alert', alertId);
   }
