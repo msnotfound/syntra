@@ -6,7 +6,11 @@ import { IntelClaim } from '../../../packages/db/models/IntelClaim';
 import { VesselPosition } from '../../../packages/db/models/VesselPosition';
 import { Organization } from '../../../packages/db/models/Organization';
 import { computeBrierScore } from '../src/workers/forecast-resolve';
-import { computeThreshold } from '../src/cron/forecast-compute';
+import {
+  computeBayesianProbabilityPct,
+  computeRollingIndicatorStats,
+  computeThreshold,
+} from '../src/cron/forecast-compute';
 
 jest.mock('@syntra/llm', () => ({
   callLLMJson: jest.fn(),
@@ -118,6 +122,64 @@ describe('computeThreshold', () => {
   it('exactly 2σ → elevated (boundary is exclusive: >2 = critical)', () => {
     // exactly 2σ: (0.4 - 0.2) / 0.1 = 2.0 — not > 2, so elevated
     expect(computeThreshold(0.40, 0.20, 0.10)).toBe('elevated');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Rolling indicator baseline and z-score
+// ---------------------------------------------------------------------------
+
+describe('computeRollingIndicatorStats', () => {
+  it('uses the rolling 30-day median for baseline so outliers do not dominate', () => {
+    const now = new Date('2026-05-10T00:00:00.000Z');
+    const points = Array.from({ length: 90 }, (_, idx) => ({
+      value: idx >= 60 ? 0.20 : 0.10,
+      observed_at: new Date(now.getTime() - (89 - idx) * 86400_000),
+    }));
+    points[75] = { ...points[75], value: 0.95 };
+    points[89] = { ...points[89], value: 0.40 };
+
+    const stats = computeRollingIndicatorStats(points, now);
+
+    expect(stats.baseline).toBeCloseTo(0.20);
+    expect(stats.sampleCount90d).toBe(90);
+    expect(stats.sampleCount30d).toBe(30);
+  });
+
+  it('computes z-score from rolling 90-day standard deviation', () => {
+    const now = new Date('2026-05-10T00:00:00.000Z');
+    const points = [0.10, 0.20, 0.30, 0.40].map((value, idx) => ({
+      value,
+      observed_at: new Date(now.getTime() - (3 - idx) * 86400_000),
+    }));
+
+    const stats = computeRollingIndicatorStats(points, now);
+
+    expect(stats.baseline).toBeCloseTo(0.25);
+    expect(stats.sigma).toBeCloseTo(0.111803);
+    expect(stats.zScore).toBeCloseTo((0.40 - 0.25) / 0.111803, 4);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Bayesian probability math
+// ---------------------------------------------------------------------------
+
+describe('computeBayesianProbabilityPct', () => {
+  it('combines prior odds and current z-score with a logistic update', () => {
+    const probability = computeBayesianProbabilityPct({
+      prior: 0.20,
+      zScore: 2,
+      zWeight: 0.9,
+    });
+
+    // sigmoid(logit(0.20) + 0.9 * 2) = 0.602
+    expect(probability).toBeCloseTo(60.2, 1);
+  });
+
+  it('clamps extreme priors before applying logit', () => {
+    expect(computeBayesianProbabilityPct({ prior: 0, zScore: 0 })).toBeGreaterThan(0);
+    expect(computeBayesianProbabilityPct({ prior: 1, zScore: 0 })).toBeLessThan(100);
   });
 });
 
