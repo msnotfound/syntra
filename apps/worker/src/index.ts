@@ -12,6 +12,7 @@ import { startVarComputeWorker } from './workers/var-compute.js';
 import { runFeedsPollCycle } from './cron/feeds-poll.js';
 import { startDecisionRecordWorker } from './workers/decision-record.js';
 import { runCommunityPollCycle } from './workers/community-poller.js';
+import { startWarRoomStateSyncWorker } from './workers/warroom-state-sync.js';
 
 async function main() {
   console.log('[worker] Starting Syntra worker...');
@@ -26,6 +27,9 @@ async function main() {
 
   startDecisionRecordWorker();
   console.log('[worker] Decision record worker started');
+
+  startWarRoomStateSyncWorker();
+  console.log('[worker] War room state sync worker started');
 
   // Matching cron: every 5 minutes
   const INTERVAL = process.env.DEMO_MODE === 'true' ? '*/1 * * * *' : '*/5 * * * *';

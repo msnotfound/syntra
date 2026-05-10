@@ -32,6 +32,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     user_id:     String(m.user_id),
     body:        m.body,
     attachments: m.attachments,
+    msg_type:    m.msg_type,
+    poll:        m.poll,
     created_at:  m.created_at,
   }))));
 }
@@ -74,6 +76,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     user_id:     String(msg.user_id),
     body:        msg.body,
     attachments: msg.attachments,
+    msg_type:    msg.msg_type,
+    poll:        msg.poll,
     created_at:  msg.created_at,
   }), { status: 201 });
 }

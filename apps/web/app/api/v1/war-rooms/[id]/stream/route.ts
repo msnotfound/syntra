@@ -43,6 +43,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
               user_id:     String(msg.user_id),
               body:        msg.body,
               attachments: msg.attachments,
+              msg_type:    msg.msg_type,
+              poll:        msg.poll,
               created_at:  msg.created_at,
             });
             controller.enqueue(encoder.encode(`event: message\ndata: ${payload}\n\n`));
