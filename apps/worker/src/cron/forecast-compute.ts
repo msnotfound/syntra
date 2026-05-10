@@ -27,6 +27,7 @@ import {
   LeadingIndicator,
   seedLeadingIndicators,
   Forecast,
+  ForecastPrior,
   Organization,
   IntelClaim,
   VesselPosition,
@@ -34,7 +35,7 @@ import {
   SanctionsList,
   WatchlistEntity,
 } from '@syntra/db';
-import type { ILeadingIndicator } from '@syntra/db';
+import type { ForecastEvidenceEvent, ForecastIndicatorType, ILeadingIndicator } from '@syntra/db';
 import { callLLMJson, renderTemplate } from '@syntra/llm';
 import { z } from 'zod';
 
@@ -71,6 +72,139 @@ function median(values: number[]): number {
 function stddev(values: number[], mean: number): number {
   if (values.length < 2) return 0;
   return Math.sqrt(values.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / values.length);
+}
+
+export function computeRollingIndicatorStats(
+  points: Array<{ value: number; observed_at: Date }>,
+  now: Date = new Date(),
+): {
+  baseline: number;
+  sigma: number;
+  zScore: number;
+  current: number;
+  sampleCount90d: number;
+  sampleCount30d: number;
+} {
+  const day30 = new Date(now.getTime() - 30 * 86400_000);
+  const day90 = new Date(now.getTime() - 90 * 86400_000);
+  const window90 = points
+    .filter(p => p.observed_at >= day90 && p.observed_at <= now)
+    .sort((a, b) => a.observed_at.getTime() - b.observed_at.getTime());
+  const window30 = window90.filter(p => p.observed_at > day30);
+  const baselineValues = window30.length > 0 ? window30.map(p => p.value) : window90.map(p => p.value);
+  const allValues = window90.map(p => p.value);
+  const current = window90.at(-1)?.value ?? 0;
+  const baseline = median(baselineValues);
+  const mean90 = allValues.length > 0 ? allValues.reduce((acc, v) => acc + v, 0) / allValues.length : 0;
+  const sigma = stddev(allValues, mean90);
+  const zScore = sigma > 0 ? (current - baseline) / sigma : 0;
+
+  return {
+    baseline,
+    sigma,
+    zScore,
+    current,
+    sampleCount90d: window90.length,
+    sampleCount30d: window30.length,
+  };
+}
+
+function clampProbability(value: number, min = 0.001, max = 0.999): number {
+  if (!Number.isFinite(value)) return 0.5;
+  return Math.min(max, Math.max(min, value));
+}
+
+function logit(p: number): number {
+  const clamped = clampProbability(p);
+  return Math.log(clamped / (1 - clamped));
+}
+
+function sigmoid(x: number): number {
+  return 1 / (1 + Math.exp(-x));
+}
+
+export function computeBayesianProbabilityPct({
+  prior,
+  zScore,
+  zWeight = 0.9,
+}: {
+  prior: number;
+  zScore: number;
+  zWeight?: number;
+}): number {
+  return sigmoid(logit(prior) + zWeight * zScore) * 100;
+}
+
+function applyLikelihoodRatio(priorProbability: number, likelihoodRatio: number): number {
+  const prior = clampProbability(priorProbability);
+  const lr = Number.isFinite(likelihoodRatio) && likelihoodRatio > 0 ? likelihoodRatio : 1;
+  const priorOdds = prior / (1 - prior);
+  const posteriorOdds = priorOdds * lr;
+  return posteriorOdds / (1 + posteriorOdds);
+}
+
+function configuredDefaultPrior(): number {
+  const configured = Number(process.env.FORECAST_DEFAULT_PRIOR);
+  return clampProbability(Number.isFinite(configured) ? configured : 0.2);
+}
+
+async function getForecastPrior(indicatorType: ForecastIndicatorType): Promise<number> {
+  const prior = await ForecastPrior.findOne({ indicator_type: indicatorType }).lean();
+  return clampProbability(prior?.base_rate ?? configuredDefaultPrior());
+}
+
+function buildEvidenceChain({
+  prior,
+  zScore,
+  zWeight,
+  claimCount,
+  occurredAt,
+  indicatorName,
+}: {
+  prior: number;
+  zScore: number;
+  zWeight: number;
+  claimCount: number;
+  occurredAt: Date;
+  indicatorName: string;
+}): ForecastEvidenceEvent[] {
+  const chain: ForecastEvidenceEvent[] = [{
+    event_type: 'prior',
+    label: 'Historical base rate prior',
+    prior_probability: prior,
+    likelihood_ratio: 1,
+    posterior_probability: prior,
+    occurred_at: occurredAt,
+    metadata: { source: 'forecast_prior' },
+  }];
+
+  const zLikelihoodRatio = Math.exp(zWeight * zScore);
+  const zPosterior = applyLikelihoodRatio(prior, zLikelihoodRatio);
+  chain.push({
+    event_type: 'indicator_z_score',
+    label: `${indicatorName} z-score evidence`,
+    prior_probability: prior,
+    likelihood_ratio: zLikelihoodRatio,
+    posterior_probability: zPosterior,
+    occurred_at: occurredAt,
+    metadata: { zScore, zWeight },
+  });
+
+  if (claimCount > 0) {
+    const claimLikelihoodRatio = Math.min(1.5, Math.pow(1.08, claimCount));
+    const claimPosterior = applyLikelihoodRatio(zPosterior, claimLikelihoodRatio);
+    chain.push({
+      event_type: 'supporting_claims',
+      label: 'Recent supporting intel claims',
+      prior_probability: zPosterior,
+      likelihood_ratio: claimLikelihoodRatio,
+      posterior_probability: claimPosterior,
+      occurred_at: occurredAt,
+      metadata: { claimCount },
+    });
+  }
+
+  return chain;
 }
 
 export function computeThreshold(
@@ -472,7 +606,18 @@ export async function runForecastComputeCycle(): Promise<{
 
     const horizonDays = TIME_HORIZON_BY_BREACH[breach as 'elevated' | 'critical'];
     const expiresAt   = new Date(now.getTime() + horizonDays * 86400_000);
-    const indType     = INDICATOR_TYPE_MAP[indicator.name] ?? 'geopolitical-event';
+    const indType     = (INDICATOR_TYPE_MAP[indicator.name] ?? 'geopolitical-event') as ForecastIndicatorType;
+    const prior       = await getForecastPrior(indType);
+    const zWeight     = Number(process.env.FORECAST_Z_WEIGHT ?? 0.9);
+    const evidenceChain = buildEvidenceChain({
+      prior,
+      zScore: sigmaDeviation,
+      zWeight: Number.isFinite(zWeight) ? zWeight : 0.9,
+      claimCount: recentClaims.length,
+      occurredAt: now,
+      indicatorName: indicator.name,
+    });
+    const probabilityPct = Math.round(evidenceChain.at(-1)!.posterior_probability * 1000) / 10;
 
     for (const org of orgs) {
       try {
@@ -484,9 +629,10 @@ export async function runForecastComputeCycle(): Promise<{
               indicator_id:       indicator._id,
               indicator_type:     indType,
               target_entity_id:   null,
-              probability_pct:    llmOut.probability_pct,
+              probability_pct:    probabilityPct,
               time_horizon_days:  horizonDays,
               supporting_claims:  recentClaims.map(c => c._id),
+              evidence_chain:     evidenceChain,
               narrative:          llmOut.narrative,
               recommended_action: llmOut.recommended_action,
               computed_at:        now,

@@ -15,8 +15,8 @@
  *   Source: Brier (1950), "Verification of forecasts expressed in terms of probability."
  */
 
-import { connectDb, Forecast, Alert } from '@syntra/db';
-import type { IForecast } from '@syntra/db';
+import { connectDb, Forecast, ForecastPrior, Alert } from '@syntra/db';
+import type { ForecastIndicatorType, IForecast } from '@syntra/db';
 
 // Map indicator_type → alert event_type keywords for outcome matching
 const EVENT_TYPE_KEYWORDS: Record<string, string[]> = {
@@ -37,6 +37,35 @@ export function computeBrierScore(probability_pct: number, occurred: boolean): n
   const p = probability_pct / 100;
   const o = occurred ? 1 : 0;
   return Math.pow(p - o, 2);
+}
+
+async function recalibrateForecastPrior(indicatorType: ForecastIndicatorType, now: Date): Promise<void> {
+  const resolved = await Forecast.find({
+    indicator_type: indicatorType,
+    actual_outcome: { $ne: null },
+  }).select('actual_outcome brier_score').lean() as unknown as Array<Pick<IForecast, 'actual_outcome' | 'brier_score'>>;
+
+  const sampleCount = resolved.length;
+  if (sampleCount === 0) return;
+
+  const occurredCount = resolved.filter(f => f.actual_outcome === 'occurred').length;
+  const scored = resolved.filter(f => f.brier_score !== null);
+  const brierAvg = scored.length > 0
+    ? scored.reduce((acc, f) => acc + (f.brier_score ?? 0), 0) / scored.length
+    : null;
+
+  await ForecastPrior.findOneAndUpdate(
+    { indicator_type: indicatorType },
+    {
+      $set: {
+        base_rate: occurredCount / sampleCount,
+        sample_count: sampleCount,
+        brier_score_avg: brierAvg,
+        updated_at: now,
+      },
+    },
+    { upsert: true },
+  );
 }
 
 export async function runForecastResolveCycle(): Promise<{ resolved: number }> {
@@ -69,6 +98,7 @@ export async function runForecastResolveCycle(): Promise<{ resolved: number }> {
     const brier_score    = computeBrierScore(forecast.probability_pct, occurred);
 
     await Forecast.updateOne({ _id: forecast._id }, { $set: { actual_outcome, brier_score } });
+    await recalibrateForecastPrior(forecast.indicator_type, now);
     resolved++;
   }
 

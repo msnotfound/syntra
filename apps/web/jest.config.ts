@@ -13,6 +13,7 @@ const config: Config = {
           moduleResolution: 'node',
           esModuleInterop: true,
           allowSyntheticDefaultImports: true,
+          jsx: 'react-jsx',
         },
       },
     ],

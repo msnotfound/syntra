@@ -1,7 +1,8 @@
 import { ensureDb } from '@/lib/db';
 import { getOrgBySlugOrThrow } from '@/lib/org';
-import { LeadingIndicator } from '@syntra/db';
-import type { ILeadingIndicator } from '@syntra/db';
+import { Forecast, LeadingIndicator } from '@syntra/db';
+import type { IForecast, ILeadingIndicator } from '@syntra/db';
+import { CalibrationDashboard } from '@/components/forecast/CalibrationDashboard';
 
 interface PageProps {
   params: { orgSlug: string };
@@ -102,7 +103,7 @@ const BREACH_FILTERS: Array<{ value: string; label: string; color?: string }> = 
 
 export default async function IndicatorsPage({ params, searchParams }: PageProps) {
   await ensureDb();
-  await getOrgBySlugOrThrow(params.orgSlug);
+  const org = await getOrgBySlugOrThrow(params.orgSlug);
 
   const breach = searchParams.breach ?? '';
   const query: Record<string, unknown> = {};
@@ -115,6 +116,11 @@ export default async function IndicatorsPage({ params, searchParams }: PageProps
   const total    = await LeadingIndicator.countDocuments({});
   const critical = await LeadingIndicator.countDocuments({ threshold_breach: 'critical' });
   const elevated = await LeadingIndicator.countDocuments({ threshold_breach: 'elevated' });
+  const resolvedForecasts = await Forecast.find({
+    org_id:         org._id,
+    actual_outcome: { $ne: null },
+    brier_score:    { $ne: null },
+  }).sort({ expires_at: -1 }).limit(300).lean() as unknown as IForecast[];
 
   const countMap: Record<string, number> = { '': total, critical, elevated, normal: total - critical - elevated };
 
@@ -163,6 +169,17 @@ export default async function IndicatorsPage({ params, searchParams }: PageProps
           {indicators.map(ind => <IndicatorCard key={String(ind._id)} indicator={ind} />)}
         </div>
       )}
+
+      <CalibrationDashboard
+        forecasts={resolvedForecasts.map(f => ({
+          id:              String(f._id),
+          indicator_type:  f.indicator_type,
+          probability_pct: f.probability_pct,
+          actual_outcome:  f.actual_outcome,
+          brier_score:     f.brier_score,
+          expires_at:      f.expires_at,
+        }))}
+      />
     </div>
   );
 }
