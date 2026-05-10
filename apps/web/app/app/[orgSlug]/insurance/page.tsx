@@ -1,8 +1,9 @@
-import { Shield, AlertTriangle } from 'lucide-react';
+import { Shield, AlertTriangle, FileText } from 'lucide-react';
 import { ensureDb } from '@/lib/db';
 import { getOrgBySlugOrThrow } from '@/lib/org';
-import { InsurancePolicy, Exposure, WatchlistEntity } from '@syntra/db';
-import type { IInsurancePolicy, IExposure, IWatchlistEntity } from '@syntra/db';
+import { Alert, InsurancePolicy, Exposure, WatchlistEntity } from '@syntra/db';
+import type { IAlert, IInsurancePolicy, IExposure, IWatchlistEntity } from '@syntra/db';
+import { colors, radii, typography } from '@syntra/ui/tokens';
 import { PolicyForm } from './PolicyForm';
 import { CoverageChart } from './CoverageChart';
 import { DeletePolicyButton } from './DeletePolicyButton';
@@ -20,6 +21,30 @@ function expiresClass(d: Date): string {
   if (daysLeft < 0) return 'text-severity-critical font-mono text-sm';
   if (daysLeft < 30) return 'text-severity-high font-mono text-sm';
   return 'text-text-secondary font-mono text-sm';
+}
+
+function resolvePerilKind(alert: IAlert | undefined): string {
+  if (!alert) return 'physical_risk';
+  if (alert.subtype === 'sanctions_match' || alert.subtype === 'compliance') return alert.subtype;
+  return alert.event_snapshot?.event_type || alert.subtype || 'physical_risk';
+}
+
+function humanize(value: string): string {
+  return value.replace(/_/g, ' ');
+}
+
+function paidClaims(policy: IInsurancePolicy): number {
+  return (policy.claims_history ?? []).reduce((sum, claim) => (
+    claim.denied ? sum : sum + Math.max(0, claim.paid_usd)
+  ), 0);
+}
+
+function remainingForPeril(policy: IInsurancePolicy, peril: string): number {
+  if ((policy.exclusions ?? []).some(item => item.peril_kind === peril)) return 0;
+  const aggregateRemaining = Math.max(0, (policy.aggregate_limit_usd ?? policy.max_payout_usd) - paidClaims(policy));
+  const subLimit = (policy.sub_limits ?? []).find(item => item.peril_kind === peril)?.limit_usd;
+  const policyLimit = Math.max(0, policy.max_payout_usd - policy.deductible_usd);
+  return Math.min(aggregateRemaining, subLimit ?? policyLimit, policyLimit);
 }
 
 export default async function InsurancePage({ params }: PageProps) {
@@ -41,15 +66,29 @@ export default async function InsurancePage({ params }: PageProps) {
   const entityIds = rawExposures.map(e => e.entity_id);
   const entities = await WatchlistEntity.find({ _id: { $in: entityIds } }).lean() as unknown as IWatchlistEntity[];
   const entityMap = new Map(entities.map(e => [String(e._id), e]));
+  const alertIds = rawExposures.map(e => e.alert_id).filter(Boolean);
+  const alerts = await Alert.find({ _id: { $in: alertIds } }).lean() as unknown as IAlert[];
+  const alertMap = new Map(alerts.map(a => [String(a._id), a]));
 
   const totalVarUsd = rawExposures.reduce((s, e) => s + e.var_value_usd, 0);
   const totalGapUsd = rawExposures.reduce((s, e) => s + (e.coverage_gap_usd ?? e.var_value_usd), 0);
+  const totalCoveredUsd = rawExposures.reduce((s, e) => s + (e.coverage_actual_usd ?? 0), 0);
   const activePolicies = policies.filter(p => new Date(p.expires_at) > new Date()).length;
+  const perilKinds = Array.from(new Set([
+    ...rawExposures.map(e => resolvePerilKind(e.alert_id ? alertMap.get(String(e.alert_id)) : undefined)),
+    ...policies.flatMap(p => (p.sub_limits ?? []).map(item => item.peril_kind)),
+    ...policies.flatMap(p => (p.exclusions ?? []).map(item => item.peril_kind)),
+  ])).sort();
+  const claimsLog = policies.flatMap(policy => (policy.claims_history ?? []).map(claim => ({
+    ...claim,
+    policy_id: policy.policy_id,
+    insurer_name: policy.insurer_name,
+  }))).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const chartData = rawExposures.map(exp => ({
     name: entityMap.get(String(exp.entity_id))?.name ?? String(exp.entity_id),
     var_usd: exp.var_value_usd,
-    covered_usd: exp.var_value_usd - (exp.coverage_gap_usd ?? exp.var_value_usd),
+    covered_usd: exp.coverage_actual_usd ?? (exp.var_value_usd - (exp.coverage_gap_usd ?? exp.var_value_usd)),
     gap_usd: exp.coverage_gap_usd ?? exp.var_value_usd,
   }));
 
@@ -65,9 +104,10 @@ export default async function InsurancePage({ params }: PageProps) {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {([
           { label: 'Total VaR', value: formatUsd(totalVarUsd), sub: 'portfolio exposure', warn: false },
+          { label: 'Actual Coverage', value: formatUsd(totalCoveredUsd), sub: 'after limits & claims', warn: false },
           { label: 'Coverage Gap', value: formatUsd(totalGapUsd), sub: 'uncovered exposure', warn: totalGapUsd > 0 },
           { label: 'Active Policies', value: String(activePolicies), sub: `${policies.length} total`, warn: false },
         ] as const).map(({ label, value, sub, warn }) => (
@@ -92,6 +132,75 @@ export default async function InsurancePage({ params }: PageProps) {
           </div>
           <div className="p-5">
             <CoverageChart data={chartData} />
+          </div>
+        </div>
+      )}
+
+      {/* Peril × policy matrix */}
+      {policies.length > 0 && perilKinds.length > 0 && (
+        <div className="bg-bg-surface border border-border-subtle rounded-md overflow-hidden">
+          <div className="px-5 py-3 border-b border-border-subtle flex items-center gap-2">
+            <Shield size={14} className="text-accent" />
+            <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">
+              Coverage Matrix
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px]">
+              <thead>
+                <tr className="border-b border-border-subtle">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">
+                    Peril
+                  </th>
+                  {policies.map(policy => (
+                    <th
+                      key={policy.policy_id}
+                      className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-text-secondary"
+                    >
+                      {policy.policy_id}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {perilKinds.map(peril => (
+                  <tr key={peril} className="border-b border-border-subtle">
+                    <td className="px-4 py-3 text-sm capitalize text-text-primary">{humanize(peril)}</td>
+                    {policies.map(policy => {
+                      const paid = paidClaims(policy);
+                      const remaining = remainingForPeril(policy, peril);
+                      const excluded = (policy.exclusions ?? []).find(item => item.peril_kind === peril);
+                      return (
+                        <td key={`${peril}-${policy.policy_id}`} className="px-4 py-3 text-right">
+                          <div className="flex flex-col items-end gap-1">
+                            <div className="h-1.5 w-28 overflow-hidden bg-bg-surface-3" style={{ borderRadius: radii.sm }}>
+                              <div
+                                className="h-full"
+                                style={{
+                                  width: `${Math.min(100, (remaining / Math.max(1, paid + remaining)) * 100)}%`,
+                                  backgroundColor: excluded ? colors.severity.critical : colors.state.success,
+                                }}
+                              />
+                            </div>
+                            <div className="font-mono text-xs text-text-primary">
+                              {formatUsd(paid)} paid / {formatUsd(remaining)} rem.
+                            </div>
+                            {excluded && (
+                              <div
+                                className="max-w-48 text-xs text-severity-critical"
+                                style={{ fontFamily: typography.fonts.body }}
+                              >
+                                {excluded.reason}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
@@ -165,6 +274,54 @@ export default async function InsurancePage({ params }: PageProps) {
       <div className="bg-bg-surface border border-border-subtle rounded-md p-5">
         <div className="text-xs font-medium uppercase tracking-wider text-text-secondary mb-4">Add Policy</div>
         <PolicyForm orgSlug={params.orgSlug} />
+      </div>
+
+      {/* Claims log */}
+      <div className="bg-bg-surface border border-border-subtle rounded-md overflow-hidden">
+        <div className="px-5 py-3 border-b border-border-subtle flex items-center gap-2">
+          <FileText size={14} className="text-accent" />
+          <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">Claims Log</span>
+        </div>
+        {claimsLog.length === 0 ? (
+          <div className="px-5 py-8 text-center text-sm text-text-muted">No claims recorded on active policies.</div>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border-subtle">
+                {['Date', 'Claim', 'Policy', 'Insurer', 'Status', 'Paid'].map((h, i) => (
+                  <th
+                    key={h}
+                    className={`px-4 py-3 text-xs font-medium uppercase tracking-wider text-text-secondary ${i === 5 ? 'text-right' : 'text-left'}`}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {claimsLog.map(claim => (
+                <tr key={`${claim.policy_id}-${claim.claim_id}`} className="border-b border-border-subtle">
+                  <td className="px-4 py-3 font-mono text-xs text-text-muted">
+                    {new Date(claim.date).toLocaleDateString('en-GB')}
+                  </td>
+                  <td className="px-4 py-3 font-mono text-sm text-text-primary">{claim.claim_id}</td>
+                  <td className="px-4 py-3 font-mono text-sm text-text-secondary">{claim.policy_id}</td>
+                  <td className="px-4 py-3 text-sm text-text-primary">{claim.insurer_name}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-1.5 py-0.5 rounded-sm text-xs ${claim.denied ? 'bg-severity-critical/10 text-severity-critical' : 'bg-success/10 text-success'}`}
+                    >
+                      {claim.denied ? 'Denied' : 'Paid'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono text-sm text-text-primary">
+                    {formatUsd(claim.paid_usd)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Coverage gaps per entity */}

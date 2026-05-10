@@ -54,7 +54,13 @@ export type { IExposure } from './models/Exposure.js';
 export type { IDataFeed } from './models/DataFeed.js';
 export type { ISlackInstall } from './models/SlackInstall.js';
 export type { ITeamsInstall } from './models/TeamsInstall.js';
-export type { IInsurancePolicy, CoverageType } from './models/InsurancePolicy.js';
+export type {
+  IInsurancePolicy,
+  CoverageType,
+  IPolicySubLimit,
+  IPolicyExclusion,
+  IPolicyClaim,
+} from './models/InsurancePolicy.js';
 export type { IDecision, DecisionType } from './models/Decision.js';
 export type { IWarRoom } from './models/WarRoom.js';
 export type { IWarRoomMessage } from './models/WarRoomMessage.js';

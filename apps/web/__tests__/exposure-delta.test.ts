@@ -2,7 +2,11 @@ import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { Exposure } from '../../../packages/db/models/Exposure';
 import { InsurancePolicy } from '../../../packages/db/models/InsurancePolicy';
-import { computeCoverageGap, computeDelta } from '../../../apps/worker/src/utils/exposure-math';
+import {
+  computeCoverageGap,
+  computeDelta,
+  computePolicyCoverage,
+} from '../../../apps/worker/src/utils/exposure-math';
 
 let mongod: MongoMemoryServer;
 
@@ -72,6 +76,89 @@ describe('computeDelta', () => {
   });
 });
 
+describe('computePolicyCoverage', () => {
+  const basePolicy = {
+    policy_id: 'POL-001',
+    max_payout_usd: 5_000_000,
+    deductible_usd: 0,
+    aggregate_limit_usd: 4_000_000,
+    sub_limits: [],
+    exclusions: [],
+    claims_history: [],
+  };
+
+  test('applies sub_limit for the alert peril kind', () => {
+    const result = computePolicyCoverage({
+      varUsd: 2_000_000,
+      perilKind: 'maritime_attack',
+      policy: {
+        ...basePolicy,
+        sub_limits: [
+          { peril_kind: 'sanctions_match', limit_usd: 300_000 },
+          { peril_kind: 'maritime_attack', limit_usd: 750_000 },
+        ],
+      },
+    });
+
+    expect(result.coverage_actual_usd).toBe(750_000);
+    expect(result.gap_usd).toBe(1_250_000);
+    expect(result.exclusion_reason).toBeNull();
+  });
+
+  test('aggregate exhaustion leaves zero available coverage', () => {
+    const result = computePolicyCoverage({
+      varUsd: 800_000,
+      perilKind: 'maritime_attack',
+      policy: {
+        ...basePolicy,
+        aggregate_limit_usd: 1_000_000,
+        claims_history: [
+          { claim_id: 'CLM-001', paid_usd: 650_000, denied: false, date: new Date('2026-01-01') },
+          { claim_id: 'CLM-002', paid_usd: 350_000, denied: false, date: new Date('2026-02-01') },
+        ],
+      },
+    });
+
+    expect(result.coverage_actual_usd).toBe(0);
+    expect(result.gap_usd).toBe(800_000);
+  });
+
+  test('exclusion zeroes coverage and returns the exclusion reason', () => {
+    const result = computePolicyCoverage({
+      varUsd: 900_000,
+      perilKind: 'sanctions_match',
+      policy: {
+        ...basePolicy,
+        exclusions: [
+          { peril_kind: 'sanctions_match', reason: 'OFAC sanctions are excluded from this schedule.' },
+        ],
+      },
+    });
+
+    expect(result.coverage_actual_usd).toBe(0);
+    expect(result.gap_usd).toBe(900_000);
+    expect(result.exclusion_reason).toBe('OFAC sanctions are excluded from this schedule.');
+  });
+
+  test('paid non-denied claims reduce aggregate availability', () => {
+    const result = computePolicyCoverage({
+      varUsd: 1_500_000,
+      perilKind: 'port_closure',
+      policy: {
+        ...basePolicy,
+        aggregate_limit_usd: 2_000_000,
+        claims_history: [
+          { claim_id: 'CLM-PAID', paid_usd: 1_200_000, denied: false, date: new Date('2026-01-01') },
+          { claim_id: 'CLM-DENIED', paid_usd: 700_000, denied: true, date: new Date('2026-02-01') },
+        ],
+      },
+    });
+
+    expect(result.coverage_actual_usd).toBe(800_000);
+    expect(result.gap_usd).toBe(700_000);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Schema: insurance fields on Exposure documents
 // ---------------------------------------------------------------------------
@@ -106,6 +193,16 @@ describe('Exposure schema — insurance fields', () => {
     expect(exp.coverage_gap_usd).toBe(0);
   });
 
+  test('new exposure defaults to coverage_actual_usd=0', async () => {
+    const exp = await Exposure.create(makeExposure());
+    expect(exp.coverage_actual_usd).toBe(0);
+  });
+
+  test('new exposure defaults to exclusion_reason=null', async () => {
+    const exp = await Exposure.create(makeExposure());
+    expect(exp.exclusion_reason).toBeNull();
+  });
+
   test('new exposure defaults to exposure_delta_usd=null', async () => {
     const exp = await Exposure.create(makeExposure());
     expect(exp.exposure_delta_usd).toBeNull();
@@ -115,12 +212,16 @@ describe('Exposure schema — insurance fields', () => {
     const exp = await Exposure.create(makeExposure({
       insurance_coverage_pct: 60,
       policy_id: 'POL-001',
+      coverage_actual_usd: 600_000,
       coverage_gap_usd: 400_000,
+      exclusion_reason: 'excluded peril',
       exposure_delta_usd: 100_000,
     }));
     expect(exp.insurance_coverage_pct).toBe(60);
     expect(exp.policy_id).toBe('POL-001');
+    expect(exp.coverage_actual_usd).toBe(600_000);
     expect(exp.coverage_gap_usd).toBe(400_000);
+    expect(exp.exclusion_reason).toBe('excluded peril');
     expect(exp.exposure_delta_usd).toBe(100_000);
   });
 
@@ -159,6 +260,24 @@ describe('InsurancePolicy schema', () => {
     const p = await InsurancePolicy.create(makePolicy());
     expect(p.policy_id).toBe('POL-2024-001');
     expect(p.coverage_type).toBe('marine');
+    expect(p.aggregate_limit_usd).toBe(5_000_000);
+    expect(p.sub_limits).toEqual([]);
+    expect(p.exclusions).toEqual([]);
+    expect(p.claims_history).toEqual([]);
+  });
+
+  test('stores sub-limits, exclusions, and claims history', async () => {
+    const p = await InsurancePolicy.create(makePolicy({
+      aggregate_limit_usd: 4_000_000,
+      sub_limits: [{ peril_kind: 'maritime_attack', limit_usd: 750_000 }],
+      exclusions: [{ peril_kind: 'sanctions_match', reason: 'Sanctions excluded' }],
+      claims_history: [{ claim_id: 'CLM-001', paid_usd: 250_000, denied: false, date: new Date('2026-01-01') }],
+    }));
+
+    expect(p.aggregate_limit_usd).toBe(4_000_000);
+    expect(p.sub_limits[0]?.peril_kind).toBe('maritime_attack');
+    expect(p.exclusions[0]?.reason).toBe('Sanctions excluded');
+    expect(p.claims_history[0]?.paid_usd).toBe(250_000);
   });
 
   test('enforces unique policy_id within org', async () => {
