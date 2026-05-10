@@ -64,7 +64,7 @@ export default async function BriefsPage({ params }: PageProps) {
           {briefs.map((brief) => {
             const expired = brief.expires_at < now;
             const title = brief.content.alert_title ?? brief.content.entity_name ?? 'Risk Brief';
-            const shareUrl = `${origin}/api/v1/briefs/${brief.share_token}/view`;
+            const shareUrl = `${origin}/api/v1/briefs/share/${brief.share_token}/view`;
             return (
               <div
                 key={String(brief._id)}

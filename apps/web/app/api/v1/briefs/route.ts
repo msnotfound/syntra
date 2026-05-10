@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(apiResponse({
     id: String(brief._id),
     share_token: shareToken,
-    share_url: `/api/v1/briefs/${shareToken}/view`,
+    share_url: `/api/v1/briefs/share/${shareToken}/view`,
     expires_at: expiresAt,
     created_at: brief.created_at,
   }), { status: 201 });

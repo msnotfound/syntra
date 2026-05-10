@@ -26,7 +26,7 @@ export function GenerateBriefButton({ alertId, orgSlug }: Props) {
       if (!res.ok) throw new Error('Generation failed');
       const json = await res.json();
       const token = json.data?.share_token as string;
-      const fullUrl = `${window.location.origin}/api/v1/briefs/${token}/view`;
+      const fullUrl = `${window.location.origin}/api/v1/briefs/share/${token}/view`;
       setShareUrl(fullUrl);
       setState('done');
     } catch {
