@@ -89,7 +89,7 @@ async function callAltRouteLLM(
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!apiKey) {
-    const { generateAltRouteSuggestion } = await import('@syntra/shared/mocks/anthropic');
+    const { generateAltRouteSuggestion } = await import('@syntra/shared/mocks/anthropic.js');
     return generateAltRouteSuggestion(alert.event_snapshot.title);
   }
 

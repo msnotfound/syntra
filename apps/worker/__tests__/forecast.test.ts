@@ -1,6 +1,6 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose, { Types } from 'mongoose';
-import { LeadingIndicator } from '../../../packages/db/models/LeadingIndicator';
+import { LeadingIndicator } from '@syntra/db';
 import { Forecast } from '../../../packages/db/models/Forecast';
 import { IntelClaim } from '../../../packages/db/models/IntelClaim';
 import { VesselPosition } from '../../../packages/db/models/VesselPosition';
@@ -174,14 +174,14 @@ describe('forecast idempotency', () => {
 
 describe('seedLeadingIndicators', () => {
   it('seeds exactly 8 system indicators', async () => {
-    const { seedLeadingIndicators } = await import('../../../packages/db/models/LeadingIndicator');
+    const { seedLeadingIndicators } = await import('@syntra/db');
     await seedLeadingIndicators();
     const count = await LeadingIndicator.countDocuments({ org_id: 'system' });
     expect(count).toBe(8);
   });
 
   it('seeding twice is idempotent', async () => {
-    const { seedLeadingIndicators } = await import('../../../packages/db/models/LeadingIndicator');
+    const { seedLeadingIndicators } = await import('@syntra/db');
     await seedLeadingIndicators();
     await seedLeadingIndicators();
     const count = await LeadingIndicator.countDocuments({ org_id: 'system' });
@@ -189,7 +189,7 @@ describe('seedLeadingIndicators', () => {
   });
 
   it('all 8 indicators have required fields populated', async () => {
-    const { seedLeadingIndicators } = await import('../../../packages/db/models/LeadingIndicator');
+    const { seedLeadingIndicators } = await import('@syntra/db');
     await seedLeadingIndicators();
     const indicators = await LeadingIndicator.find({}).lean();
     for (const ind of indicators) {

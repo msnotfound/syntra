@@ -161,7 +161,7 @@ describe('matchesFilter', () => {
   });
 
   test('mock parseNLWatchlist returns deterministic stub', async () => {
-    const { parseNLWatchlist } = await import('../../packages/shared/mocks/anthropic');
+    const { parseNLWatchlist } = await import('@syntra/shared/mocks/anthropic.js');
     const result = await parseNLWatchlist('Track suppliers in India', ['supplier', 'port'], ['south_asia']);
     expect(result.entity_types).toContain('supplier');
     expect(result.countries).toContain('IN');

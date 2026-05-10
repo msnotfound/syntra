@@ -37,7 +37,7 @@ export function startExposureDeltaWorker() {
     const recent = await Exposure.find({ org_id: orgOid, entity_id: entityOid })
       .sort({ computed_at: -1 })
       .limit(2)
-      .lean() as IExposure[];
+      .lean() as unknown as IExposure[];
 
     if (recent.length === 0) return;
 

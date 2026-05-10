@@ -100,7 +100,7 @@ export function startSlackDispatchWorker() {
       const data = await res.json() as { ok: boolean; error?: string };
       if (!data.ok) console.error('[slack-dispatch] postMessage failed:', data.error);
     } else {
-      const mock = await import('@syntra/shared/mocks/slack');
+      const mock = await import('@syntra/shared/mocks/slack.js');
       await mock.postMessage(botToken, { channel: install.workspace_id, ...card });
     }
   }, { connection });

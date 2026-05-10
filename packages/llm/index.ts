@@ -60,7 +60,7 @@ export async function generateAlertContext(
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!apiKey) {
-    const { generateAlertContext: mockFn } = await import('@syntra/shared/mocks/anthropic');
+    const { generateAlertContext: mockFn } = await import('@syntra/shared/mocks/anthropic.js');
     const result = await mockFn(eventTitle, affectedEntityNames, orgIndustry);
     cache.set(cacheKey, result);
     return result;

@@ -96,6 +96,9 @@ export async function extractCompanyMetadata(
       { name: 'Shipping Partner XYZ', type: 'partner', confidence: 0.75, excerpt: 'Logistics and shipping partner' },
       { name: 'Component Supplier A', type: 'supplier', confidence: 0.7, excerpt: 'Strategic component supplier' },
     ],
+  };
+}
+
 export interface AltRouteSuggestionOutput {
   alternatives: Array<{
     route_name: string;

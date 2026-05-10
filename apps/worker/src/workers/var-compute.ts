@@ -1,8 +1,8 @@
 import { Queue, Worker } from 'bullmq';
 import { connectDb, Alert, WatchlistEntity, Exposure } from '@syntra/db';
 import type { IAlert } from '@syntra/db';
-import { getDisruptionFactor, computeVarUsd, USD_TO_INR } from '@syntra/shared/utils/var-table.js';
-import type { AlertKind, AlertSeverity } from '@syntra/shared/utils/var-table.js';
+import { getDisruptionFactor, computeVarUsd, USD_TO_INR } from '@syntra/shared';
+import type { AlertKind, AlertSeverity } from '@syntra/shared';
 import { getExposureDeltaQueue } from './exposure-delta.js';
 
 const REDIS_URL = process.env.UPSTASH_REDIS_URL;
@@ -26,7 +26,7 @@ export function startVarComputeWorker() {
     if (!alert) return;
 
     // Resolve alert kind from v3 subtype if present, otherwise infer from event_type.
-    const rawSubtype = (alert as Record<string, unknown>).subtype as string | undefined;
+    const rawSubtype = (alert as unknown as Record<string, unknown>).subtype as string | undefined;
     const kind = resolveKind(rawSubtype, alert.event_snapshot?.event_type);
     const severity = alert.severity as AlertSeverity;
     const disruption_factor = getDisruptionFactor(kind, severity);

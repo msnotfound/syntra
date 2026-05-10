@@ -7,6 +7,7 @@
     "outDir": "dist",
     "paths": {
       "@syntra/shared": ["../../packages/shared/index.ts"],
+      "@syntra/shared/mocks/*.js": ["../../packages/shared/mocks/*.ts"],
       "@syntra/shared/mocks/*": ["../../packages/shared/mocks/*.ts"],
       "@syntra/shared/schemas": ["../../packages/shared/schemas/index.ts"],
       "@syntra/shared/utils": ["../../packages/shared/utils/index.ts"],

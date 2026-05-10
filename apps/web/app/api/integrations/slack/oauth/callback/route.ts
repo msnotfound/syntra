@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   let scope: string;
 
   if (!process.env.SLACK_CLIENT_ID) {
-    const mock = await import('@syntra/shared/mocks/slack');
+    const mock = await import('@syntra/shared/mocks/slack.js');
     ({ access_token, team_id, team_name, scope } = await mock.oauthAccess(code));
   } else {
     const res = await fetch('https://slack.com/api/oauth.v2.access', {

@@ -81,7 +81,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   Object.assign(source, updates);
   await source.save();
 
-  return NextResponse.json(apiResponse(serializeSource(source.toObject())));
+  return NextResponse.json(apiResponse(serializeSource(source.toObject() as unknown as Record<string, unknown>)));
 }
 
 export async function DELETE(req: NextRequest, { params }: RouteParams) {

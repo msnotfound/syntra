@@ -78,7 +78,7 @@ async function generateNarrative(alert: IAlert, orgName: string): Promise<Digest
 
 async function sendDigestEmail(to: string, subject: string, html: string): Promise<void> {
   if (!process.env.SENDGRID_API_KEY) {
-    const { sendEmail } = await import('@syntra/shared/mocks/sendgrid');
+    const { sendEmail } = await import('@syntra/shared/mocks/sendgrid.js');
     return sendEmail({ to, from: 'Syntra <alerts@syntra.app>', subject, html });
   }
   const sgMail = await import('@sendgrid/mail');
@@ -149,7 +149,7 @@ export async function runDigestCycle(
     const alerts = await Alert.find({
       org_id: orgId,
       created_at: { $gte: since },
-    }).sort({ created_at: -1 }).limit(20).lean() as IAlert[];
+    }).sort({ created_at: -1 }).limit(20).lean() as unknown as IAlert[];
 
     const alertsBySev: Record<string, number> = { critical: 0, high: 0, medium: 0, low: 0 };
     const digestItems: DigestAlertItem[] = [];

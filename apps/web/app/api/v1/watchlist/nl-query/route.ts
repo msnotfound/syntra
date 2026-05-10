@@ -65,12 +65,12 @@ export async function POST(req: NextRequest) {
 
   let nlParsed: NLWatchlistParsed;
   try {
-    nlParsed = await callLLMJson<NLWatchlistParseOutput>(
+    nlParsed = await callLLMJson<NLWatchlistParsed>(
       NL_WATCHLIST_PARSE_MODEL,
       NL_WATCHLIST_PARSE_SYSTEM,
       userMessage,
       async () => {
-        const { parseNLWatchlist } = await import('@syntra/shared/mocks/anthropic');
+        const { parseNLWatchlist } = await import('@syntra/shared/mocks/anthropic.js');
         return parseNLWatchlist(prompt, AVAILABLE_ENTITY_TYPES, AVAILABLE_REGIONS);
       },
     );

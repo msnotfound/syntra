@@ -150,7 +150,7 @@ export default async function MitigationsPage({ params, searchParams }: PageProp
                   <div className="text-xs font-mono" style={{ color: '#64748B' }}>
                     {s.confidence_pct}% confidence
                   </div>
-                  <TimeAgo date={new Date(s.created_at)} className="text-xs font-mono" style={{ color: '#64748B' } as React.CSSProperties} />
+                  <TimeAgo date={new Date(s.created_at)} className="text-xs font-mono text-text-muted" />
                 </div>
               </div>
             );

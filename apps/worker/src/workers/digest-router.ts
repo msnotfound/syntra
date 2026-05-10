@@ -124,7 +124,7 @@ async function routeToChannel(
       const subject = `[${alert.severity.toUpperCase()}] ${alert.event_snapshot.title}`;
       const sendEmail = process.env.SENDGRID_API_KEY
         ? (await import('@sendgrid/mail')).default.send.bind((await import('@sendgrid/mail')).default)
-        : (await import('@syntra/shared/mocks/sendgrid')).sendEmail;
+        : (await import('@syntra/shared/mocks/sendgrid.js')).sendEmail;
       await (sendEmail as Function)({
         to: config.destination_id,
         from: process.env.SENDGRID_FROM_EMAIL ?? 'alerts@syntra.app',
@@ -172,7 +172,7 @@ async function routeToChannel(
           body: smsBody,
         });
       } else {
-        const { sendWhatsApp } = await import('@syntra/shared/mocks/twilio');
+        const { sendWhatsApp } = await import('@syntra/shared/mocks/twilio.js');
         await sendWhatsApp({ to: config.destination_id, from: 'sandbox', body: smsBody });
       }
       break;

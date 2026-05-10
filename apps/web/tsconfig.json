@@ -19,7 +19,9 @@
     "paths": {
       "@/*": [
         "./*"
-      ]
+      ],
+      "@syntra/shared/mocks/*.js": ["../../packages/shared/mocks/*.ts"],
+      "@syntra/shared/mocks/*": ["../../packages/shared/mocks/*.ts"]
     },
     "allowJs": true,
     "noEmit": true,

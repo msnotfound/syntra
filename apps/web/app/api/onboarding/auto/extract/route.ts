@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       // Use mock extraction
-      const mock = await import('@syntra/shared/mocks/anthropic');
+      const mock = await import('@syntra/shared/mocks/anthropic.js');
       extracted = await mock.extractCompanyMetadata(content.text, content.source);
     } else {
       // Call real LLM
@@ -144,7 +144,7 @@ Extract company metadata: name, sector, country/region, major suppliers (with ex
         systemPrompt,
         prompt,
         async () => {
-          const mock = await import('@syntra/shared/mocks/anthropic');
+          const mock = await import('@syntra/shared/mocks/anthropic.js');
           return mock.extractCompanyMetadata(content.text, content.source);
         },
       );

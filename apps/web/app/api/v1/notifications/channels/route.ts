@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
   });
 
   // For email/SMS: fire OTP (side-effect only, non-blocking)
-  if (['email', 'sms'].includes(parsed.data.channel_type)) {
+  if (parsed.data.channel_type === 'email' || parsed.data.channel_type === 'sms') {
     sendVerificationCode(String(channel._id), parsed.data.channel_type, parsed.data.destination).catch(
       err => console.error('[notifications/channels] OTP send failed', err),
     );
@@ -76,7 +76,7 @@ async function sendVerificationCode(channelId: string, type: 'email' | 'sms', de
   if (type === 'email') {
     const sendEmail = process.env.SENDGRID_API_KEY
       ? (await import('@sendgrid/mail')).default.send.bind((await import('@sendgrid/mail')).default)
-      : (await import('@syntra/shared/mocks/sendgrid')).sendEmail;
+      : (await import('@syntra/shared/mocks/sendgrid.js')).sendEmail;
     await (sendEmail as Function)({
       to: destination,
       from: process.env.SENDGRID_FROM_EMAIL ?? 'alerts@syntra.app',
@@ -94,7 +94,7 @@ async function sendVerificationCode(channelId: string, type: 'email' | 'sms', de
         body: `Your Syntra code: ${code}`,
       });
     } else {
-      const { sendWhatsApp } = await import('@syntra/shared/mocks/twilio');
+      const { sendWhatsApp } = await import('@syntra/shared/mocks/twilio.js');
       await sendWhatsApp({ to: destination, from: 'sandbox', body: `Your Syntra code: ${code}` });
     }
   }

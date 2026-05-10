@@ -74,5 +74,5 @@ export async function POST(req: NextRequest) {
     config: storedConfig,
   });
 
-  return NextResponse.json(apiResponse(serializeSource(source.toObject())), { status: 201 });
+  return NextResponse.json(apiResponse(serializeSource(source.toObject() as unknown as Record<string, unknown>)), { status: 201 });
 }

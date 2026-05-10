@@ -87,7 +87,7 @@ export function startDispatchWorker() {
 async function dispatchEmail(alert: IAlert, org: IOrganization, entities: IWatchlistEntity[], llmCtx: { whyMatters: string; recommendedActions: string[] }) {
   const sendEmail = process.env.SENDGRID_API_KEY
     ? (await import('@sendgrid/mail')).default.send.bind((await import('@sendgrid/mail')).default)
-    : (await import('@syntra/shared/mocks/sendgrid')).sendEmail;
+    : (await import('@syntra/shared/mocks/sendgrid.js')).sendEmail;
 
   const severityEmoji = { critical: '🔴', high: '🟠', medium: '🟡', low: '🔵' }[alert.severity] ?? '⚪';
   const subject = `[${alert.severity.toUpperCase()}] ${alert.event_snapshot.title}`;
@@ -137,7 +137,7 @@ async function dispatchWhatsApp(alert: IAlert, org: IOrganization, llmCtx: { why
     const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
     await client.messages.create({ to: payload.to, from: payload.from, body: payload.body });
   } else {
-    const { sendWhatsApp } = await import('@syntra/shared/mocks/twilio');
+    const { sendWhatsApp } = await import('@syntra/shared/mocks/twilio.js');
     await sendWhatsApp(payload);
   }
 }
