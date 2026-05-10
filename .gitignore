@@ -43,3 +43,7 @@ coverage/
 # Misc
 *.pem
 .vercel
+
+# Local debug scripts
+check-mongo.ts
+count-events.ts

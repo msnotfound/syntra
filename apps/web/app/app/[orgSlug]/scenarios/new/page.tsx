@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
 export default function NewScenarioPage() {
   const router = useRouter();
@@ -87,7 +87,7 @@ export default function NewScenarioPage() {
             className="flex items-center gap-1.5 px-4 h-9 rounded-md text-sm font-medium transition-colors active:scale-95 disabled:opacity-50"
             style={{ backgroundColor: '#3B82F6', color: '#FAFAFA', borderRadius: '6px', transitionDuration: '150ms' }}
           >
-            {saving && <Loader2 size={14} className="animate-spin" />}
+            {saving && <span className="skeleton h-3.5 w-3.5 rounded-sm" aria-hidden="true" />}
             {saving ? 'Creating…' : 'Create scenario'}
           </button>
           <Link

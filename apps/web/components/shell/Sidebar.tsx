@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
 import {
-  LayoutDashboard, Bell, List, Code2, Settings,
+  LayoutDashboard, Bell, List, Code2, Settings, ChevronDown,
   HelpCircle, BookOpen, Kanban, Activity, TrendingDown, Shield, ClipboardList, Users, FileText, Network, Rss, Briefcase, Lightbulb,
   type LucideIcon,
 } from 'lucide-react';
@@ -40,9 +40,10 @@ const BOTTOM_ITEMS: NavItem[] = [
 
 interface SidebarProps {
   orgSlug: string;
+  orgName: string;
 }
 
-export function Sidebar({ orgSlug }: SidebarProps) {
+export function Sidebar({ orgSlug, orgName }: SidebarProps) {
   const pathname = usePathname();
   const base = `/app/${orgSlug}`;
 
@@ -53,8 +54,23 @@ export function Sidebar({ orgSlug }: SidebarProps) {
   }
 
   return (
-    <aside className="w-64 flex-shrink-0 bg-bg-surface flex flex-col h-full border-r border-border-subtle">
-      <nav className="flex-1 py-4 px-3 space-y-0.5">
+    <aside className="w-72 flex-shrink-0 bg-bg-surface flex flex-col h-full border-r border-border-subtle">
+      <div className="px-4 py-5 border-b border-border-subtle">
+        <button
+          type="button"
+          className="group flex h-9 w-full items-center justify-between rounded-md border border-border-subtle bg-bg-surface px-3 text-left transition-colors duration-quick ease-out hover:border-border-default hover:bg-bg-surface-2 active:scale-95"
+          aria-label="Switch organization"
+        >
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-medium text-text-primary">{orgName}</span>
+            <span className="block font-mono text-[11px] text-text-muted">operational desk</span>
+          </span>
+          <ChevronDown size={14} className="ml-3 flex-shrink-0 text-text-muted transition-colors duration-quick group-hover:text-text-secondary" />
+        </button>
+      </div>
+
+      <nav className="flex-1 px-4 py-6 space-y-6 overflow-auto">
+        <div className="space-y-1">
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
@@ -64,10 +80,10 @@ export function Sidebar({ orgSlug }: SidebarProps) {
               href={`${base}${item.href}`}
               className={clsx(
                 'flex items-center gap-3 px-3 h-8 rounded-sm text-sm font-medium',
-                'transition-colors duration-[150ms] ease-out',
+                'transition-colors duration-quick ease-out',
                 'active:scale-95',
                 active
-                  ? 'bg-bg-surface-2 text-text-primary border-l-2 border-accent pl-2.5'
+                  ? 'bg-bg-surface-2 text-accent border-l-2 border-accent pl-2.5'
                   : 'text-text-secondary hover:bg-bg-surface-2 hover:text-text-primary border-l-2 border-transparent pl-2.5'
               )}
             >
@@ -76,16 +92,17 @@ export function Sidebar({ orgSlug }: SidebarProps) {
             </Link>
           );
         })}
+        </div>
       </nav>
 
-      <div className="border-t border-border-subtle py-4 px-3 space-y-0.5">
+      <div className="border-t border-border-subtle px-4 py-6 space-y-1">
         {BOTTOM_ITEMS.map((item) => {
           const Icon = item.icon;
           return (
             <Link
               key={item.href}
               href={`${base}${item.href}`}
-              className="flex items-center gap-3 px-3 h-8 rounded-sm text-sm font-medium text-text-secondary hover:bg-bg-surface-2 hover:text-text-primary transition-colors duration-[150ms] ease-out border-l-2 border-transparent pl-2.5"
+              className="flex items-center gap-3 px-3 h-8 rounded-sm text-sm font-medium text-text-secondary hover:bg-bg-surface-2 hover:text-text-primary transition-colors duration-quick ease-out border-l-2 border-transparent pl-2.5 active:scale-95"
             >
               <Icon size={16} />
               {item.label}

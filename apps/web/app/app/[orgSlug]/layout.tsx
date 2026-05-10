@@ -18,7 +18,7 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
     <div className="flex flex-col h-screen bg-bg-base">
       <TopBar orgName={org.name} orgSlug={org.slug} />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar orgSlug={org.slug} />
+        <Sidebar orgSlug={org.slug} orgName={org.name} />
         <main className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto px-8 py-6">
             {children}

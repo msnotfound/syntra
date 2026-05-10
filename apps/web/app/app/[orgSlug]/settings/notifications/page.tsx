@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Plus, Trash2, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 
 type ChannelType = 'email' | 'slack' | 'teams' | 'webhook' | 'sms';
 type Format = 'summary' | 'full' | 'oneliner';
@@ -305,7 +305,7 @@ export default function NotificationsPage() {
                     disabled={!addDest.trim() || addStatus === 'sending'}
                     className="ml-auto flex items-center gap-1.5 px-3 h-7 rounded-md text-xs font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50"
                   >
-                    {addStatus === 'sending' ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+                    {addStatus === 'sending' ? <span className="skeleton h-3 w-3 rounded-sm" aria-hidden="true" /> : <Plus size={12} />}
                     Add
                   </button>
                 </div>

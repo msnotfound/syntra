@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, Check, Copy, Loader2 } from 'lucide-react';
+import { FileText, Check, Copy } from 'lucide-react';
 
 interface Props {
   alertId: string;
@@ -48,7 +48,7 @@ export function GenerateBriefButton({ alertId, orgSlug }: Props) {
           href={shareUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95"
+          className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-quick ease-out active:scale-95"
         >
           <FileText size={14} />
           View PDF
@@ -56,7 +56,7 @@ export function GenerateBriefButton({ alertId, orgSlug }: Props) {
         <button
           onClick={copyLink}
           title="Copy share link"
-          className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-bg-surface-2 border border-border-default text-text-primary hover:bg-bg-surface-3 transition-colors duration-[150ms] ease-out active:scale-95"
+          className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-bg-surface-2 border border-border-default text-text-primary hover:bg-bg-surface-3 transition-colors duration-quick ease-out active:scale-95"
         >
           {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
           {copied ? 'Copied' : 'Copy link'}
@@ -69,16 +69,16 @@ export function GenerateBriefButton({ alertId, orgSlug }: Props) {
     <button
       onClick={handleGenerate}
       disabled={state === 'loading'}
-      className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-bg-surface-2 border border-border-default text-text-primary hover:bg-bg-surface-3 transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-bg-surface-2 border border-border-default text-text-primary hover:bg-bg-surface-3 transition-colors duration-quick ease-out active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
     >
       {state === 'loading' ? (
-        <Loader2 size={14} className="animate-spin" />
+        <span className="skeleton h-3.5 w-3.5 rounded-sm" aria-hidden="true" />
       ) : state === 'error' ? (
         <FileText size={14} className="text-severity-high" />
       ) : (
         <FileText size={14} />
       )}
-      {state === 'loading' ? 'Generating…' : state === 'error' ? 'Retry' : 'Generate Brief'}
+      {state === 'loading' ? 'Briefing…' : state === 'error' ? 'Retry' : 'Brief'}
     </button>
   );
 }

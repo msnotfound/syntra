@@ -43,10 +43,6 @@ export default async function AlertDetailPage({ params }: PageProps) {
     org_id: org._id,
   }).sort({ created_at: -1 }).lean() as unknown as IMitigationSuggestion[];
 
-  const severityColor: Record<string, string> = {
-    critical: '#EF4444', high: '#F97316', medium: '#EAB308', low: '#60A5FA',
-  };
-
   const memberList = members.map(m => ({
     id: String(m._id),
     name: m.name,
@@ -73,20 +69,39 @@ export default async function AlertDetailPage({ params }: PageProps) {
       </nav>
 
       {/* Header */}
-      <div className="bg-bg-surface border border-border-subtle rounded-md p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-3">
+      <div className="bg-bg-surface border border-border-subtle rounded-md p-5">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-3">
               <SeverityBadge severity={alert.severity as Severity} />
+              <h1 className="truncate text-xl font-semibold text-text-primary">{alert.event_snapshot.title}</h1>
+              <div className="ml-auto hidden font-mono text-xs text-text-muted xl:block">
+                {new Date(alert.event_snapshot.occurred_at).toLocaleString('en-GB', { timeZone: 'UTC' })} UTC
+              </div>
             </div>
-            <h1 className="text-xl font-semibold text-text-primary mb-2">{alert.event_snapshot.title}</h1>
-            <div className="flex items-center gap-2 text-sm text-text-secondary">
+            <div className="mt-2 flex items-center gap-2 text-sm text-text-secondary">
               <span>{alert.event_snapshot.country}</span>
               <span className="text-text-muted">·</span>
               <TimeAgo date={new Date(alert.event_snapshot.occurred_at)} className="font-mono text-text-muted text-xs" />
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex flex-shrink-0 flex-wrap items-center justify-end gap-1.5">
+            {!alert.acknowledged_at && (
+              <form action={`/api/v1/alerts/${String(alert._id)}/acknowledge`} method="POST">
+                <button
+                  type="submit"
+                  className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-quick ease-out active:scale-95"
+                >
+                  <CheckCircle size={14} />
+                  Acknowledge
+                </button>
+              </form>
+            )}
+            <button className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-bg-surface-2 border border-border-default text-text-primary hover:bg-bg-surface-3 transition-colors duration-quick ease-out active:scale-95">
+              <Share2 size={14} />
+              Forward
+            </button>
+            <GenerateBriefButton alertId={String(alert._id)} orgSlug={params.orgSlug} />
             {alert.severity === 'critical' && (
               <StartWarRoomButton
                 alertId={String(alert._id)}
@@ -94,28 +109,12 @@ export default async function AlertDetailPage({ params }: PageProps) {
                 orgSlug={params.orgSlug}
               />
             )}
-            {!alert.acknowledged_at && (
-              <form action={`/api/v1/alerts/${String(alert._id)}/acknowledge`} method="POST">
-                <button
-                  type="submit"
-                  className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95"
-                >
-                  <CheckCircle size={14} />
-                  Acknowledge
-                </button>
-              </form>
-            )}
             <LogDecisionModal alertId={String(alert._id)} orgSlug={params.orgSlug} />
-            <button className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-bg-surface-2 border border-border-default text-text-primary hover:bg-bg-surface-3 transition-colors duration-[150ms] ease-out active:scale-95">
-              <Share2 size={14} />
-              Forward to team
-            </button>
-            <GenerateBriefButton alertId={String(alert._id)} orgSlug={params.orgSlug} />
           </div>
         </div>
         {alert.acknowledged_at && (
           <div className="mt-3 pt-3 border-t border-border-subtle flex items-center gap-1.5 text-xs text-text-muted">
-            <CheckCircle size={12} className="text-green-500" />
+            <CheckCircle size={12} className="text-success" />
             <span>Acknowledged <TimeAgo date={new Date(alert.acknowledged_at)} /></span>
           </div>
         )}
@@ -123,7 +122,7 @@ export default async function AlertDetailPage({ params }: PageProps) {
 
       {/* Map + Why this matters */}
       <div className="grid grid-cols-[3fr_2fr] gap-4">
-        <div className="bg-bg-surface border border-border-subtle rounded-md overflow-hidden" style={{ height: 320 }}>
+        <div className="aspect-[16/9] overflow-hidden rounded-md border border-border-subtle bg-bg-surface">
           <WorldMap
             watchlistPins={entities
               .filter(e => e.latitude !== null && e.longitude !== null)
@@ -137,14 +136,14 @@ export default async function AlertDetailPage({ params }: PageProps) {
             }]}
             center={[alert.event_snapshot.location.lng, alert.event_snapshot.location.lat]}
             zoom={5}
-            height="320px"
+            height="100%"
           />
         </div>
 
         <div className="bg-bg-surface border border-border-subtle rounded-md p-5">
           <div className="text-xs font-medium uppercase tracking-wider text-text-secondary mb-4">Why This Matters To You</div>
           {alert.llm_context.why_matters && (
-            <p className="text-sm text-text-primary mb-4">{alert.llm_context.why_matters}</p>
+            <p className="mb-5 border-l border-accent/60 pl-4 text-md leading-7 text-text-primary">{alert.llm_context.why_matters}</p>
           )}
           <div className="space-y-3">
             {entities.map(e => (
@@ -268,19 +267,19 @@ export default async function AlertDetailPage({ params }: PageProps) {
                 inventory_buffer: 'Inventory Buffer',
                 contract_clause: 'Contract Clause',
               };
-              const statusColor: Record<string, string> = {
-                proposed: '#94A3B8',
-                accepted: '#22C55E',
-                rejected: '#EF4444',
+              const statusClass: Record<string, string> = {
+                proposed: 'text-text-secondary',
+                accepted: 'text-success',
+                rejected: 'text-severity-critical',
               };
               return (
                 <div key={String(m._id)} className="p-5">
                   <div className="flex items-start justify-between gap-4 mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-sm bg-bg-surface-2 text-text-secondary" style={{ borderRadius: '4px' }}>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-sm bg-bg-surface-2 text-text-secondary">
                         {typeLabel[m.suggestion_type] ?? m.suggestion_type}
                       </span>
-                      <span className="text-xs font-mono" style={{ color: statusColor[m.status] ?? '#94A3B8' }}>
+                      <span className={`text-xs font-mono ${statusClass[m.status] ?? 'text-text-secondary'}`}>
                         {m.status}
                       </span>
                     </div>
@@ -291,8 +290,7 @@ export default async function AlertDetailPage({ params }: PageProps) {
                             <input type="hidden" name="status" value="accepted" />
                             <button
                               type="submit"
-                              className="flex items-center gap-1 px-2.5 h-7 rounded-sm text-xs font-medium transition-colors duration-[150ms] ease-out active:scale-95"
-                              style={{ backgroundColor: 'rgba(34,197,94,0.1)', color: '#22C55E', border: '1px solid rgba(34,197,94,0.2)' }}
+                              className="flex items-center gap-1 px-2.5 h-7 rounded-sm text-xs font-medium border border-success/20 bg-success/10 text-success transition-colors duration-quick ease-out hover:bg-success/15 active:scale-95"
                             >
                               <CheckCircle2 size={12} /> Accept
                             </button>
@@ -301,8 +299,7 @@ export default async function AlertDetailPage({ params }: PageProps) {
                             <input type="hidden" name="status" value="rejected" />
                             <button
                               type="submit"
-                              className="flex items-center gap-1 px-2.5 h-7 rounded-sm text-xs font-medium transition-colors duration-[150ms] ease-out active:scale-95"
-                              style={{ backgroundColor: '#1E2530', color: '#94A3B8', border: '1px solid #262C36' }}
+                              className="flex items-center gap-1 px-2.5 h-7 rounded-sm text-xs font-medium border border-border-default bg-bg-surface-2 text-text-secondary transition-colors duration-quick ease-out hover:bg-bg-surface-3 hover:text-text-primary active:scale-95"
                             >
                               <XCircle size={12} /> Dismiss
                             </button>
@@ -315,7 +312,7 @@ export default async function AlertDetailPage({ params }: PageProps) {
                   <div className="flex items-center gap-4 text-xs text-text-muted font-mono">
                     <span>{m.confidence_pct}% confidence</span>
                     {m.estimated_var_reduction_usd !== null && m.estimated_var_reduction_usd > 0 && (
-                      <span className="text-green-500">
+                      <span className="text-success">
                         ~${(m.estimated_var_reduction_usd / 1_000).toFixed(0)}K potential VaR reduction
                       </span>
                     )}
@@ -367,7 +364,7 @@ export default async function AlertDetailPage({ params }: PageProps) {
                         </div>
                       )}
                       {exp.exposure_delta_usd != null && (
-                        <div className={`text-xs font-mono mt-0.5 ${exp.exposure_delta_usd > 0 ? 'text-severity-high' : 'text-green-500'}`}>
+                        <div className={`text-xs font-mono mt-0.5 ${exp.exposure_delta_usd > 0 ? 'text-severity-high' : 'text-success'}`}>
                           {exp.exposure_delta_usd > 0 ? '+' : ''}
                           {(exp.exposure_delta_usd / 1_000_000).toFixed(1)}M vs prior
                         </div>

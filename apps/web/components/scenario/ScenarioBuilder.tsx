@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Trash2, Play, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Play } from 'lucide-react';
 
 type AlertKind     = 'physical_risk' | 'sanctions_match' | 'compliance';
 type AlertSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info';
@@ -186,6 +186,8 @@ export function ScenarioBuilder({
               {/* Remove */}
               <button
                 onClick={() => removeEvent(idx)}
+                aria-label="Remove event"
+                title="Remove event"
                 className="flex items-center justify-center w-8 h-8 rounded-md text-text-muted transition-colors duration-[150ms] ease-out active:scale-95"
               >
                 <Trash2 size={14} />
@@ -204,7 +206,7 @@ export function ScenarioBuilder({
             disabled={running || events.length === 0}
             className="flex items-center gap-1.5 px-4 h-8 rounded-md text-sm font-medium bg-accent text-text-primary transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {running ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
+            {running ? <span className="skeleton h-3.5 w-3.5 rounded-sm" aria-hidden="true" /> : <Play size={14} />}
             {running ? 'Computing…' : 'Run scenario'}
           </button>
         </div>

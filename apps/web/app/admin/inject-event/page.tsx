@@ -104,7 +104,7 @@ export default function InjectEventPage() {
                 >
                   {loading === p.id ? (
                     <>
-                      <span className="animate-spin inline-block w-3.5 h-3.5 border border-text-primary border-t-transparent rounded-full" />
+                      <span className="skeleton inline-block h-3.5 w-3.5 rounded-sm" aria-hidden="true" />
                       Injecting…
                     </>
                   ) : (

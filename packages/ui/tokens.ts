@@ -29,6 +29,8 @@ export const colors = {
   },
   accent: {
     DEFAULT: '#3B82F6', // primary actions, links, focus rings, active indicators
+    hover:   '#60A5FA',
+    muted:   '#1E3A8A',
   },
   severity: {
     critical: '#EF4444',
@@ -37,10 +39,38 @@ export const colors = {
     low:      '#60A5FA',
     info:     '#94A3B8',
   },
+  state: {
+    success: '#22C55E',
+    warning: '#F59E0B',
+    error:   '#EF4444',
+  },
+  map: {
+    bg:           '#0A0A0A',
+    water:        '#151921',
+    land:         '#1E2530',
+    border:       '#262C36',
+    watchlistPin: '#3B82F6',
+    eventGlow:    'rgba(239, 68, 68, 0.4)',
+  },
 } as const;
 
 export const spacing = {
   base: 4, // 4px grid — Tailwind defaults
+  px: {
+    0:  '0px',
+    1:  '4px',
+    2:  '8px',
+    3:  '12px',
+    4:  '16px',
+    5:  '20px',
+    6:  '24px',
+    7:  '28px',
+    8:  '32px',
+    9:  '36px',
+    10: '40px',
+    12: '48px',
+    16: '64px',
+  },
 } as const;
 
 export const radii = {
@@ -50,8 +80,34 @@ export const radii = {
 } as const;
 
 export const transitions = {
-  // All transitions use this duration + easing. Do not introduce others.
-  default: '150ms ease-out',
+  instant:    '0ms',
+  quick:      '150ms ease-out',
+  poised:     '250ms cubic-bezier(0.16, 1, 0.3, 1)',
+  considered: '400ms cubic-bezier(0.16, 1, 0.3, 1)',
+  default:    '150ms ease-out',
+} as const;
+
+export const elevation = {
+  0: {
+    bg: colors.bg.base,
+    border: 'transparent',
+    className: 'bg-bg-base border-transparent',
+  },
+  1: {
+    bg: colors.bg.surface,
+    border: colors.border.subtle,
+    className: 'bg-bg-surface border border-border-subtle',
+  },
+  2: {
+    bg: colors.bg.surface2,
+    border: colors.border.default,
+    className: 'bg-bg-surface-2 border border-border-default',
+  },
+  3: {
+    bg: colors.bg.surface3,
+    border: colors.border.strong,
+    className: 'bg-bg-surface-3 border border-border-strong',
+  },
 } as const;
 
 export const typography = {
@@ -71,6 +127,7 @@ export const typography = {
     '2xl': '32px',
   },
   weights: {
+    light:    300,
     regular: 400,
     medium:  500,
     semibold: 600,
@@ -80,16 +137,22 @@ export const typography = {
 export const interactions = {
   // Apply to all buttons and nav items.
   buttonPress: 'active:scale-95',
-  // 2px accent outline, no offset.
-  focusRing: 'focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6]',
+  // 1px accent ring, 2px offset, 0.6 opacity. Keyboard-visible only.
+  focusRing: 'focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-accent/60',
   // Background shift only on hover. No translateY, no shadow lift.
-  hoverSurface: 'hover:bg-[#1E2530]',
+  hoverSurface: 'hover:bg-bg-surface-2',
+} as const;
+
+export const focusRing = {
+  width: '1px',
+  color: 'rgba(59, 130, 246, 0.6)',
+  offset: '2px',
+  className: interactions.focusRing,
 } as const;
 
 export const sidebar = {
-  // v2: 256px (was 224px in v1).
-  width: '256px',
-  widthClass: 'w-64',
+  width: '288px',
+  widthClass: 'w-72',
 } as const;
 
 // Type exports for downstream consumers.
@@ -97,4 +160,5 @@ export type ColorToken = typeof colors;
 export type SpacingToken = typeof spacing;
 export type RadiiToken = typeof radii;
 export type TransitionToken = typeof transitions;
+export type ElevationToken = typeof elevation;
 export type TypographyToken = typeof typography;

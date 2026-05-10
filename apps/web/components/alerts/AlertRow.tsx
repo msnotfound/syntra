@@ -26,25 +26,20 @@ interface AlertRowProps {
 }
 
 const SEVERITY_BORDER: Record<Severity, string> = {
-  critical: 'border-l-severity-critical',
-  high:     'border-l-severity-high',
-  medium:   'border-l-severity-medium',
-  low:      'border-l-severity-low',
-  info:     'border-l-text-disabled',
+  critical: 'severity-border-critical',
+  high:     'severity-border-high',
+  medium:   'severity-border-medium',
+  low:      'severity-border-low',
+  info:     'severity-border-info',
 };
 
 export function AlertRow({
   id, orgSlug, severity, title, country, occurredAt,
   affectedEntities, acknowledgedAt, acknowledgedByName, onAcknowledge,
 }: AlertRowProps) {
-  const borderColor = {
-    critical: '#EF4444', high: '#F97316', medium: '#EAB308', low: '#60A5FA', info: '#94A3B8',
-  }[severity];
-
   return (
     <div
-      className="group bg-bg-surface hover:bg-bg-surface-2 transition-colors duration-[150ms] ease-out border-b border-border-subtle"
-      style={{ borderLeft: `3px solid ${borderColor}` }}
+      className={clsx('group bg-bg-surface hover:bg-bg-surface-2 transition-colors duration-quick ease-out border-b border-border-subtle', SEVERITY_BORDER[severity])}
     >
       <div className="px-4 py-3">
         <div className="flex items-start justify-between gap-4">
@@ -68,7 +63,7 @@ export function AlertRow({
             )}
             {acknowledgedAt && (
               <div className="mt-1 text-xs text-text-muted flex items-center gap-1">
-                <span className="text-green-500">✓</span>
+                <span className="text-success">✓</span>
                 <span>Acknowledged{acknowledgedByName ? ` by ${acknowledgedByName}` : ''} · </span>
                 <TimeAgo date={acknowledgedAt} className="font-mono" />
               </div>

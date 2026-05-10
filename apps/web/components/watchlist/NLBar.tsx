@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Loader2, X, Check } from 'lucide-react';
+import { Sparkles, X, Check } from 'lucide-react';
 
 interface EntityRef {
   id: string;
@@ -117,7 +117,7 @@ export function NLBar({ orgSlug }: NLBarProps) {
           style={{ transition: 'border-color 150ms ease-out' }}
         >
           {loading
-            ? <Loader2 size={14} className="text-text-muted animate-spin shrink-0" />
+            ? <span className="skeleton h-3.5 w-3.5 shrink-0 rounded-sm" aria-hidden="true" />
             : <Sparkles size={14} className="text-accent shrink-0" />
           }
           <input
@@ -133,6 +133,8 @@ export function NLBar({ orgSlug }: NLBarProps) {
             <button
               type="button"
               onClick={() => setPrompt('')}
+              aria-label="Clear prompt"
+              title="Clear prompt"
               className="text-text-muted hover:text-text-secondary transition-colors duration-[150ms] ease-out"
             >
               <X size={12} />
@@ -169,7 +171,7 @@ export function NLBar({ orgSlug }: NLBarProps) {
           onClick={e => { if (e.target === e.currentTarget) handleDismiss(); }}
         >
           <div
-            className="w-full max-w-md bg-bg-surface border border-border-default rounded-md p-6 shadow-[0_8px_24px_rgba(0,0,0,0.5)]"
+            className="w-full max-w-md bg-bg-surface border border-border-default rounded-md p-6"
           >
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
@@ -179,6 +181,8 @@ export function NLBar({ orgSlug }: NLBarProps) {
               </div>
               <button
                 onClick={handleDismiss}
+                aria-label="Close confirmation"
+                title="Close confirmation"
                 className="p-1 rounded text-text-muted hover:text-text-primary hover:bg-bg-surface-2 transition-colors duration-[150ms] ease-out"
               >
                 <X size={14} />
@@ -256,7 +260,7 @@ export function NLBar({ orgSlug }: NLBarProps) {
                   disabled={confirming}
                   className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-40"
                 >
-                  {confirming && <Loader2 size={12} className="animate-spin" />}
+                  {confirming && <span className="skeleton h-3 w-3 rounded-sm" aria-hidden="true" />}
                   Confirm
                 </button>
               )}

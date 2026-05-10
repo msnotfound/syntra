@@ -32,6 +32,11 @@
   --radius-lg: 8px;
 
   --transition: 150ms ease-out;
+  --motion-instant: 0ms;
+  --motion-quick: 150ms ease-out;
+  --motion-poised: 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-considered: 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  --focus-ring: rgba(59, 130, 246, 0.6);
 }
 
 * {
@@ -50,6 +55,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 1px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* Tabular nums for all data-heavy contexts */
 .font-mono,
 [data-tabular] {
@@ -62,6 +80,7 @@ body {
 .severity-border-high     { border-left: 3px solid var(--severity-high); }
 .severity-border-medium   { border-left: 3px solid var(--severity-medium); }
 .severity-border-low      { border-left: 3px solid var(--severity-low); }
+.severity-border-info     { border-left: 3px solid var(--severity-info); }
 
 /* Map container */
 .mapbox-container {
@@ -88,16 +107,37 @@ body {
 }
 
 /* Skeleton shimmer */
-@keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+@keyframes shimmer-restrained {
+  0%   { background-position: -120% 0; }
+  100% { background-position: 120% 0; }
 }
 
 .skeleton {
-  background: linear-gradient(90deg, var(--bg-surface-2) 25%, var(--bg-surface-3) 50%, var(--bg-surface-2) 75%);
+  background: linear-gradient(90deg, var(--bg-surface) 0%, var(--bg-surface-2) 50%, var(--bg-surface) 100%);
   background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+  animation: shimmer-restrained 600ms ease-out infinite;
   border-radius: var(--radius-sm);
+}
+
+@keyframes fade-up-poised {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.stagger-reveal {
+  animation: fade-up-poised var(--motion-poised) both;
+  animation-delay: calc(var(--stagger-index, 0) * 50ms);
+}
+
+.surface-lift {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  transition: background-color var(--motion-quick), border-color var(--motion-quick), transform var(--motion-quick);
+}
+
+.surface-lift:hover {
+  background-color: var(--bg-surface-2);
+  border-color: var(--border-default);
 }
 
 /* Map event pulse */
@@ -108,6 +148,17 @@ body {
 
 .map-event-pulse {
   animation: pulse-ring 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Scrollbar styling */

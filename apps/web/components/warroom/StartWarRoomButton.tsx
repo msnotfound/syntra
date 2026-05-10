@@ -39,10 +39,10 @@ export function StartWarRoomButton({ alertId, alertTitle, orgSlug }: StartWarRoo
     <button
       onClick={handleClick}
       disabled={loading}
-      className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium border border-severity-critical bg-bg-surface text-severity-critical transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-60"
+      className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium border border-severity-critical/60 bg-bg-surface text-severity-critical transition-colors duration-quick ease-out hover:bg-severity-critical/10 active:scale-95 disabled:opacity-60"
     >
       <Shield size={14} />
-      {loading ? 'Opening…' : 'Start War Room'}
+      {loading ? 'Opening…' : 'War-Room'}
     </button>
   );
 }

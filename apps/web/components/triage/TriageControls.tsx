@@ -91,7 +91,7 @@ export function TriageControls({ alertId, currentStatus, currentAssigneeId, memb
         </button>
 
         {assignDropdownOpen && (
-          <div className="absolute top-full mt-1 left-0 right-0 z-10 bg-bg-surface border border-border-default rounded-md shadow-lg overflow-hidden">
+          <div className="absolute top-full mt-1 left-0 right-0 z-10 bg-bg-surface border border-border-default rounded-md overflow-hidden">
             <button
               onClick={() => updateAssignee(null)}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-secondary hover:bg-bg-surface-2 transition-colors duration-[150ms] ease-out"

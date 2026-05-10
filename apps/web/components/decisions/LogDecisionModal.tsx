@@ -86,12 +86,14 @@ export function LogDecisionModal({ alertId, orgSlug, onSuccess }: LogDecisionMod
           />
 
           {/* Modal */}
-          <div className="relative z-10 w-full max-w-md bg-bg-surface border border-border-default rounded-md shadow-xl p-6">
+          <div className="relative z-10 w-full max-w-md bg-bg-surface border border-border-default rounded-md p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wider">Log Decision</h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
+                aria-label="Close decision modal"
+                title="Close decision modal"
                 className="text-text-muted hover:text-text-primary transition-colors duration-[150ms]"
               >
                 <X size={16} />
