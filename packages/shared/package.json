@@ -18,7 +18,8 @@
     "./utils/sanctions-match": "./utils/sanctions-match.ts",
     "./token-encrypt": "./token-encrypt.ts",
     "./utils/intel-provenance": "./utils/intel-provenance.ts",
-    "./utils/var-table": "./utils/var-table.ts"
+    "./utils/var-table": "./utils/var-table.ts",
+    "./utils/var-monte-carlo": "./utils/var-monte-carlo.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

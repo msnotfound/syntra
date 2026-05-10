@@ -1,5 +1,22 @@
 import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 
+export interface IExposureSimulation {
+  var_at_75: number;
+  var_at_95: number;
+  var_at_99: number;
+  expected_loss_usd: number;
+  std_dev_usd: number;
+  iterations: number;
+  distribution: {
+    min: number;
+    mode: number;
+    max: number;
+  };
+  distribution_shape?: string;
+  methodology: string;
+  computed_at: Date;
+}
+
 export interface IExposure extends Document {
   org_id: Types.ObjectId;
   entity_id: Types.ObjectId;
@@ -14,6 +31,8 @@ export interface IExposure extends Document {
   policy_id: string | null;             // reference to InsurancePolicy.policy_id
   coverage_gap_usd: number;             // max(0, var_value_usd * (1 - insurance_coverage_pct/100))
   exposure_delta_usd: number | null;    // change vs prior computed value (positive = worsened)
+  // M21 depth pass: optional Monte Carlo percentile bands.
+  simulation: IExposureSimulation | null;
 }
 
 const ExposureSchema = new Schema<IExposure>({
@@ -30,6 +49,7 @@ const ExposureSchema = new Schema<IExposure>({
   policy_id: { type: String, default: null },
   coverage_gap_usd: { type: Number, default: 0 },
   exposure_delta_usd: { type: Number, default: null },
+  simulation: { type: Schema.Types.Mixed, default: null },
 }, { timestamps: false });
 
 ExposureSchema.index({ org_id: 1, computed_at: -1 });

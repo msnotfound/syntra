@@ -219,6 +219,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@syntra/shared':
+        specifier: workspace:*
+        version: link:../shared
       dotenv:
         specifier: ^16.4.5
         version: 16.6.1
