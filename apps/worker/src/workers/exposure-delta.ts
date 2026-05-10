@@ -1,9 +1,13 @@
 import { Queue, Worker } from 'bullmq';
-import { connectDb, Exposure, InsurancePolicy } from '@syntra/db';
-import type { IExposure } from '@syntra/db';
+import { connectDb, Alert, Exposure, InsurancePolicy } from '@syntra/db';
+import type { IAlert, IExposure, IInsurancePolicy } from '@syntra/db';
 import mongoose from 'mongoose';
-import { computeCoverageGap, computeDelta } from '../utils/exposure-math.js';
-export { computeCoverageGap, computeDelta } from '../utils/exposure-math.js';
+import {
+  computeCoverageGap,
+  computeDelta,
+  computePolicyCoverage,
+} from '../utils/exposure-math.js';
+export { computeCoverageGap, computeDelta, computePolicyCoverage } from '../utils/exposure-math.js';
 
 const REDIS_URL = process.env.UPSTASH_REDIS_URL;
 const connection = REDIS_URL
@@ -21,6 +25,47 @@ export interface ExposureDeltaJobData {
   orgId: string;
   entityId: string;
   newVarUsd: number;
+}
+
+type LeanPolicy = IInsurancePolicy & { _id: mongoose.Types.ObjectId };
+
+function resolvePerilKind(alert: IAlert | null): string {
+  if (!alert) return 'physical_risk';
+  if (alert.subtype === 'sanctions_match' || alert.subtype === 'compliance') return alert.subtype;
+  return alert.event_snapshot?.event_type || alert.subtype || 'physical_risk';
+}
+
+function isPolicyActive(policy: IInsurancePolicy, now = new Date()): boolean {
+  return new Date(policy.expires_at).getTime() > now.getTime();
+}
+
+function chooseApplicablePolicy(
+  exposure: IExposure,
+  policies: LeanPolicy[],
+  perilKind: string,
+): LeanPolicy | null {
+  const activePolicies = policies.filter(policy => isPolicyActive(policy));
+  if (exposure.policy_id) {
+    return activePolicies.find(policy => policy.policy_id === exposure.policy_id) ?? null;
+  }
+
+  return activePolicies.reduce<LeanPolicy | null>((best, policy) => {
+    const candidateCoverage = computePolicyCoverage({
+      varUsd: exposure.var_value_usd,
+      perilKind,
+      counterpartyId: String(exposure.entity_id),
+      policy,
+    }).coverage_actual_usd;
+    const bestCoverage = best
+      ? computePolicyCoverage({
+        varUsd: exposure.var_value_usd,
+        perilKind,
+        counterpartyId: String(exposure.entity_id),
+        policy: best,
+      }).coverage_actual_usd
+      : -1;
+    return candidateCoverage > bestCoverage ? policy : best;
+  }, null);
 }
 
 /**
@@ -46,26 +91,31 @@ export function startExposureDeltaWorker() {
 
     const exposure_delta_usd = computeDelta(current.var_value_usd, previous?.var_value_usd ?? null);
 
-    // Look up the linked policy to compute effective coverage.
-    let insurance_coverage_pct = current.insurance_coverage_pct ?? 0;
-    if (current.policy_id) {
-      const policy = await InsurancePolicy.findOne({
-        org_id: orgOid,
-        policy_id: current.policy_id,
-      }).lean();
-      if (policy) {
-        const effectiveCoverage = Math.max(0, policy.max_payout_usd - policy.deductible_usd);
-        insurance_coverage_pct = current.var_value_usd > 0
-          ? Math.min(100, (effectiveCoverage / current.var_value_usd) * 100)
-          : 0;
-      }
-    }
-
-    const coverage_gap_usd = computeCoverageGap(current.var_value_usd, insurance_coverage_pct);
+    const alert = current.alert_id
+      ? await Alert.findById(current.alert_id).lean() as unknown as IAlert | null
+      : null;
+    const perilKind = resolvePerilKind(alert);
+    const policies = await InsurancePolicy.find({ org_id: orgOid }).lean() as unknown as LeanPolicy[];
+    const policy = chooseApplicablePolicy(current, policies, perilKind);
+    const coverage = computePolicyCoverage({
+      varUsd: current.var_value_usd,
+      perilKind,
+      counterpartyId: String(current.entity_id),
+      policy,
+    });
 
     await Exposure.updateOne(
       { _id: current._id },
-      { $set: { exposure_delta_usd, coverage_gap_usd, insurance_coverage_pct } },
+      {
+        $set: {
+          exposure_delta_usd,
+          coverage_actual_usd: coverage.coverage_actual_usd,
+          coverage_gap_usd: coverage.gap_usd,
+          insurance_coverage_pct: coverage.insurance_coverage_pct,
+          policy_id: policy?.policy_id ?? current.policy_id ?? null,
+          exclusion_reason: coverage.exclusion_reason,
+        },
+      },
     );
   }, { connection });
 
@@ -74,4 +124,3 @@ export function startExposureDeltaWorker() {
   );
   return worker;
 }
-

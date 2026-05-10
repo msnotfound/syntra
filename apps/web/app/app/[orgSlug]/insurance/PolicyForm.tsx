@@ -33,6 +33,7 @@ export function PolicyForm({ orgSlug }: PolicyFormProps) {
         insurer_name: data.insurer_name,
         coverage_type: data.coverage_type,
         max_payout_usd: Number(data.max_payout_usd),
+        aggregate_limit_usd: data.aggregate_limit_usd ? Number(data.aggregate_limit_usd) : undefined,
         deductible_usd: Number(data.deductible_usd || 0),
         expires_at: new Date(data.expires_at as string).toISOString(),
       }),
@@ -81,6 +82,7 @@ export function PolicyForm({ orgSlug }: PolicyFormProps) {
 
       {[
         { name: 'max_payout_usd', label: 'Max Payout (USD)', placeholder: '5000000' },
+        { name: 'aggregate_limit_usd', label: 'Aggregate Limit (USD)', placeholder: '4000000' },
         { name: 'deductible_usd', label: 'Deductible (USD)', placeholder: '50000' },
       ].map(f => (
         <div key={f.name}>

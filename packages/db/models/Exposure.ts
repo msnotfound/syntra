@@ -29,7 +29,9 @@ export interface IExposure extends Document {
   // M30: insurance fields
   insurance_coverage_pct: number;       // 0–100, pct of VaR covered by policy
   policy_id: string | null;             // reference to InsurancePolicy.policy_id
+  coverage_actual_usd: number;          // actual dollars available after sub-limits, aggregate, claims, exclusions
   coverage_gap_usd: number;             // max(0, var_value_usd * (1 - insurance_coverage_pct/100))
+  exclusion_reason: string | null;      // populated when a policy exclusion zeroes coverage
   exposure_delta_usd: number | null;    // change vs prior computed value (positive = worsened)
   // M21 depth pass: optional Monte Carlo percentile bands.
   simulation: IExposureSimulation | null;
@@ -47,7 +49,9 @@ const ExposureSchema = new Schema<IExposure>({
   // M30: insurance fields (additive, all have defaults so existing docs keep working)
   insurance_coverage_pct: { type: Number, default: 0, min: 0, max: 100 },
   policy_id: { type: String, default: null },
+  coverage_actual_usd: { type: Number, default: 0, min: 0 },
   coverage_gap_usd: { type: Number, default: 0 },
+  exclusion_reason: { type: String, default: null },
   exposure_delta_usd: { type: Number, default: null },
   simulation: { type: Schema.Types.Mixed, default: null },
 }, { timestamps: false });
