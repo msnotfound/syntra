@@ -2,7 +2,7 @@ import { connectDb, Alert, WatchlistEntity, SupplierLink, Exposure, MitigationSu
 import { callLLMJson, renderTemplate } from '@syntra/llm';
 import { ALT_ROUTE_SUGGESTION } from '../../../../specs/contracts/05-llm-prompts.contract.js';
 import { Types } from 'mongoose';
-import type { IAlert, IWatchlistEntity, IExposure } from '@syntra/db';
+import type { IAlert, IWatchlistEntity, IExposure, MitigationSuggestionType } from '@syntra/db';
 
 // ---------------------------------------------------------------------------
 // BFS: walk SupplierLink graph up to depth 3, collecting alternative peers
@@ -80,6 +80,193 @@ interface AltRouteLLMOutput {
     risk_notes: string;
   }>;
   narrative: string;
+}
+
+interface MitigationAnalysisOutput {
+  root_cause: string;
+  impact_horizon_days: number;
+  impact_horizon_label: string;
+  affected_operations: string[];
+}
+
+interface MitigationCandidate {
+  suggestion_type: MitigationSuggestionType;
+  narrative: string;
+  estimated_var_reduction_usd: number | null;
+  confidence_pct: number;
+  ease_of_execution_pct: number;
+  expected_outcome: Record<string, unknown>;
+  sources: string[];
+}
+
+interface MitigationGenerateOutput {
+  candidates: MitigationCandidate[];
+}
+
+interface MitigationRankOutput {
+  ranked: Array<{
+    candidate_index: number;
+    rank_score: number;
+    rationale: string;
+  }>;
+}
+
+const MITIGATION_MODEL = 'claude-haiku-4-5';
+const ALLOWED_SUGGESTION_TYPES = new Set<MitigationSuggestionType>([
+  'alt_route',
+  'alt_supplier',
+  'inventory_buffer',
+  'contract_clause',
+]);
+
+function summarizeEntities(entities: IWatchlistEntity[]): string {
+  return entities.map(e => `${e.name} (${e.type})`).join(', ') || 'none';
+}
+
+function summarizeExposures(exposures: IExposure[]): string {
+  if (exposures.length === 0) return 'none';
+  return exposures
+    .map(e => `${String(e.entity_id)}: ${e.var_value_usd} USD VaR`)
+    .join('; ');
+}
+
+function buildMitigationContext(
+  alert: IAlert,
+  entities: IWatchlistEntity[],
+  alternatives: IWatchlistEntity[],
+  exposures: IExposure[],
+  estimatedReduction: number,
+): string {
+  return [
+    `Alert: ${alert.event_snapshot.title}`,
+    `Severity: ${alert.severity}`,
+    `Event type: ${alert.event_snapshot.event_type}`,
+    `Location: ${alert.event_snapshot.country} (${alert.event_snapshot.country_code ?? 'unknown code'})`,
+    `Affected entities: ${summarizeEntities(entities)}`,
+    `Alternative entities from supplier graph: ${summarizeEntities(alternatives)}`,
+    `Exposure rows: ${summarizeExposures(exposures)}`,
+    `Estimated total VaR reduction pool: ${estimatedReduction} USD`,
+    `Sources: ${alert.event_snapshot.sources.map(s => s.url).join(', ')}`,
+  ].join('\n');
+}
+
+function fallbackAnalysis(alert: IAlert): MitigationAnalysisOutput {
+  return {
+    root_cause: alert.event_snapshot.title,
+    impact_horizon_days: alert.severity === 'critical' ? 30 : 14,
+    impact_horizon_label: alert.severity === 'critical' ? '2-6 weeks' : '1-3 weeks',
+    affected_operations: alert.match_reasons,
+  };
+}
+
+function fallbackGenerate(
+  alert: IAlert,
+  entities: IWatchlistEntity[],
+  alternatives: IWatchlistEntity[],
+  estimatedReduction: number,
+): MitigationGenerateOutput {
+  const entityNames = entities.map(e => e.name).join(', ') || 'affected operations';
+  const candidates: MitigationCandidate[] = [];
+
+  if (entities.some(e => e.type === 'route') || alert.match_reasons.includes('route')) {
+    candidates.push({
+      suggestion_type: 'alt_route',
+      narrative: `Route around the disrupted corridor for ${entityNames}.`,
+      estimated_var_reduction_usd: estimatedReduction > 0 ? estimatedReduction : null,
+      confidence_pct: 72,
+      ease_of_execution_pct: 65,
+      expected_outcome: { summary: 'Reduces exposure to the disrupted route.' },
+      sources: alert.event_snapshot.sources.map(s => s.url),
+    });
+  }
+
+  if (alternatives.length > 0) {
+    candidates.push({
+      suggestion_type: 'alt_supplier',
+      narrative: `Qualify alternate suppliers: ${alternatives.slice(0, 3).map(a => a.name).join(', ')}.`,
+      estimated_var_reduction_usd: estimatedReduction > 0 ? Math.round(estimatedReduction * 0.6) : null,
+      confidence_pct: 65,
+      ease_of_execution_pct: 45,
+      expected_outcome: { summary: 'Reduces supplier concentration.', supplier_name: alternatives[0]?.name },
+      sources: [],
+    });
+  }
+
+  candidates.push({
+    suggestion_type: 'inventory_buffer',
+    narrative: `Build 30-60 days of buffer stock for ${entityNames}.`,
+    estimated_var_reduction_usd: estimatedReduction > 0 ? Math.round(estimatedReduction * 0.35) : null,
+    confidence_pct: 80,
+    ease_of_execution_pct: 75,
+    expected_outcome: { summary: 'Absorbs near-term disruption while logistics recover.' },
+    sources: [],
+  });
+
+  candidates.push({
+    suggestion_type: 'contract_clause',
+    narrative: `Prepare contractual notice language tied to ${alert.event_snapshot.title}.`,
+    estimated_var_reduction_usd: estimatedReduction > 0 ? Math.round(estimatedReduction * 0.25) : null,
+    confidence_pct: 70,
+    ease_of_execution_pct: 70,
+    expected_outcome: { summary: 'Preserves rights under disruption clauses.' },
+    sources: [],
+  });
+
+  return { candidates };
+}
+
+function fallbackRank(candidates: MitigationCandidate[]): MitigationRankOutput {
+  return {
+    ranked: candidates.map((candidate, index) => ({
+      candidate_index: index,
+      rank_score:
+        (candidate.estimated_var_reduction_usd ?? 0) +
+        candidate.confidence_pct * 1_000 +
+        candidate.ease_of_execution_pct * 500,
+      rationale: 'Fallback weighted score from VaR reduction, confidence, and execution ease.',
+    })),
+  };
+}
+
+async function runMitigationDepthPass(
+  alert: IAlert,
+  entities: IWatchlistEntity[],
+  alternatives: IWatchlistEntity[],
+  exposures: IExposure[],
+  estimatedReduction: number,
+): Promise<MitigationCandidate[]> {
+  const context = buildMitigationContext(alert, entities, alternatives, exposures, estimatedReduction);
+
+  const analysis = await callLLMJson<MitigationAnalysisOutput>(
+    MITIGATION_MODEL,
+    'You are a supply-chain risk analyst. Return only compact JSON.',
+    `ANALYZE\n${context}\n\nReturn JSON with root_cause, impact_horizon_days, impact_horizon_label, affected_operations.`,
+    async () => fallbackAnalysis(alert),
+  );
+
+  const generated = await callLLMJson<MitigationGenerateOutput>(
+    MITIGATION_MODEL,
+    'You generate feasible supply-chain mitigations. Return only JSON matching the requested shape.',
+    `GENERATE\n${context}\n\nAnalysis: ${JSON.stringify(analysis)}\n\nGenerate 3-5 candidates. Allowed suggestion_type values: alt_route, alt_supplier, inventory_buffer, contract_clause. Each candidate needs narrative, estimated_var_reduction_usd, confidence_pct, ease_of_execution_pct, expected_outcome, sources.`,
+    async () => fallbackGenerate(alert, entities, alternatives, estimatedReduction),
+  );
+
+  const candidates = generated.candidates.filter(candidate =>
+    ALLOWED_SUGGESTION_TYPES.has(candidate.suggestion_type),
+  );
+
+  const ranked = await callLLMJson<MitigationRankOutput>(
+    MITIGATION_MODEL,
+    'You rank mitigation candidates for operational usefulness. Return only JSON.',
+    `RANK\n${context}\n\nCandidates: ${JSON.stringify(candidates)}\n\nRank candidates by expected VaR reduction, confidence, execution ease, and specificity. Return ranked array with candidate_index, rank_score, rationale.`,
+    async () => fallbackRank(candidates),
+  );
+
+  return ranked.ranked
+    .filter(r => r.candidate_index >= 0 && r.candidate_index < candidates.length)
+    .sort((a, b) => b.rank_score - a.rank_score)
+    .slice(0, 3)
+    .map(r => candidates[r.candidate_index]);
 }
 
 async function callAltRouteLLM(
@@ -173,58 +360,87 @@ export async function runMitigationSuggest(alertId: string): Promise<MitigationR
 
   const created: string[] = [];
 
-  // 1. Alt route suggestion (if route entities affected or event is a route disruption)
-  if (routeEntity || alert.match_reasons.includes('route')) {
-    const llmOutput = await callAltRouteLLM(alert, routeEntity);
-    const narrative = llmOutput.narrative + (llmOutput.alternatives.length > 0
-      ? '\n\nAlternative options: ' + llmOutput.alternatives.map(a =>
-          `${a.route_name} via ${a.via} (+${a.extra_days}d${a.cost_delta_pct !== null ? `, ${a.cost_delta_pct > 0 ? '+' : ''}${a.cost_delta_pct}% cost` : ''})`
-        ).join('; ')
-      : '');
+  if (process.env.ANTHROPIC_API_KEY) {
+    const candidates = await runMitigationDepthPass(alert, entities, alternatives, exposures, estimatedReduction);
+    for (const candidate of candidates) {
+      const doc = await MitigationSuggestion.create({
+        org_id:                      alert.org_id,
+        alert_id:                    alert._id,
+        suggestion_type:             candidate.suggestion_type,
+        narrative:                   candidate.narrative,
+        confidence_pct:              Math.max(0, Math.min(100, Math.round(candidate.confidence_pct))),
+        estimated_var_reduction_usd: candidate.estimated_var_reduction_usd,
+        expected_outcome:            candidate.expected_outcome,
+        outcome_actual:              null,
+        sources:                     candidate.sources,
+        status:                      'proposed',
+      });
+      created.push(String(doc._id));
+    }
+  } else {
 
-    const sources = alert.event_snapshot.sources.map(s => s.url);
-    const doc = await MitigationSuggestion.create({
-      org_id:   alert.org_id,
-      alert_id: alert._id,
-      suggestion_type: 'alt_route',
-      narrative,
-      confidence_pct: 72,
-      estimated_var_reduction_usd: estimatedReduction > 0 ? estimatedReduction : null,
-      sources,
-      status: 'proposed',
-    });
-    created.push(String(doc._id));
-  }
+    // 1. Alt route suggestion (if route entities affected or event is a route disruption)
+    if (routeEntity || alert.match_reasons.includes('route')) {
+      const llmOutput = await callAltRouteLLM(alert, routeEntity);
+      const narrative = llmOutput.narrative + (llmOutput.alternatives.length > 0
+        ? '\n\nAlternative options: ' + llmOutput.alternatives.map(a =>
+            `${a.route_name} via ${a.via} (+${a.extra_days}d${a.cost_delta_pct !== null ? `, ${a.cost_delta_pct > 0 ? '+' : ''}${a.cost_delta_pct}% cost` : ''})`
+          ).join('; ')
+        : '');
 
-  // 2. Alt supplier suggestion (if tier-1/2 alternatives found in graph walk)
-  if (alternatives.length > 0) {
-    const altNames = alternatives.slice(0, 3).map(a => a.name).join(', ');
-    const doc = await MitigationSuggestion.create({
-      org_id:   alert.org_id,
-      alert_id: alert._id,
-      suggestion_type: 'alt_supplier',
-      narrative: `Based on your supplier graph, ${alternatives.length} potential alternative supplier${alternatives.length !== 1 ? 's' : ''} identified within 2-tier network: ${altNames}. Consider activating contingency contracts with these parties.`,
-      confidence_pct: 65,
-      estimated_var_reduction_usd: estimatedReduction > 0 ? Math.round(estimatedReduction * 0.6) : null,
-      sources: [],
-      status: 'proposed',
-    });
-    created.push(String(doc._id));
-  }
+      const sources = alert.event_snapshot.sources.map(s => s.url);
+      const doc = await MitigationSuggestion.create({
+        org_id:   alert.org_id,
+        alert_id: alert._id,
+        suggestion_type: 'alt_route',
+        narrative,
+        confidence_pct: 72,
+        estimated_var_reduction_usd: estimatedReduction > 0 ? estimatedReduction : null,
+        expected_outcome: {
+          summary: llmOutput.narrative,
+          alternatives: llmOutput.alternatives,
+        },
+        outcome_actual: null,
+        sources,
+        status: 'proposed',
+      });
+      created.push(String(doc._id));
+    }
 
-  // 3. Inventory buffer suggestion (for high severity)
-  if (alert.severity === 'critical' || alert.severity === 'high') {
-    const doc = await MitigationSuggestion.create({
-      org_id:   alert.org_id,
-      alert_id: alert._id,
-      suggestion_type: 'inventory_buffer',
-      narrative: `Consider pre-positioning 30–60 days of safety stock for goods sourced from affected entities (${entities.map(e => e.name).join(', ')}). This hedges against potential supply disruption of 4–8 weeks indicated by the event severity.`,
-      confidence_pct: 80,
-      estimated_var_reduction_usd: estimatedReduction > 0 ? Math.round(estimatedReduction * 0.35) : null,
-      sources: [],
-      status: 'proposed',
-    });
-    created.push(String(doc._id));
+    // 2. Alt supplier suggestion (if tier-1/2 alternatives found in graph walk)
+    if (alternatives.length > 0) {
+      const altNames = alternatives.slice(0, 3).map(a => a.name).join(', ');
+      const doc = await MitigationSuggestion.create({
+        org_id:   alert.org_id,
+        alert_id: alert._id,
+        suggestion_type: 'alt_supplier',
+        narrative: `Based on your supplier graph, ${alternatives.length} potential alternative supplier${alternatives.length !== 1 ? 's' : ''} identified within 2-tier network: ${altNames}. Consider activating contingency contracts with these parties.`,
+        confidence_pct: 65,
+        estimated_var_reduction_usd: estimatedReduction > 0 ? Math.round(estimatedReduction * 0.6) : null,
+        expected_outcome: { summary: 'Reduces supplier concentration.', supplier_name: alternatives[0]?.name },
+        outcome_actual: null,
+        sources: [],
+        status: 'proposed',
+      });
+      created.push(String(doc._id));
+    }
+
+    // 3. Inventory buffer suggestion (for high severity)
+    if (alert.severity === 'critical' || alert.severity === 'high') {
+      const doc = await MitigationSuggestion.create({
+        org_id:   alert.org_id,
+        alert_id: alert._id,
+        suggestion_type: 'inventory_buffer',
+        narrative: `Consider pre-positioning 30-60 days of safety stock for goods sourced from affected entities (${entities.map(e => e.name).join(', ')}). This hedges against potential supply disruption of 4-8 weeks indicated by the event severity.`,
+        confidence_pct: 80,
+        estimated_var_reduction_usd: estimatedReduction > 0 ? Math.round(estimatedReduction * 0.35) : null,
+        expected_outcome: { summary: 'Absorbs near-term disruption while logistics recover.' },
+        outcome_actual: null,
+        sources: [],
+        status: 'proposed',
+      });
+      created.push(String(doc._id));
+    }
   }
 
   // Trigger alternative Scenario via M19 queue if estimated reduction is meaningful (> $10K)

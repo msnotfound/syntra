@@ -15,6 +15,8 @@ export interface IMitigationSuggestion extends Document {
   narrative: string;
   confidence_pct: number;
   estimated_var_reduction_usd: number | null;
+  expected_outcome: Record<string, unknown> | null;
+  outcome_actual: Record<string, unknown> | null;
   sources: string[];
   status: MitigationStatus;
   created_at: Date;
@@ -31,6 +33,8 @@ const MitigationSuggestionSchema = new Schema<IMitigationSuggestion>({
   narrative:                  { type: String, required: true },
   confidence_pct:             { type: Number, required: true, min: 0, max: 100 },
   estimated_var_reduction_usd: { type: Number, default: null },
+  expected_outcome:           { type: Schema.Types.Mixed, default: null },
+  outcome_actual:             { type: Schema.Types.Mixed, default: null },
   sources:                    { type: [String], default: [] },
   status: {
     type: String,
