@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronRight, CheckCircle, Share2, TrendingDown, Lightbulb, CheckCircle2, XCircle } from 'lucide-react';
+import { ChevronRight, CheckCircle, Share2, TrendingDown, Lightbulb, CheckCircle2, XCircle, GitBranch } from 'lucide-react';
 import { LogDecisionModal } from '@/components/decisions/LogDecisionModal';
 import { ensureDb } from '@/lib/db';
 import { getOrgBySlugOrThrow } from '@/lib/org';
-import { Alert, WatchlistEntity, User, Exposure, MitigationSuggestion } from '@syntra/db';
+import { Alert, WatchlistEntity, User, Exposure, MitigationSuggestion, IntelClaim, SourceReliability } from '@syntra/db';
 import { SeverityBadge } from '@syntra/ui/components/SeverityBadge';
 import { EntityChip } from '@syntra/ui/components/EntityChip';
 import { TimeAgo } from '@syntra/ui/components/TimeAgo';
@@ -13,7 +13,12 @@ import { TriageControls } from '@/components/triage/TriageControls';
 import { CommentThread } from '@/components/triage/CommentThread';
 import { StartWarRoomButton } from '@/components/warroom/StartWarRoomButton';
 import { GenerateBriefButton } from '@/components/briefs/GenerateBriefButton';
-import type { IAlert, IWatchlistEntity, IUser, IExposure, IMitigationSuggestion } from '@syntra/db';
+import { Provenance } from '@/components/intel/Provenance';
+import { SourceBadge } from '@/components/intel/SourceBadge';
+import { ProvenanceTrail } from '@/components/intel/ProvenanceTrail';
+import type { ProvenanceClaim } from '@/components/intel/ProvenanceTrail';
+import type { AdmiraltyCode } from '@/components/intel/SourceBadge';
+import type { IAlert, IWatchlistEntity, IUser, IExposure, IMitigationSuggestion, IIntelClaim, ISourceReliability } from '@syntra/db';
 import type { Severity, EntityType } from '@syntra/shared';
 
 interface PageProps { params: { orgSlug: string; id: string } }
@@ -42,6 +47,35 @@ export default async function AlertDetailPage({ params }: PageProps) {
     alert_id: alert._id,
     org_id: org._id,
   }).sort({ created_at: -1 }).lean() as unknown as IMitigationSuggestion[];
+
+  const rawClaims = await IntelClaim.find({ alert_id: alert._id })
+    .sort({ created_at: 1 })
+    .lean() as unknown as IIntelClaim[];
+
+  const claimSourceIds = [...new Set(rawClaims.map(c => String(c.source_id)))];
+  const claimSources = claimSourceIds.length > 0
+    ? (await SourceReliability.find({ _id: { $in: claimSourceIds } }).lean() as unknown as ISourceReliability[])
+    : [];
+  const claimSourceMap = new Map(claimSources.map(s => [String(s._id), s]));
+
+  const provenanceClaims: ProvenanceClaim[] = rawClaims.map((c, i) => {
+    const src = claimSourceMap.get(String(c.source_id)) ?? null;
+    return {
+      claim_id: String(c._id),
+      claim_text: c.claim_text,
+      claim_type: c.claim_type,
+      evidence_url: c.evidence_url,
+      asserted_at: c.asserted_at.toISOString(),
+      parent_claim_ids: (c.parent_claim_ids ?? []).map(id => String(id)),
+      depth: i,
+      source: src ? {
+        source_id: String(src._id),
+        source_name: src.source_name,
+        admiralty_code: src.admiralty_code,
+        reliability_pct: src.reliability_pct,
+      } : null,
+    };
+  });
 
   const memberList = members.map(m => ({
     id: String(m._id),
@@ -143,7 +177,11 @@ export default async function AlertDetailPage({ params }: PageProps) {
         <div className="bg-bg-surface border border-border-subtle rounded-md p-5">
           <div className="text-xs font-medium uppercase tracking-wider text-text-secondary mb-4">Why This Matters To You</div>
           {alert.llm_context.why_matters && (
-            <p className="mb-5 border-l border-accent/60 pl-4 text-md leading-7 text-text-primary">{alert.llm_context.why_matters}</p>
+            <p className="mb-5 border-l border-accent/60 pl-4 text-md leading-7 text-text-primary">
+              <Provenance claims={provenanceClaims} context="Why this matters">
+                {alert.llm_context.why_matters}
+              </Provenance>
+            </p>
           )}
           <div className="space-y-3">
             {entities.map(e => (
@@ -196,7 +234,9 @@ export default async function AlertDetailPage({ params }: PageProps) {
                 {alert.llm_context.recommended_actions.map((action, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-text-primary">
                     <span className="text-accent mt-0.5">•</span>
-                    {action}
+                    <Provenance claims={provenanceClaims} context={`Recommended action ${i + 1}`}>
+                      {action}
+                    </Provenance>
                   </li>
                 ))}
               </ul>
@@ -210,21 +250,35 @@ export default async function AlertDetailPage({ params }: PageProps) {
                 <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">Sources</span>
               </div>
               <div className="p-5 space-y-2">
-                {alert.event_snapshot.sources.map((src, i) => (
-                  <a
-                    key={i}
-                    href={src.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-text-secondary hover:text-accent transition-colors duration-[150ms] ease-out"
-                  >
-                    <div className="w-6 h-6 rounded-sm bg-bg-surface-2 flex items-center justify-center text-xs font-mono text-text-muted flex-shrink-0">
-                      {src.name.charAt(0)}
-                    </div>
-                    <span className="font-medium">{src.name}</span>
-                    <span className="text-text-muted">→</span>
-                  </a>
-                ))}
+                {alert.event_snapshot.sources.map((src, i) => {
+                  const matchedSource = claimSources.find(cs =>
+                    cs.source_name.toLowerCase().includes(src.name.toLowerCase()) ||
+                    src.name.toLowerCase().includes(cs.source_name.toLowerCase())
+                  );
+                  return (
+                    <a
+                      key={i}
+                      href={src.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-text-secondary hover:text-accent transition-colors duration-[150ms] ease-out"
+                    >
+                      {matchedSource ? (
+                        <SourceBadge
+                          admiralty_code={matchedSource.admiralty_code as AdmiraltyCode}
+                          reliability_pct={matchedSource.reliability_pct}
+                          source_name={matchedSource.source_name}
+                        />
+                      ) : (
+                        <div className="w-6 h-6 rounded-sm bg-bg-surface-2 flex items-center justify-center text-xs font-mono text-text-muted flex-shrink-0">
+                          {src.name.charAt(0)}
+                        </div>
+                      )}
+                      <span className="font-medium">{src.name}</span>
+                      <span className="text-text-muted">→</span>
+                    </a>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -308,7 +362,11 @@ export default async function AlertDetailPage({ params }: PageProps) {
                       )}
                     </div>
                   </div>
-                  <p className="text-sm text-text-primary mb-2">{m.narrative}</p>
+                  <p className="text-sm text-text-primary mb-2">
+                    <Provenance claims={provenanceClaims} context="Mitigation suggestion">
+                      {m.narrative}
+                    </Provenance>
+                  </p>
                   <div className="flex items-center gap-4 text-xs text-text-muted font-mono">
                     <span>{m.confidence_pct}% confidence</span>
                     {m.estimated_var_reduction_usd !== null && m.estimated_var_reduction_usd > 0 && (
@@ -374,6 +432,23 @@ export default async function AlertDetailPage({ params }: PageProps) {
                 );
               })}
             </div>
+          </div>
+        </div>
+      )}
+      {/* Intel Provenance Trail */}
+      {provenanceClaims.length > 0 && (
+        <div className="bg-bg-surface border border-border-subtle rounded-md">
+          <div className="px-5 py-3 border-b border-border-subtle flex items-center gap-2">
+            <GitBranch size={14} className="text-accent" />
+            <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">
+              Intel Provenance Trail
+            </span>
+            <span className="ml-auto text-xs font-mono text-text-muted">
+              {provenanceClaims.length} claim{provenanceClaims.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="p-5">
+            <ProvenanceTrail claims={provenanceClaims} />
           </div>
         </div>
       )}
