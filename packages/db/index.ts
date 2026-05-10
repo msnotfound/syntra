@@ -73,3 +73,9 @@ export type { IPurchaseOrder, IPOItem, POStatus } from './models/PurchaseOrder.j
 export type { ICounterparty, CounterpartyRole } from './models/Counterparty.js';
 export type { IContract, ContractType } from './models/Contract.js';
 export type { IMitigationSuggestion, MitigationSuggestionType, MitigationStatus } from './models/MitigationSuggestion.js';
+
+export { Forecast } from './models/Forecast.js';
+export { LeadingIndicator, seedLeadingIndicators, INDICATOR_SEEDS } from './models/LeadingIndicator.js';
+
+export type { IForecast, ForecastIndicatorType, ForecastOutcome } from './models/Forecast.js';
+export type { ILeadingIndicator, ThresholdBreach } from './models/LeadingIndicator.js';
