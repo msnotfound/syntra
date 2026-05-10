@@ -54,9 +54,12 @@ export async function runForecastResolveCycle(): Promise<{ resolved: number }> {
     const keywords = EVENT_TYPE_KEYWORDS[forecast.indicator_type] ?? [];
     const regex = keywords.length > 0 ? new RegExp(keywords.join('|'), 'i') : null;
 
+    // Match against the real-world event time (occurred_at), not when syntra
+    // generated the alert (created_at) — alerts may land hours-to-days after
+    // the underlying event, but the forecast window is about real events.
     const alertQuery: Record<string, unknown> = {
-      org_id:     forecast.org_id,
-      created_at: { $gte: forecast.computed_at, $lte: forecast.expires_at },
+      org_id: forecast.org_id,
+      'event_snapshot.occurred_at': { $gte: forecast.computed_at, $lte: forecast.expires_at },
     };
     if (regex) alertQuery['event_snapshot.event_type'] = regex;
 
