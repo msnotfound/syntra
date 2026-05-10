@@ -38,9 +38,9 @@ export default function OnboardingDemoPage() {
   }
 
   const severityColor: Record<string, string> = {
-    critical: 'text-[#EF4444]',
-    high: 'text-[#F97316]',
-    medium: 'text-[#EAB308]',
+    critical: 'text-severity-critical',
+    high: 'text-severity-high',
+    medium: 'text-severity-medium',
   };
 
   return (
@@ -51,7 +51,7 @@ export default function OnboardingDemoPage() {
           <span>100%</span>
         </div>
         <div className="h-1 bg-bg-surface-2 rounded-full overflow-hidden">
-          <div className="h-full bg-accent rounded-full transition-all duration-300 ease-out" style={{ width: '100%' }} />
+          <div className="h-full bg-accent rounded-full transition-colors duration-300 ease-out" style={{ width: '100%' }} />
         </div>
       </div>
 
@@ -98,7 +98,7 @@ export default function OnboardingDemoPage() {
         <div className="flex justify-end">
           <button
             onClick={() => router.push(`/app/${orgSlug}`)}
-            className="flex items-center gap-1.5 px-5 h-9 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95"
+            className="flex items-center gap-1.5 px-5 h-9 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95"
           >
             Go to dashboard
             <ArrowRight size={14} />

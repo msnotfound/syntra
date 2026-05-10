@@ -8,10 +8,10 @@ import type { IShipment } from '@syntra/db';
 interface PageProps { params: { orgSlug: string }; searchParams: { status?: string } }
 
 const STATUS_COLOR: Record<string, string> = {
-  draft:      'text-[#64748B]',
-  in_transit: 'text-[#60A5FA]',
+  draft:      'text-text-muted',
+  in_transit: 'text-severity-low',
   delivered:  'text-emerald-400',
-  cancelled:  'text-[#EF4444]',
+  cancelled:  'text-severity-critical',
 };
 
 export default async function ShipmentsPage({ params, searchParams }: PageProps) {
@@ -34,57 +34,57 @@ export default async function ShipmentsPage({ params, searchParams }: PageProps)
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <div className="flex items-center gap-2 text-sm text-[#64748B] mb-1">
-            <Link href={base} className="hover:text-[#94A3B8] transition-colors duration-[150ms]">Operations</Link>
+          <div className="flex items-center gap-2 text-sm text-text-muted mb-1">
+            <Link href={base} className="hover:text-text-secondary transition-colors duration-[150ms]">Operations</Link>
             <span>/</span>
-            <span className="text-[#94A3B8]">Shipments</span>
+            <span className="text-text-secondary">Shipments</span>
           </div>
-          <h1 className="text-xl font-semibold text-[#FAFAFA]">Shipments</h1>
-          <p className="text-sm text-[#94A3B8] mt-1">{shipments.length} shipments</p>
+          <h1 className="text-xl font-semibold text-text-primary">Shipments</h1>
+          <p className="text-sm text-text-secondary mt-1">{shipments.length} shipments</p>
         </div>
-        <button className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-[#3B82F6] text-white hover:bg-blue-500 transition-colors duration-[150ms] ease-out active:scale-95">
+        <button className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95">
           <Plus size={14} /> Add shipment
         </button>
       </div>
 
       <div className="flex items-center gap-1">
-        <Link href={`${base}/shipments`} className={`px-3 py-1.5 rounded text-xs ${!searchParams.status ? 'bg-[#1E2530] text-[#FAFAFA]' : 'text-[#94A3B8] hover:text-[#FAFAFA]'} transition-colors duration-[150ms]`}>All</Link>
+        <Link href={`${base}/shipments`} className={`px-3 py-1.5 rounded text-xs ${!searchParams.status ? 'bg-bg-surface-2 text-text-primary' : 'text-text-secondary hover:text-text-primary'} transition-colors duration-[150ms]`}>All</Link>
         {STATUSES.map(s => (
-          <Link key={s} href={`${base}/shipments?status=${s}`} className={`px-3 py-1.5 rounded text-xs ${searchParams.status === s ? 'bg-[#1E2530] text-[#FAFAFA]' : 'text-[#94A3B8] hover:text-[#FAFAFA]'} transition-colors duration-[150ms]`}>
+          <Link key={s} href={`${base}/shipments?status=${s}`} className={`px-3 py-1.5 rounded text-xs ${searchParams.status === s ? 'bg-bg-surface-2 text-text-primary' : 'text-text-secondary hover:text-text-primary'} transition-colors duration-[150ms]`}>
             {s.replace('_', ' ')}
           </Link>
         ))}
       </div>
 
-      <div className="bg-[#151921] border border-[#1E2530] rounded-md overflow-hidden">
+      <div className="bg-bg-surface border border-border-subtle rounded-md overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[#1E2530]">
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#94A3B8]">Ref</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#94A3B8]">Origin</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#94A3B8]">Destination</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#94A3B8]">Status</th>
-              <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-[#94A3B8]">Value (USD)</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#94A3B8]">ETA</th>
+            <tr className="border-b border-border-subtle">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Ref</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Origin</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Destination</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Status</th>
+              <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-text-secondary">Value (USD)</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">ETA</th>
             </tr>
           </thead>
           <tbody>
             {shipments.length === 0 ? (
-              <tr><td colSpan={6} className="px-4 py-12 text-center text-sm text-[#64748B]">No shipments found.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-12 text-center text-sm text-text-muted">No shipments found.</td></tr>
             ) : shipments.map(s => (
-              <tr key={String(s._id)} className="border-b border-[#1E2530] hover:bg-[#1E2530] transition-colors duration-[150ms]">
+              <tr key={String(s._id)} className="border-b border-border-subtle hover:bg-bg-surface-2 transition-colors duration-[150ms]">
                 <td className="px-4 py-3">
-                  <Link href={`${base}/shipments/${String(s._id)}`} className="text-sm font-medium text-[#FAFAFA] font-mono hover:text-[#3B82F6] transition-colors duration-[150ms]">
+                  <Link href={`${base}/shipments/${String(s._id)}`} className="text-sm font-medium text-text-primary font-mono hover:text-accent transition-colors duration-[150ms]">
                     {s.ref}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-sm text-[#94A3B8]">{entityMap[String(s.origin_entity_id)] ?? '—'}</td>
-                <td className="px-4 py-3 text-sm text-[#94A3B8]">{entityMap[String(s.destination_entity_id)] ?? '—'}</td>
+                <td className="px-4 py-3 text-sm text-text-secondary">{entityMap[String(s.origin_entity_id)] ?? '—'}</td>
+                <td className="px-4 py-3 text-sm text-text-secondary">{entityMap[String(s.destination_entity_id)] ?? '—'}</td>
                 <td className="px-4 py-3">
-                  <span className={`text-xs font-medium capitalize ${STATUS_COLOR[s.status] ?? 'text-[#94A3B8]'}`}>{s.status.replace('_', ' ')}</span>
+                  <span className={`text-xs font-medium capitalize ${STATUS_COLOR[s.status] ?? 'text-text-secondary'}`}>{s.status.replace('_', ' ')}</span>
                 </td>
-                <td className="px-4 py-3 text-sm text-[#FAFAFA] font-mono text-right">${s.value_usd.toLocaleString()}</td>
-                <td className="px-4 py-3 text-sm text-[#64748B] font-mono">
+                <td className="px-4 py-3 text-sm text-text-primary font-mono text-right">${s.value_usd.toLocaleString()}</td>
+                <td className="px-4 py-3 text-sm text-text-muted font-mono">
                   {s.eta_at ? new Date(s.eta_at).toLocaleDateString() : '—'}
                 </td>
               </tr>

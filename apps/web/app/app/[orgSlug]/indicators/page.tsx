@@ -9,35 +9,39 @@ interface PageProps {
 }
 
 const BREACH_STYLE: Record<string, { text: string; border: string; bg: string }> = {
-  normal:   { text: '#60A5FA', border: 'rgba(96,165,250,0.25)',  bg: 'rgba(96,165,250,0.06)'  },
-  elevated: { text: '#EAB308', border: 'rgba(234,179,8,0.25)',   bg: 'rgba(234,179,8,0.06)'   },
-  critical: { text: '#EF4444', border: 'rgba(239,68,68,0.25)',   bg: 'rgba(239,68,68,0.06)'   },
+  normal:   { text: 'text-severity-low',      border: 'border-severity-low/25',      bg: 'bg-severity-low/10' },
+  elevated: { text: 'text-severity-medium',   border: 'border-severity-medium/25',   bg: 'bg-severity-medium/10' },
+  critical: { text: 'text-severity-critical', border: 'border-severity-critical/25', bg: 'bg-severity-critical/10' },
 };
 
 function TrendArrow({ trend }: { trend: string }) {
-  if (trend === 'rising')  return <span style={{ color: '#F97316' }}>▲</span>;
-  if (trend === 'falling') return <span style={{ color: '#22C55E' }}>▼</span>;
-  return <span style={{ color: '#64748B' }}>→</span>;
+  if (trend === 'rising')  return <span className="text-severity-high">▲</span>;
+  if (trend === 'falling') return <span className="text-severity-low">▼</span>;
+  return <span className="text-text-muted">→</span>;
 }
 
 function SparkBar({ value, baseline }: { value: number; baseline: number }) {
   const vPct = Math.min(100, value   * 100);
   const bPct = Math.min(100, baseline * 100);
+  const isAboveBaseline = vPct > bPct + 5;
   return (
-    <div style={{ position: 'relative', height: '28px', backgroundColor: '#1E2530', borderRadius: '4px', overflow: 'hidden' }}>
+    <div className="relative h-7 bg-bg-surface-2 rounded-sm overflow-hidden">
       {/* Baseline marker */}
-      <div style={{ position: 'absolute', left: `${bPct}%`, top: 0, bottom: 0, width: '1px', backgroundColor: '#3B82F6', opacity: 0.5 }} />
+      <div
+        className="absolute top-0 bottom-0 w-px bg-accent opacity-50"
+        style={{
+          // dynamic — token cast required
+          left: `${bPct}%`,
+        }}
+      />
       {/* Current-value bar */}
       <div
+        className={`absolute left-0 top-1/4 h-1/2 rounded-r-sm transition-colors duration-[150ms] ease-out ${
+          isAboveBaseline ? 'bg-severity-high' : 'bg-accent'
+        }`}
         style={{
-          position:        'absolute',
-          left:            0,
-          top:             '25%',
-          height:          '50%',
+          // dynamic — token cast required
           width:           `${vPct}%`,
-          backgroundColor: vPct > bPct + 5 ? '#F97316' : '#3B82F6',
-          borderRadius:    '0 2px 2px 0',
-          transition:      '150ms ease-out',
         }}
       />
     </div>
@@ -48,40 +52,24 @@ function IndicatorCard({ indicator }: { indicator: ILeadingIndicator }) {
   const bs = BREACH_STYLE[indicator.threshold_breach] ?? BREACH_STYLE.normal;
   return (
     <div
-      style={{
-        backgroundColor: '#151921',
-        border:          `1px solid ${bs.border}`,
-        borderRadius:    '6px',
-        padding:         '14px',
-        display:         'flex',
-        flexDirection:   'column',
-        gap:             '10px',
-      }}
+      className={`bg-bg-surface border ${bs.border} rounded-md p-3.5 flex flex-col gap-2.5`}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div className="flex justify-between items-start">
         <div>
-          <div style={{ fontSize: '12px', fontFamily: '"Geist Mono", monospace', color: '#94A3B8', marginBottom: '4px' }}>
+          <div className="text-xs font-mono text-text-secondary mb-1">
             {indicator.name}
           </div>
           <span
-            style={{
-              fontSize:        '10px',
-              padding:         '2px 6px',
-              borderRadius:    '4px',
-              backgroundColor: bs.bg,
-              color:           bs.text,
-              textTransform:   'uppercase',
-              letterSpacing:   '0.06em',
-            }}
+            className={`text-xs px-1.5 py-0.5 rounded-sm ${bs.bg} ${bs.text} uppercase tracking-wider`}
           >
             {indicator.threshold_breach}
           </span>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '22px', fontFamily: '"Geist Mono", monospace', color: bs.text }}>
+        <div className="text-right">
+          <div className={`text-lg font-mono ${bs.text}`}>
             {(indicator.current_value * 100).toFixed(0)}%
           </div>
-          <div style={{ fontSize: '12px', color: '#64748B' }}>
+          <div className="text-xs text-text-muted">
             <TrendArrow trend={indicator.trend} />
           </div>
         </div>
@@ -89,15 +77,15 @@ function IndicatorCard({ indicator }: { indicator: ILeadingIndicator }) {
 
       <SparkBar value={indicator.current_value} baseline={indicator.baseline_value} />
 
-      <p style={{ fontSize: '11px', color: '#64748B', lineHeight: '1.45', margin: 0 }}>
+      <p className="text-xs text-text-muted leading-normal m-0">
         {indicator.description}
       </p>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#475569', flexWrap: 'wrap', gap: '4px' }}>
-        <span style={{ fontFamily: '"Geist Mono", monospace' }}>
+      <div className="flex justify-between text-xs text-text-disabled flex-wrap gap-1">
+        <span className="font-mono">
           baseline {(indicator.baseline_value * 100).toFixed(0)}% · σ {indicator.sigma.toFixed(3)}
         </span>
-        <span style={{ textAlign: 'right' }}>
+        <span className="text-right">
           {indicator.source_modules.join(' + ')}
         </span>
       </div>
@@ -107,9 +95,9 @@ function IndicatorCard({ indicator }: { indicator: ILeadingIndicator }) {
 
 const BREACH_FILTERS: Array<{ value: string; label: string; color?: string }> = [
   { value: '',         label: 'All' },
-  { value: 'critical', label: 'Critical', color: '#EF4444' },
-  { value: 'elevated', label: 'Elevated', color: '#EAB308' },
-  { value: 'normal',   label: 'Normal',   color: '#60A5FA' },
+  { value: 'critical', label: 'Critical', color: 'text-severity-critical' },
+  { value: 'elevated', label: 'Elevated', color: 'text-severity-medium' },
+  { value: 'normal',   label: 'Normal',   color: 'text-severity-low' },
 ];
 
 export default async function IndicatorsPage({ params, searchParams }: PageProps) {
@@ -133,35 +121,29 @@ export default async function IndicatorsPage({ params, searchParams }: PageProps
   return (
     <div className="space-y-6">
       <div>
-        <h1 style={{ fontSize: '20px', fontWeight: 600, color: '#FAFAFA' }}>Leading Indicators</h1>
-        <p style={{ fontSize: '13px', color: '#94A3B8', marginTop: '4px' }}>
+        <h1 className="text-xl font-semibold text-text-primary">Leading Indicators</h1>
+        <p className="mt-1 text-sm text-text-secondary">
           {total} indicators · {critical} critical · {elevated} elevated
         </p>
       </div>
 
       {/* Filter bar */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+      <div className="flex gap-2 flex-wrap">
         {BREACH_FILTERS.map(f => {
           const isActive = breach === f.value;
           return (
             <a
               key={f.value}
               href={f.value ? `/app/${params.orgSlug}/indicators?breach=${f.value}` : `/app/${params.orgSlug}/indicators`}
-              style={{
-                padding:         '4px 12px',
-                borderRadius:    '4px',
-                fontSize:        '12px',
-                fontWeight:      500,
-                border:          isActive ? '1px solid #3B82F6' : '1px solid #262C36',
-                backgroundColor: isActive ? '#262C36' : '#1E2530',
-                color:           isActive ? '#FAFAFA' : (f.color ?? '#94A3B8'),
-                textDecoration:  'none',
-                transition:      '150ms ease-out',
-              }}
+              className={`px-3 py-1 rounded-sm text-xs font-medium border no-underline transition-colors duration-[150ms] ease-out active:scale-95 ${
+                isActive
+                  ? 'border-accent bg-bg-surface-3 text-text-primary'
+                  : `border-border-default bg-bg-surface-2 ${f.color ?? 'text-text-secondary'}`
+              }`}
             >
               {f.label}
               {' '}
-              <span style={{ fontFamily: '"Geist Mono", monospace', color: '#475569', fontSize: '11px' }}>
+              <span className="font-mono text-text-disabled text-xs">
                 {countMap[f.value] ?? ''}
               </span>
             </a>
@@ -172,12 +154,12 @@ export default async function IndicatorsPage({ params, searchParams }: PageProps
       {/* Indicator grid */}
       {indicators.length === 0 ? (
         <div
-          style={{ backgroundColor: '#151921', border: '1px solid #1E2530', borderRadius: '6px', padding: '48px', textAlign: 'center' }}
+          className="bg-bg-surface border border-border-subtle rounded-md p-12 text-center"
         >
-          <p style={{ fontSize: '14px', color: '#94A3B8' }}>No indicators match filter.</p>
+          <p className="text-base text-text-secondary">No indicators match filter.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' }}>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-2.5">
           {indicators.map(ind => <IndicatorCard key={String(ind._id)} indicator={ind} />)}
         </div>
       )}

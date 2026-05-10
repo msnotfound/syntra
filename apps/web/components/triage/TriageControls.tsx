@@ -81,7 +81,7 @@ export function TriageControls({ alertId, currentStatus, currentAssigneeId, memb
         <button
           onClick={() => setAssignDropdownOpen(o => !o)}
           disabled={busy}
-          className="w-full flex items-center justify-between gap-2 px-3 h-8 rounded-md text-sm bg-bg-surface-2 border border-border-default text-text-primary hover:bg-bg-surface-3 transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6]"
+          className="w-full flex items-center justify-between gap-2 px-3 h-8 rounded-md text-sm bg-bg-surface-2 border border-border-default text-text-primary hover:bg-bg-surface-3 transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent"
         >
           <div className="flex items-center gap-1.5">
             <UserCheck size={13} className="text-text-secondary" />
@@ -124,7 +124,7 @@ export function TriageControls({ alertId, currentStatus, currentAssigneeId, memb
           <button
             onClick={() => updateStatus('triaged')}
             disabled={busy}
-            className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium border border-border-default text-text-primary bg-bg-surface-2 hover:bg-bg-surface-3 transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6]"
+            className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium border border-border-default text-text-primary bg-bg-surface-2 hover:bg-bg-surface-3 transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent"
           >
             Mark Triaged
           </button>
@@ -133,7 +133,7 @@ export function TriageControls({ alertId, currentStatus, currentAssigneeId, memb
           <button
             onClick={() => updateStatus('closed')}
             disabled={busy}
-            className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6]"
+            className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent"
           >
             <CheckCircle size={13} />
             Close Alert

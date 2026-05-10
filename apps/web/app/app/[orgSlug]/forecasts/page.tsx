@@ -21,21 +21,16 @@ const INDICATOR_TYPE_LABELS: Record<string, string> = {
 };
 
 function ForecastBadge({ pct, horizonDays }: { pct: number; horizonDays: number }) {
-  const color = pct >= 66 ? '#F97316' : pct >= 40 ? '#EAB308' : '#60A5FA';
+  const tone = pct >= 66 ? 'high' : pct >= 40 ? 'medium' : 'low';
+  const toneClass = {
+    high:   'border-severity-high/40 bg-severity-high/10 text-severity-high',
+    medium: 'border-severity-medium/40 bg-severity-medium/10 text-severity-medium',
+    low:    'border-severity-low/40 bg-severity-low/10 text-severity-low',
+  }[tone];
+
   return (
     <span
-      style={{
-        display:         'inline-flex',
-        alignItems:      'center',
-        gap:             '4px',
-        padding:         '2px 8px',
-        border:          `1.5px dashed ${color}66`,
-        borderRadius:    '4px',
-        fontSize:        '11px',
-        fontFamily:      '"Geist Mono", monospace',
-        color,
-        backgroundColor: `${color}15`,
-      }}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border border-dashed text-xs font-mono ${toneClass}`}
     >
       🔮 FORECAST · {pct}% · {horizonDays}d
     </span>
@@ -79,31 +74,26 @@ export default async function ForecastsPage({ params, searchParams }: PageProps)
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 style={{ fontSize: '20px', fontWeight: 600, color: '#FAFAFA' }}>Forecasts</h1>
-        <p style={{ fontSize: '13px', color: '#94A3B8', marginTop: '4px' }}>
+        <h1 className="text-xl font-semibold text-text-primary">Forecasts</h1>
+        <p className="mt-1 text-sm text-text-secondary">
           {tab !== 'accuracy' ? `${forecasts.length} ${tab} forecasts` : `${resolvedForecasts.length} resolved forecasts`}
           {avgBrier !== null && ` · accuracy last 90d: Brier ${avgBrier.toFixed(2)}`}
         </p>
       </div>
 
       {/* Tab bar */}
-      <div style={{ display: 'flex', gap: '0', borderBottom: '1px solid #1E2530' }}>
+      <div className="flex gap-0 border-b border-border-subtle">
         {TABS.map(t => {
           const isActive = tab === t;
           return (
             <a
               key={t}
               href={`/app/${params.orgSlug}/forecasts?tab=${t}`}
-              style={{
-                padding:         '6px 16px',
-                fontSize:        '13px',
-                fontWeight:      isActive ? 500 : 400,
-                color:           isActive ? '#FAFAFA' : '#64748B',
-                borderBottom:    isActive ? '2px solid #F97316' : '2px solid transparent',
-                textDecoration:  'none',
-                transition:      '150ms ease-out',
-                textTransform:   'capitalize',
-              }}
+              className={`px-4 py-1.5 text-sm capitalize no-underline border-b-2 transition-colors duration-[150ms] ease-out active:scale-95 ${
+                isActive
+                  ? 'font-medium text-text-primary border-severity-high'
+                  : 'font-regular text-text-muted border-transparent'
+              }`}
             >
               {t === 'accuracy' ? 'Accuracy report' : t}
             </a>
@@ -130,22 +120,16 @@ export default async function ForecastsPage({ params, searchParams }: PageProps)
       {tab !== 'accuracy' && (
         forecasts.length === 0 ? (
           <div
-            style={{
-              backgroundColor: '#151921',
-              border:          '1.5px dashed rgba(249,115,22,0.3)',
-              borderRadius:    '6px',
-              padding:         '48px',
-              textAlign:       'center',
-            }}
+            className="bg-bg-surface border border-dashed border-severity-high/30 rounded-md p-12 text-center"
           >
-            <TrendingUp size={32} style={{ color: '#475569', margin: '0 auto 12px' }} />
-            <p style={{ fontSize: '14px', fontWeight: 500, color: '#94A3B8' }}>No {tab} forecasts</p>
-            <p style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>
+            <TrendingUp size={32} className="mx-auto mb-3 text-text-disabled" />
+            <p className="text-base font-medium text-text-secondary">No {tab} forecasts</p>
+            <p className="mt-1 text-xs text-text-muted">
               Forecasts appear when leading indicators breach their thresholds.
             </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="flex flex-col gap-2">
             {forecasts.map(forecast => {
               const indicator = indicatorMap.get(String(forecast.indicator_id));
               const label     = INDICATOR_TYPE_LABELS[forecast.indicator_type] ?? forecast.indicator_type;
@@ -155,20 +139,15 @@ export default async function ForecastsPage({ params, searchParams }: PageProps)
               return (
                 <div
                   key={String(forecast._id)}
-                  style={{
-                    backgroundColor: '#151921',
-                    border:          '1.5px dashed rgba(249,115,22,0.35)',
-                    borderRadius:    '6px',
-                    padding:         '16px',
-                  }}
+                  className="bg-bg-surface border border-dashed border-severity-high/40 rounded-md p-4"
                 >
                   {/* Card header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div className="flex justify-between items-start mb-2.5">
+                    <div className="flex flex-col gap-1.5">
                       <ForecastBadge pct={forecast.probability_pct} horizonDays={forecast.time_horizon_days} />
-                      <h3 style={{ fontSize: '14px', fontWeight: 500, color: '#FAFAFA', margin: 0 }}>{label}</h3>
+                      <h3 className="text-base font-medium text-text-primary m-0">{label}</h3>
                     </div>
-                    <div style={{ fontSize: '11px', color: '#475569', fontFamily: '"Geist Mono", monospace', textAlign: 'right' }}>
+                    <div className="text-xs text-text-disabled font-mono text-right">
                       {tab === 'active'
                         ? `expires in ${daysLeft}d`
                         : expiresAt.toLocaleDateString('en-IN')}
@@ -179,33 +158,33 @@ export default async function ForecastsPage({ params, searchParams }: PageProps)
                   <ProbabilityBar probability_pct={forecast.probability_pct} className="mb-3" />
 
                   {/* Narrative */}
-                  <p style={{ fontSize: '13px', color: '#94A3B8', marginBottom: '10px', lineHeight: '1.5' }}>
+                  <p className="text-sm text-text-secondary mb-2.5 leading-normal">
                     {forecast.narrative}
                   </p>
 
                   {/* Indicator signal */}
                   {indicator && (
-                    <div style={{ fontSize: '12px', color: '#64748B', marginBottom: '8px' }}>
-                      <span style={{ color: '#475569' }}>Signal: </span>
+                    <div className="text-xs text-text-muted mb-2">
+                      <span className="text-text-disabled">Signal: </span>
                       {indicator.name}
                       {indicator.trend === 'rising'  && ' ▲'}
                       {indicator.trend === 'falling' && ' ▼'}
                       {indicator.trend === 'stable'  && ' →'}
                       {' '}
-                      <span style={{ fontFamily: '"Geist Mono", monospace' }}>
+                      <span className="font-mono">
                         {(indicator.current_value * 100).toFixed(0)}%
                       </span>
                     </div>
                   )}
 
                   {/* Action + supporting claims count */}
-                  <div style={{ borderTop: '1px solid #1E2530', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <p style={{ fontSize: '12px', color: '#94A3B8', flex: 1, margin: 0 }}>
-                      <span style={{ color: '#64748B' }}>Action: </span>
+                  <div className="border-t border-border-subtle pt-2.5 flex justify-between items-center">
+                    <p className="text-xs text-text-secondary flex-1 m-0">
+                      <span className="text-text-muted">Action: </span>
                       {forecast.recommended_action}
                     </p>
                     {forecast.supporting_claims.length > 0 && (
-                      <span style={{ fontSize: '11px', color: '#475569', marginLeft: '12px', flexShrink: 0 }}>
+                      <span className="text-xs text-text-disabled ml-3 flex-shrink-0">
                         {forecast.supporting_claims.length} claim{forecast.supporting_claims.length !== 1 ? 's' : ''}
                       </span>
                     )}
@@ -213,20 +192,18 @@ export default async function ForecastsPage({ params, searchParams }: PageProps)
 
                   {/* Outcome badge (resolved forecasts only) */}
                   {forecast.actual_outcome && (
-                    <div style={{ marginTop: '8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div className="mt-2 flex gap-2 items-center">
                       <span
-                        style={{
-                          fontSize:        '11px',
-                          padding:         '2px 8px',
-                          borderRadius:    '4px',
-                          backgroundColor: forecast.actual_outcome === 'occurred' ? 'rgba(34,197,94,0.1)' : 'rgba(100,116,139,0.15)',
-                          color:           forecast.actual_outcome === 'occurred' ? '#22C55E' : '#64748B',
-                        }}
+                        className={`text-xs px-2 py-0.5 rounded-sm ${
+                          forecast.actual_outcome === 'occurred'
+                            ? 'bg-severity-low/10 text-severity-low'
+                            : 'bg-text-muted/15 text-text-muted'
+                        }`}
                       >
                         {forecast.actual_outcome === 'occurred' ? '✓ Materialized' : '✗ Did not occur'}
                       </span>
                       {forecast.brier_score !== null && (
-                        <span style={{ fontSize: '11px', fontFamily: '"Geist Mono", monospace', color: '#475569' }}>
+                        <span className="text-xs font-mono text-text-disabled">
                           Brier: {forecast.brier_score.toFixed(3)}
                         </span>
                       )}

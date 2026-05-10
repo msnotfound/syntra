@@ -1,11 +1,7 @@
 'use client';
 
 // Horizontal probability bar.
-// Width = probability_pct%. Color:
-//   ≥66% → orange (#F97316) — high-confidence FORECAST
-//   ≥40% → amber (#EAB308)  — elevated
-//   <40%  → blue (#60A5FA)   — low probability
-// Orange is the FORECAST accent per design guide §23 Screen 41.
+// Width = probability_pct%. Tone follows forecast severity tiers.
 // Never use red — that color is reserved for real-time alerts.
 
 interface ProbabilityBarProps {
@@ -13,37 +9,30 @@ interface ProbabilityBarProps {
   className?: string;
 }
 
-function getColor(pct: number): string {
-  if (pct >= 66) return '#F97316';
-  if (pct >= 40) return '#EAB308';
-  return '#60A5FA';
+function getToneClass(pct: number): string {
+  if (pct >= 66) return 'bg-severity-high text-severity-high';
+  if (pct >= 40) return 'bg-severity-medium text-severity-medium';
+  return 'bg-severity-low text-severity-low';
 }
 
 export function ProbabilityBar({ probability_pct, className = '' }: ProbabilityBarProps) {
   const clamped = Math.max(0, Math.min(100, probability_pct));
-  const color   = getColor(clamped);
+  const toneClass = getToneClass(clamped);
+  const [barClass, textClass] = toneClass.split(' ');
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <div style={{ backgroundColor: '#1E2530', borderRadius: '4px', height: '6px', flex: 1, overflow: 'hidden' }}>
+      <div className="bg-bg-surface-2 rounded-sm h-1.5 flex-1 overflow-hidden">
         <div
+          className={`h-full rounded-sm transition-colors duration-[150ms] ease-out ${barClass}`}
           style={{
+            // dynamic — token cast required
             width:           `${clamped}%`,
-            height:          '100%',
-            backgroundColor: color,
-            borderRadius:    '4px',
-            transition:      '150ms ease-out',
           }}
         />
       </div>
       <span
-        style={{
-          color,
-          fontFamily: '"Geist Mono", monospace',
-          fontSize:   '12px',
-          minWidth:   '36px',
-          textAlign:  'right',
-        }}
+        className={`font-mono text-xs min-w-9 text-right ${textClass}`}
       >
         {clamped}%
       </span>

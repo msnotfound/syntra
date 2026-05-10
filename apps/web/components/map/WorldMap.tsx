@@ -56,7 +56,7 @@ export function WorldMap({
         // Watchlist pins — blue dots
         for (const pin of watchlistPins) {
           const el = document.createElement('div');
-          el.className = 'w-3 h-3 rounded-full border-2 border-white bg-blue-500';
+          el.className = 'w-3 h-3 rounded-full border-2 border-text-primary bg-accent';
           el.style.cssText = 'width:12px;height:12px;border-radius:50%;background:#3B82F6;border:2px solid rgba(255,255,255,0.5);';
           new mapboxgl.Marker(el).setLngLat([pin.lng, pin.lat]).addTo(map);
         }

@@ -47,7 +47,7 @@ export default async function BriefsPage({ params }: PageProps) {
           </div>
           <Link
             href={`/app/${params.orgSlug}/alerts`}
-            className="inline-flex items-center gap-1.5 mt-4 px-3 h-8 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out"
+            className="inline-flex items-center gap-1.5 mt-4 px-3 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out"
           >
             View Alerts
           </Link>

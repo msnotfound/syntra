@@ -62,7 +62,7 @@ export function HeatmapPanel({ orgSlug, orgScore, cells, computedAt }: HeatmapPa
         </div>
         <div className="flex-1 h-2 bg-bg-surface-3 rounded-[4px] overflow-hidden">
           <div
-            className={`h-full rounded-[4px] transition-all duration-[150ms] ease-out ${
+            className={`h-full rounded-[4px] transition-colors duration-[150ms] ease-out ${
               orgScore >= 75 ? 'bg-severity-critical'
               : orgScore >= 50 ? 'bg-severity-high'
               : orgScore >= 25 ? 'bg-severity-medium'

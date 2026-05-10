@@ -84,7 +84,7 @@ export default function NewScenarioPage() {
           <button
             type="submit"
             disabled={saving || !name.trim()}
-            className="flex items-center gap-1.5 px-4 h-9 rounded-md text-sm font-medium transition-all active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 h-9 rounded-md text-sm font-medium transition-colors active:scale-95 disabled:opacity-50"
             style={{ backgroundColor: '#3B82F6', color: '#FAFAFA', borderRadius: '6px', transitionDuration: '150ms' }}
           >
             {saving && <Loader2 size={14} className="animate-spin" />}
@@ -92,7 +92,7 @@ export default function NewScenarioPage() {
           </button>
           <Link
             href={`/app/${params.orgSlug}/scenarios`}
-            className="flex items-center px-4 h-9 rounded-md text-sm transition-all"
+            className="flex items-center px-4 h-9 rounded-md text-sm transition-colors"
             style={{ color: '#94A3B8', backgroundColor: '#151921', borderRadius: '6px' }}
           >
             Cancel

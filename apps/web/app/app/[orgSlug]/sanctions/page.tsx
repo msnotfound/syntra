@@ -11,9 +11,9 @@ interface PageProps {
 function ScoreBadge({ score }: { score: number }) {
   const color =
     score >= 95
-      ? 'text-severity-critical bg-[#EF444426] border-severity-critical'
+      ? 'text-severity-critical bg-severity-critical/15 border-severity-critical'
       : score >= 80
-        ? 'text-severity-high bg-[#F9731626] border-severity-high'
+        ? 'text-severity-high bg-severity-high/15 border-severity-high'
         : 'text-text-secondary bg-bg-surface-2 border-border-default';
   return (
     <span className={`inline-flex items-center px-2 h-5 rounded-sm text-xs font-mono font-medium border ${color}`}>
@@ -24,9 +24,9 @@ function ScoreBadge({ score }: { score: number }) {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    pending: 'text-severity-medium bg-[#EAB30826] border-severity-medium',
-    cleared: 'text-severity-low bg-[#60A5FA26] border-severity-low',
-    confirmed: 'text-severity-critical bg-[#EF444426] border-severity-critical',
+    pending: 'text-severity-medium bg-severity-medium/15 border-severity-medium',
+    cleared: 'text-severity-low bg-severity-low/15 border-severity-low',
+    confirmed: 'text-severity-critical bg-severity-critical/15 border-severity-critical',
   };
   return (
     <span className={`inline-flex items-center px-2 h-5 rounded-sm text-xs font-medium border ${map[status] ?? ''}`}>
@@ -82,7 +82,7 @@ export default async function SanctionsPage({ params, searchParams }: PageProps)
 
       {/* List status bar */}
       {!latestList && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-md border border-severity-medium bg-[#EAB30814] text-sm text-severity-medium">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-md border border-severity-medium bg-severity-medium/10 text-sm text-severity-medium">
           Sanctions list not yet synced. The daily cron runs at 02:00 UTC.
         </div>
       )}

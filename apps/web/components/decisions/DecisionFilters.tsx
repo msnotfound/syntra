@@ -50,7 +50,7 @@ export function DecisionFilters({ members, currentFilters }: DecisionFiltersProp
       <select
         value={currentFilters.user_id ?? ''}
         onChange={e => updateFilter('user_id', e.target.value)}
-        className="h-8 px-2 rounded-md text-xs bg-bg-surface-2 border border-border-default text-text-primary focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6]"
+        className="h-8 px-2 rounded-md text-xs bg-bg-surface-2 border border-border-default text-text-primary focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent"
       >
         <option value="">All users</option>
         {members.map(m => (
@@ -62,7 +62,7 @@ export function DecisionFilters({ members, currentFilters }: DecisionFiltersProp
       <select
         value={currentFilters.type ?? ''}
         onChange={e => updateFilter('type', e.target.value)}
-        className="h-8 px-2 rounded-md text-xs bg-bg-surface-2 border border-border-default text-text-primary focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6]"
+        className="h-8 px-2 rounded-md text-xs bg-bg-surface-2 border border-border-default text-text-primary focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent"
       >
         {DECISION_TYPES.map(dt => (
           <option key={dt.value} value={dt.value}>{dt.label}</option>
@@ -74,7 +74,7 @@ export function DecisionFilters({ members, currentFilters }: DecisionFiltersProp
         type="date"
         value={currentFilters.from ?? ''}
         onChange={e => updateFilter('from', e.target.value)}
-        className="h-8 px-2 rounded-md text-xs bg-bg-surface-2 border border-border-default text-text-primary focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6]"
+        className="h-8 px-2 rounded-md text-xs bg-bg-surface-2 border border-border-default text-text-primary focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent"
         placeholder="From"
       />
       <span className="text-xs text-text-muted">–</span>
@@ -83,7 +83,7 @@ export function DecisionFilters({ members, currentFilters }: DecisionFiltersProp
         type="date"
         value={currentFilters.to ?? ''}
         onChange={e => updateFilter('to', e.target.value)}
-        className="h-8 px-2 rounded-md text-xs bg-bg-surface-2 border border-border-default text-text-primary focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6]"
+        className="h-8 px-2 rounded-md text-xs bg-bg-surface-2 border border-border-default text-text-primary focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent"
         placeholder="To"
       />
 

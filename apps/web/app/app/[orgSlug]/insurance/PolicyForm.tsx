@@ -61,7 +61,7 @@ export function PolicyForm({ orgSlug }: PolicyFormProps) {
             type={f.type}
             placeholder={f.placeholder}
             required
-            className="w-full h-8 px-3 rounded-md bg-bg-surface-3 border border-border-default text-sm text-text-primary placeholder:text-text-disabled focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6] transition-colors duration-[150ms]"
+            className="w-full h-8 px-3 rounded-md bg-bg-surface-3 border border-border-default text-sm text-text-primary placeholder:text-text-disabled focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent transition-colors duration-[150ms]"
           />
         </div>
       ))}
@@ -71,7 +71,7 @@ export function PolicyForm({ orgSlug }: PolicyFormProps) {
         <select
           name="coverage_type"
           required
-          className="w-full h-8 px-3 rounded-md bg-bg-surface-3 border border-border-default text-sm text-text-primary focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6] transition-colors duration-[150ms]"
+          className="w-full h-8 px-3 rounded-md bg-bg-surface-3 border border-border-default text-sm text-text-primary focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent transition-colors duration-[150ms]"
         >
           {COVERAGE_TYPES.map(ct => (
             <option key={ct.value} value={ct.value}>{ct.label}</option>
@@ -92,7 +92,7 @@ export function PolicyForm({ orgSlug }: PolicyFormProps) {
             step="1"
             placeholder={f.placeholder}
             required={f.name === 'max_payout_usd'}
-            className="w-full h-8 px-3 rounded-md bg-bg-surface-3 border border-border-default text-sm text-text-primary font-mono placeholder:text-text-disabled focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6] transition-colors duration-[150ms]"
+            className="w-full h-8 px-3 rounded-md bg-bg-surface-3 border border-border-default text-sm text-text-primary font-mono placeholder:text-text-disabled focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent transition-colors duration-[150ms]"
           />
         </div>
       ))}
@@ -103,7 +103,7 @@ export function PolicyForm({ orgSlug }: PolicyFormProps) {
           name="expires_at"
           type="date"
           required
-          className="w-full h-8 px-3 rounded-md bg-bg-surface-3 border border-border-default text-sm text-text-primary focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6] transition-colors duration-[150ms]"
+          className="w-full h-8 px-3 rounded-md bg-bg-surface-3 border border-border-default text-sm text-text-primary focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent transition-colors duration-[150ms]"
         />
       </div>
 
@@ -111,7 +111,7 @@ export function PolicyForm({ orgSlug }: PolicyFormProps) {
         <button
           type="submit"
           disabled={submitting}
-          className="px-4 h-8 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover disabled:opacity-50 transition-colors duration-[150ms] ease-out active:scale-95"
+          className="px-4 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover disabled:opacity-50 transition-colors duration-[150ms] ease-out active:scale-95"
         >
           {submitting ? 'Adding…' : 'Add Policy'}
         </button>

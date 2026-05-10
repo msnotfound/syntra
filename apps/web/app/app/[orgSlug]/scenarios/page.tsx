@@ -35,7 +35,7 @@ export default async function ScenariosPage({ params }: PageProps) {
         </div>
         <Link
           href={`/app/${params.orgSlug}/scenarios/new`}
-          className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium transition-all active:scale-95"
+          className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium transition-colors active:scale-95"
           style={{ backgroundColor: '#3B82F6', color: '#FAFAFA', borderRadius: '6px', transitionDuration: '150ms' }}
         >
           <Plus size={14} />

@@ -28,11 +28,11 @@ const DECISION_TYPE_LABELS: Record<string, string> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  acknowledged: 'text-[#60A5FA] bg-[#60A5FA]/10',
-  assigned: 'text-[#94A3B8] bg-[#94A3B8]/10',
-  closed: 'text-[#10B981] bg-[#10B981]/10',
-  escalated: 'text-[#F97316] bg-[#F97316]/10',
-  mitigation_chosen: 'text-[#EAB308] bg-[#EAB308]/10',
+  acknowledged: 'text-severity-low bg-severity-low/10',
+  assigned: 'text-text-secondary bg-text-secondary/10',
+  closed: 'text-severity-low bg-severity-low/10',
+  escalated: 'text-severity-high bg-severity-high/10',
+  mitigation_chosen: 'text-severity-medium bg-severity-medium/10',
 };
 
 export default async function DecisionsPage({ params, searchParams }: PageProps) {

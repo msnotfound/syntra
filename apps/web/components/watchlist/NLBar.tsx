@@ -142,7 +142,7 @@ export function NLBar({ orgSlug }: NLBarProps) {
         <button
           type="submit"
           disabled={!prompt.trim() || loading}
-          className="px-3 h-9 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-3 h-9 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Parse
         </button>
@@ -254,7 +254,7 @@ export function NLBar({ orgSlug }: NLBarProps) {
                 <button
                   onClick={handleConfirm}
                   disabled={confirming}
-                  className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-40"
+                  className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-40"
                 >
                   {confirming && <Loader2 size={12} className="animate-spin" />}
                   Confirm

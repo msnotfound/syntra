@@ -146,7 +146,7 @@ export default async function HeatmapPage({ params, searchParams }: PageProps) {
             href={`${base}/heatmap?days=${d}${entityTypeFilter ? `&type=${entityTypeFilter}` : ''}`}
             className={`px-2.5 h-7 flex items-center rounded-[4px] text-xs font-medium transition-colors duration-[150ms] ease-out active:scale-95 ${
               days === d
-                ? 'bg-accent text-white'
+                ? 'bg-accent text-text-primary'
                 : 'bg-bg-surface-2 text-text-secondary hover:text-text-primary hover:bg-bg-surface-3'
             }`}
           >
@@ -159,7 +159,7 @@ export default async function HeatmapPage({ params, searchParams }: PageProps) {
           href={`${base}/heatmap?days=${days}`}
           className={`px-2.5 h-7 flex items-center rounded-[4px] text-xs font-medium transition-colors duration-[150ms] ease-out active:scale-95 ${
             !entityTypeFilter
-              ? 'bg-accent text-white'
+              ? 'bg-accent text-text-primary'
               : 'bg-bg-surface-2 text-text-secondary hover:text-text-primary hover:bg-bg-surface-3'
           }`}
         >
@@ -171,7 +171,7 @@ export default async function HeatmapPage({ params, searchParams }: PageProps) {
             href={`${base}/heatmap?days=${days}&type=${type}`}
             className={`px-2.5 h-7 flex items-center rounded-[4px] text-xs font-medium capitalize transition-colors duration-[150ms] ease-out active:scale-95 ${
               entityTypeFilter === type
-                ? 'bg-accent text-white'
+                ? 'bg-accent text-text-primary'
                 : 'bg-bg-surface-2 text-text-secondary hover:text-text-primary hover:bg-bg-surface-3'
             }`}
           >

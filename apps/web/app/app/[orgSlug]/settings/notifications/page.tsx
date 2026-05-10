@@ -303,7 +303,7 @@ export default function NotificationsPage() {
                   <button
                     onClick={handleAddChannel}
                     disabled={!addDest.trim() || addStatus === 'sending'}
-                    className="ml-auto flex items-center gap-1.5 px-3 h-7 rounded-md text-xs font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50"
+                    className="ml-auto flex items-center gap-1.5 px-3 h-7 rounded-md text-xs font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50"
                   >
                     {addStatus === 'sending' ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
                     Add
@@ -331,7 +331,7 @@ export default function NotificationsPage() {
                   <button
                     onClick={handleVerifyOtp}
                     disabled={otpInput.length < 6 || verifyStatus === 'sending'}
-                    className="px-3 h-9 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50"
+                    className="px-3 h-9 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50"
                   >
                     {verifyStatus === 'sending' ? 'Verifying…' : 'Verify'}
                   </button>
@@ -361,7 +361,7 @@ export default function NotificationsPage() {
                         onClick={() => toggleConfig(idx)}
                         className={`w-9 h-5 rounded-full relative transition-colors duration-[150ms] ease-out flex-shrink-0 ${cfg.enabled ? 'bg-accent' : 'bg-bg-surface-3'}`}
                       >
-                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-[150ms] ease-out ${cfg.enabled ? 'left-[18px]' : 'left-0.5'}`} />
+                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-colors duration-[150ms] ease-out ${cfg.enabled ? 'left-[18px]' : 'left-0.5'}`} />
                       </button>
                       <span className="w-20 text-sm text-text-primary">{CHANNEL_LABELS[cfg.channel_id]}</span>
                       <span className="flex-1 text-xs text-text-muted font-mono truncate">{cfg.destination_id}</span>
@@ -459,7 +459,7 @@ export default function NotificationsPage() {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-4 h-8 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50"
+                  className="px-4 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95 disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save changes'}
                 </button>

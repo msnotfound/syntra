@@ -98,7 +98,7 @@ export default async function AlertDetailPage({ params }: PageProps) {
               <form action={`/api/v1/alerts/${String(alert._id)}/acknowledge`} method="POST">
                 <button
                   type="submit"
-                  className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95"
+                  className="flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium bg-accent text-text-primary hover:bg-accent-hover transition-colors duration-[150ms] ease-out active:scale-95"
                 >
                   <CheckCircle size={14} />
                   Acknowledge
