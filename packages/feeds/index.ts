@@ -13,3 +13,9 @@ export type { SanctionsUpdateEvent, SanctionsOfacQuery, SanctionsOfacResponse } 
 export type { MaritimeAdvisory, MaritimeQuery, MaritimeResponse } from './providers/maritime-imo.js';
 export type { CurrencyRate, CurrencyQuery, CurrencyResponse } from './providers/currency-ecb.js';
 export type { FeedProvider } from './withCostGate.js';
+export { MarinetrafficAisProvider, marinetrafficAisProvider } from './providers/marinetraffic-ais.js';
+export type { AISQuery, AISPosition, AISResponse } from './providers/marinetraffic-ais.js';
+export { FlightawareProvider, flightawareProvider } from './providers/flightaware.js';
+export type { FlightQuery, FlightPosition, FlightResponse } from './providers/flightaware.js';
+export { SentinelHubSatelliteProvider, sentinelHubSatelliteProvider } from './providers/sentinel-hub-satellite.js';
+export type { SatelliteQuery, SatelliteObservation, SatelliteResponse } from './providers/sentinel-hub-satellite.js';

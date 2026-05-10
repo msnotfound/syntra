@@ -14,6 +14,9 @@ export interface IShipment extends Document {
   active: boolean;
   created_at: Date;
   updated_at: Date;
+  vessel_imo: string | null;
+  ais_tracked: boolean;
+  ais_position: { lat: number; lng: number; heading: number; speed_kn: number; updated_at: Date; } | null;
 }
 
 const CoordSchema = new Schema({ lat: { type: Number, required: true }, lng: { type: Number, required: true } }, { _id: false });
@@ -28,12 +31,16 @@ const ShipmentSchema = new Schema<IShipment>({
   eta_at:                { type: Date, default: null },
   value_usd:             { type: Number, required: true, min: 0 },
   active:                { type: Boolean, default: true },
+  vessel_imo:            { type: String, default: null },
+  ais_tracked:           { type: Boolean, default: false },
+  ais_position:          { type: new Schema({ lat: { type: Number, required: true }, lng: { type: Number, required: true }, heading: { type: Number, required: true }, speed_kn: { type: Number, required: true }, updated_at: { type: Date, required: true } }, { _id: false }), default: null },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 ShipmentSchema.index({ org_id: 1, active: 1 });
 ShipmentSchema.index({ org_id: 1, status: 1 });
 ShipmentSchema.index({ org_id: 1, origin_entity_id: 1 });
 ShipmentSchema.index({ org_id: 1, destination_entity_id: 1 });
+ShipmentSchema.index({ org_id: 1, ais_tracked: 1 });
 
 export const Shipment: Model<IShipment> =
   mongoose.models.Shipment ?? mongoose.model<IShipment>('Shipment', ShipmentSchema);
