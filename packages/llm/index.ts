@@ -37,6 +37,56 @@ Rules:
 - Return an empty relationships array if no supplier/buyer relationship is supported.`,
 } as const;
 
+export const CONTRACT_TERMS_EXTRACT = {
+  id: 'CONTRACT_TERMS_EXTRACT',
+  version: '1.0.0',
+  model: 'claude-haiku-4-5-20251001',
+  system:
+    'You extract operational contract terms for a B2B supply-chain risk platform. Return only strict JSON matching the requested schema. Do not include markdown. Use null when a field is absent. Do not invent parties, dates, values, or clauses.',
+  template: `Document URL: {{doc_url}}
+Chunk {{chunk_index}} of {{chunk_count}}
+
+Extract structured operational contract data from this text.
+
+Return strict JSON:
+{
+  "counterparties": [
+    { "name": string, "role": "buyer" | "seller" | "guarantor" | "agent", "entity_id": null }
+  ],
+  "obligations": [
+    { "party": string, "description": string, "due_date": string | null, "status": "pending" | "fulfilled" | "breached" | "unknown" }
+  ],
+  "key_dates": [
+    { "label": string, "date": "YYYY-MM-DD", "type": "effective" | "expiry" | "renewal" | "milestone" }
+  ],
+  "value_clauses": [
+    { "description": string, "amount_usd": number | null, "currency": string, "trigger": string | null }
+  ],
+  "force_majeure": { "covered": boolean, "excerpt": string | null },
+  "exclusivity": { "exclusive": boolean, "scope": string | null, "geographies": string[] },
+  "confidence_pct": number
+}
+
+Rules:
+- Use short factual descriptions.
+- Include only dates explicitly stated or directly represented by a clause.
+- Excerpts must be verbatim snippets under 45 words.
+- If a chunk has no relevant data, return empty arrays, covered=false, exclusive=false, confidence_pct=0.
+
+Example 1:
+Text: "This Supply Agreement is effective 1 April 2026 between Sundaram Pharma Ltd (Buyer) and Kandla API Manufacturing Pvt Ltd (Seller). Seller shall deliver monthly API batches. Force majeure includes port closure and export restrictions. Buyer commits USD 1,200,000 annually."
+JSON:
+{"counterparties":[{"name":"Sundaram Pharma Ltd","role":"buyer","entity_id":null},{"name":"Kandla API Manufacturing Pvt Ltd","role":"seller","entity_id":null}],"obligations":[{"party":"Kandla API Manufacturing Pvt Ltd","description":"Deliver monthly API batches.","due_date":null,"status":"pending"}],"key_dates":[{"label":"Effective Date","date":"2026-04-01","type":"effective"}],"value_clauses":[{"description":"Annual buyer commitment.","amount_usd":1200000,"currency":"USD","trigger":"annual commitment"}],"force_majeure":{"covered":true,"excerpt":"Force majeure includes port closure and export restrictions."},"exclusivity":{"exclusive":false,"scope":null,"geographies":[]},"confidence_pct":92}
+
+Example 2:
+Text: "Distributor has exclusive rights in Kenya and Tanzania until 31 December 2027. Renewal notice must be sent by 30 September 2027."
+JSON:
+{"counterparties":[],"obligations":[{"party":"Distributor","description":"Send renewal notice by the stated notice deadline.","due_date":"2027-09-30","status":"pending"}],"key_dates":[{"label":"Expiry Date","date":"2027-12-31","type":"expiry"},{"label":"Renewal Notice Deadline","date":"2027-09-30","type":"renewal"}],"value_clauses":[],"force_majeure":{"covered":false,"excerpt":null},"exclusivity":{"exclusive":true,"scope":"Distributor exclusive rights.","geographies":["Kenya","Tanzania"]},"confidence_pct":86}
+
+Contract text:
+{{text}}`,
+} as const;
+
 export async function callLLMJson<T>(
   model: string,
   systemPrompt: string,
