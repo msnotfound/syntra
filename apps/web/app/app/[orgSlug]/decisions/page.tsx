@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ChevronRight, Download } from 'lucide-react';
+import { ChevronRight, Download, GitBranch } from 'lucide-react';
 import { ensureDb } from '@/lib/db';
 import { getOrgBySlugOrThrow } from '@/lib/org';
-import { Decision, User } from '@syntra/db';
+import { Decision, User, IntelClaim } from '@syntra/db';
 import mongoose from 'mongoose';
 import { DecisionFilters } from '@/components/decisions/DecisionFilters';
 
@@ -66,6 +66,18 @@ export default async function DecisionsPage({ params, searchParams }: PageProps)
     Decision.countDocuments(filter),
     User.find({ org_id: org._id }).lean(),
   ]);
+
+  // Aggregate claim counts per alert_id for this page of decisions
+  const alertIds = [...new Set(decisions.map(d => String(d.alert_id)))].filter(Boolean);
+  const claimCountsRaw = alertIds.length > 0
+    ? await IntelClaim.aggregate([
+        { $match: { alert_id: { $in: alertIds.map(id => new mongoose.Types.ObjectId(id)) } } },
+        { $group: { _id: '$alert_id', count: { $sum: 1 } } },
+      ])
+    : [];
+  const claimCountMap = new Map<string, number>(
+    claimCountsRaw.map((r: { _id: mongoose.Types.ObjectId; count: number }) => [String(r._id), r.count])
+  );
 
   const userMap = new Map(members.map(m => [String(m._id), m.name]));
   const totalPages = Math.ceil(total / limit);
@@ -133,6 +145,7 @@ export default async function DecisionsPage({ params, searchParams }: PageProps)
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Type</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Decision</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Justification</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Claims</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
@@ -162,6 +175,22 @@ export default async function DecisionsPage({ params, searchParams }: PageProps)
                   </td>
                   <td className="px-4 py-3 text-text-secondary max-w-xs truncate" title={d.justification}>
                     {d.justification || <span className="text-text-muted">—</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    {(() => {
+                      const count = claimCountMap.get(String(d.alert_id)) ?? 0;
+                      return count > 0 ? (
+                        <Link
+                          href={`/app/${params.orgSlug}/alerts/${String(d.alert_id)}#provenance`}
+                          className="inline-flex items-center gap-1 text-xs font-mono text-accent hover:underline"
+                        >
+                          <GitBranch size={11} />
+                          {count}
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-text-muted">—</span>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}

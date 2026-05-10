@@ -1,10 +1,14 @@
-import { TrendingUp } from 'lucide-react';
+import Link from 'next/link';
+import { TrendingUp, GitBranch } from 'lucide-react';
 import { ensureDb } from '@/lib/db';
 import { getOrgBySlugOrThrow } from '@/lib/org';
-import { Forecast, LeadingIndicator } from '@syntra/db';
-import type { IForecast, ILeadingIndicator } from '@syntra/db';
+import { Forecast, LeadingIndicator, SourceReliability, IntelClaim } from '@syntra/db';
+import type { IForecast, ILeadingIndicator, ISourceReliability } from '@syntra/db';
 import { ProbabilityBar } from '@/components/forecast/ProbabilityBar';
 import { AccuracyDashboard } from '@/components/forecast/AccuracyDashboard';
+import { SourceBadge } from '@/components/intel/SourceBadge';
+import type { AdmiraltyCode } from '@/components/intel/SourceBadge';
+import mongoose from 'mongoose';
 
 interface PageProps {
   params: { orgSlug: string };
@@ -69,6 +73,33 @@ export default async function ForecastsPage({ params, searchParams }: PageProps)
     ? (await LeadingIndicator.find({ _id: { $in: indicatorIds } }).lean()) as unknown as ILeadingIndicator[]
     : [];
   const indicatorMap = new Map(indicators.map(i => [String(i._id), i]));
+
+  // Fetch supporting claims and top source per forecast for provenance surface
+  const allSupportingClaimIds = forecasts.flatMap(f => (f.supporting_claims ?? []).map(id => String(id)));
+  const supportingClaims = allSupportingClaimIds.length > 0
+    ? await IntelClaim.find({ _id: { $in: allSupportingClaimIds } }).lean()
+    : [];
+
+  const sourceIdsForForecasts = [...new Set(supportingClaims.map((c: { source_id: mongoose.Types.ObjectId }) => String(c.source_id)))];
+  const forecastSources = sourceIdsForForecasts.length > 0
+    ? (await SourceReliability.find({ _id: { $in: sourceIdsForForecasts } }).lean() as unknown as ISourceReliability[])
+    : [];
+  const forecastSourceMap = new Map(forecastSources.map(s => [String(s._id), s]));
+
+  // Map forecastId → top source (highest admiralty code)
+  const CODE_ORDER = ['A','B','C','D','E','F'];
+  const forecastTopSourceMap = new Map<string, ISourceReliability>();
+  for (const forecast of forecasts) {
+    const claimIds = (forecast.supporting_claims ?? []).map(id => String(id));
+    const myClaims = supportingClaims.filter((c: { _id: mongoose.Types.ObjectId }) => claimIds.includes(String(c._id)));
+    const mySources = myClaims
+      .map((c: { source_id: mongoose.Types.ObjectId }) => forecastSourceMap.get(String(c.source_id)))
+      .filter((s): s is ISourceReliability => !!s);
+    if (mySources.length > 0) {
+      mySources.sort((a, b) => CODE_ORDER.indexOf(a.admiralty_code) - CODE_ORDER.indexOf(b.admiralty_code));
+      forecastTopSourceMap.set(String(forecast._id), mySources[0]);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -177,17 +208,36 @@ export default async function ForecastsPage({ params, searchParams }: PageProps)
                     </div>
                   )}
 
-                  {/* Action + supporting claims count */}
-                  <div className="border-t border-border-subtle pt-2.5 flex justify-between items-center">
+                  {/* Action + supporting claims count + source badge + detail link */}
+                  <div className="border-t border-border-subtle pt-2.5 flex justify-between items-center gap-3">
                     <p className="text-xs text-text-secondary flex-1 m-0">
                       <span className="text-text-muted">Action: </span>
                       {forecast.recommended_action}
                     </p>
-                    {forecast.supporting_claims.length > 0 && (
-                      <span className="text-xs text-text-disabled ml-3 flex-shrink-0">
-                        {forecast.supporting_claims.length} claim{forecast.supporting_claims.length !== 1 ? 's' : ''}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {(() => {
+                        const topSrc = forecastTopSourceMap.get(String(forecast._id));
+                        return topSrc ? (
+                          <SourceBadge
+                            admiralty_code={topSrc.admiralty_code as AdmiraltyCode}
+                            reliability_pct={topSrc.reliability_pct}
+                            source_name={topSrc.source_name}
+                          />
+                        ) : null;
+                      })()}
+                      {forecast.supporting_claims.length > 0 && (
+                        <span className="text-xs text-text-disabled flex items-center gap-1">
+                          <GitBranch size={11} />
+                          {forecast.supporting_claims.length} claim{forecast.supporting_claims.length !== 1 ? 's' : ''}
+                        </span>
+                      )}
+                      <Link
+                        href={`/app/${params.orgSlug}/forecasts/${String(forecast._id)}`}
+                        className="text-xs font-medium text-accent hover:underline"
+                      >
+                        View detail →
+                      </Link>
+                    </div>
                   </div>
 
                   {/* Outcome badge (resolved forecasts only) */}
