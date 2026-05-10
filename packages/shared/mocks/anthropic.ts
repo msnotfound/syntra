@@ -56,4 +56,47 @@ export async function parseNLWatchlist(
   };
 }
 
+export interface CompanyMetadataExtractOutput {
+  company_name: string | null;
+  sector: string | null;
+  country: string | null;
+  region: string | null;
+  suppliers: Array<{ name: string; confidence: number; excerpt: string }>;
+  customers: Array<{ name: string; confidence: number; excerpt: string }>;
+  facilities: Array<{ name: string; location: string | null; confidence: number; excerpt: string }>;
+  counterparties: Array<{ name: string; type: 'supplier' | 'customer' | 'partner' | 'competitor' | null; confidence: number; excerpt: string }>;
+}
+
+export async function extractCompanyMetadata(
+  inputText: string,
+  _inputSource: 'webpage' | 'annual_report',
+): Promise<CompanyMetadataExtractOutput> {
+  await delay(200);
+  const hasSupplier = inputText.toLowerCase().includes('supplier') || inputText.toLowerCase().includes('source');
+  const hasCustomer = inputText.toLowerCase().includes('customer') || inputText.toLowerCase().includes('export') || inputText.toLowerCase().includes('market');
+
+  return {
+    company_name: 'Example Company Ltd.',
+    sector: 'Manufacturing & Exports',
+    country: 'IN',
+    region: 'South Asia',
+    suppliers: hasSupplier ? [
+      { name: 'Raw Materials Supplier A', confidence: 0.75, excerpt: 'Primary supplier of raw materials from Southeast Asia' },
+      { name: 'Component Provider B', confidence: 0.65, excerpt: 'Secondary supplier based in South Asia' },
+    ] : [],
+    customers: hasCustomer ? [
+      { name: 'Major Export Market US', confidence: 0.8, excerpt: 'Primary export destination in North America' },
+      { name: 'European Distribution Partner', confidence: 0.7, excerpt: 'Secondary customer base in EU' },
+    ] : [],
+    facilities: [
+      { name: 'Manufacturing Plant - Bangalore', location: 'Bangalore, KA, IN', confidence: 0.85, excerpt: 'Main manufacturing facility' },
+      { name: 'Logistics Hub - Mumbai Port', location: 'Mumbai, MH, IN', confidence: 0.7, excerpt: 'Export logistics coordination center' },
+    ],
+    counterparties: [
+      { name: 'Shipping Partner XYZ', type: 'partner', confidence: 0.75, excerpt: 'Logistics and shipping partner' },
+      { name: 'Component Supplier A', type: 'supplier', confidence: 0.7, excerpt: 'Strategic component supplier' },
+    ],
+  };
+}
+
 function delay(ms: number) { return new Promise(r => setTimeout(r, ms)); }
