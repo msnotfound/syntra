@@ -50,15 +50,22 @@ export default async function SanctionsPage({ params, searchParams }: PageProps)
 
   const statusFilter = searchParams.status ?? 'pending';
 
-  const [queue, latestList] = await Promise.all([
+  const [queue, latestLists] = await Promise.all([
     SanctionsReviewQueue.find({ org_id: org._id, status: statusFilter })
       .sort({ screened_at: -1 })
       .limit(100)
       .lean() as unknown as Promise<ISanctionsReviewQueue[]>,
-    SanctionsList.findOne({ list_name: 'ofac_sdn' })
+    SanctionsList.find({})
       .sort({ updated_at: -1 })
-      .lean() as unknown as Promise<ISanctionsList | null>,
+      .lean() as unknown as Promise<ISanctionsList[]>,
   ]);
+  const latestByName = new Map<string, ISanctionsList>();
+  for (const list of latestLists) {
+    if (!latestByName.has(list.list_name)) latestByName.set(list.list_name, list);
+  }
+  const activeLists = [...latestByName.values()];
+  const latestList = activeLists[0] ?? null;
+  const totalEntries = activeLists.reduce((sum, list) => sum + list.entry_count, 0);
 
   return (
     <div className="space-y-6">
@@ -67,14 +74,14 @@ export default async function SanctionsPage({ params, searchParams }: PageProps)
         <div>
           <h1 className="text-xl font-semibold text-text-primary">Sanctions Screening</h1>
           <p className="text-sm text-text-secondary mt-1">
-            Daily OFAC SDN screening against your watchlist entities.
+            Daily OFAC, UN, and EU screening against your watchlist entities.
           </p>
         </div>
         {latestList && (
           <div className="text-right">
             <p className="text-xs text-text-muted">Last sync</p>
             <p className="text-sm font-mono text-text-secondary">
-              {latestList.version} · {latestList.entry_count.toLocaleString()} entries
+              {latestList.version} · {totalEntries.toLocaleString()} entries
             </p>
           </div>
         )}
@@ -130,7 +137,12 @@ export default async function SanctionsPage({ params, searchParams }: PageProps)
                   }`}
                 >
                   <td className="px-4 py-3 font-medium text-text-primary">
-                    {item.entity_name}
+                    <a
+                      href={`/app/${params.orgSlug}/sanctions/${String(item._id)}`}
+                      className="text-text-primary transition-colors hover:text-accent"
+                    >
+                      {item.entity_name}
+                    </a>
                   </td>
                   <td className="px-4 py-3 text-text-secondary">
                     <div>{item.matched_name}</div>
@@ -171,8 +183,8 @@ export default async function SanctionsPage({ params, searchParams }: PageProps)
 
       {/* Footer note */}
       <p className="text-xs text-text-muted">
-        Entities scoring ≥ 95 are auto-escalated to critical alerts. Scores 80–94 appear here for
-        manual review. Source:{' '}
+        Composite scores ≥ 90 are auto-escalated to critical alerts. Scores 70–89 appear here for
+        manual review. Sources include OFAC, UN, and EU public sanctions lists; OFAC reference:{' '}
         <a
           href="https://sanctionssearch.ofac.treas.gov/"
           className="text-accent hover:text-accent-hover transition-colors"
