@@ -28,8 +28,6 @@ export interface IAlert extends Document {
     why_matters: string | null;
     recommended_actions: string[];
   };
-  /** v3: narrows the alert type. */
-  subtype: 'physical_risk' | 'sanctions_match' | 'compliance';
   /** v3: triage lifecycle status (M18). */
   status: 'open' | 'triaged' | 'closed';
   /** v3: assigned team member (M18). */
@@ -65,7 +63,6 @@ const AlertSchema = new Schema<IAlert>({
     why_matters: { type: String, default: null },
     recommended_actions: { type: [String], default: [] },
   },
-  subtype: { type: String, enum: ['physical_risk','sanctions_match','compliance'], default: 'physical_risk' },
   status: { type: String, enum: ['open','triaged','closed'], default: 'open' },
   assignee_user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   comments: [{
