@@ -6,6 +6,7 @@ import { Alert } from '../../../packages/db/models/Alert';
 import { Exposure } from '../../../packages/db/models/Exposure';
 import { MitigationSuggestion } from '../../../packages/db/models/MitigationSuggestion';
 import { Scenario } from '../../../packages/db/models/Scenario';
+import { callLLMJson } from '@syntra/llm';
 
 // Mock packages/llm to avoid network calls
 jest.mock('@syntra/llm', () => ({
@@ -43,6 +44,8 @@ afterAll(async () => {
 });
 
 afterEach(async () => {
+  delete process.env.ANTHROPIC_API_KEY;
+  jest.mocked(callLLMJson).mockReset();
   await WatchlistEntity.deleteMany({});
   await SupplierLink.deleteMany({});
   await Alert.deleteMany({});
@@ -246,6 +249,109 @@ describe('mitigation-suggest — graph walk', () => {
     const scenario = await Scenario.findOne({ org_id: ORG }).lean();
     expect(scenario).toBeTruthy();
     expect(scenario!.name).toContain('Test Alert Event');
+  });
+
+  test('8. LLM depth pass runs analyze, generate, rank and persists ranked top three outcomes', async () => {
+    process.env.ANTHROPIC_API_KEY = 'test-key';
+    const route = await makeEntity('India-Europe Red Sea Lane', 'route');
+    const supplier = await makeEntity('Affected API Supplier');
+    const alert = await makeAlert([String(route._id), String(supplier._id)], 'critical');
+
+    await Exposure.create({
+      org_id: ORG,
+      entity_id: route._id,
+      alert_id: alert._id,
+      var_value_usd: 1_000_000,
+      var_value_inr: 83_000_000,
+      confidence_interval: 0.95,
+      methodology: 'test',
+      computed_at: new Date(),
+    });
+
+    jest.mocked(callLLMJson)
+      .mockResolvedValueOnce({
+        root_cause: 'Red Sea transit lanes are unavailable after a security escalation.',
+        impact_horizon_days: 21,
+        impact_horizon_label: '2-4 weeks',
+        affected_operations: ['India-Europe shipments', 'API supplier deliveries'],
+      })
+      .mockResolvedValueOnce({
+        candidates: [
+          {
+            suggestion_type: 'alt_route',
+            narrative: 'Divert booked containers around Cape of Good Hope.',
+            estimated_var_reduction_usd: 520_000,
+            confidence_pct: 82,
+            ease_of_execution_pct: 70,
+            expected_outcome: {
+              summary: 'Avoids Red Sea exposure with a longer transit window.',
+              proposed_route: [{ lat: 18.9, lng: 72.8 }, { lat: -34.3, lng: 18.4 }],
+              extra_days: 14,
+            },
+            sources: ['carrier-capacity:MAA-RTM-cape'],
+          },
+          {
+            suggestion_type: 'alt_supplier',
+            narrative: 'Qualify alternate API supplier in Singapore.',
+            estimated_var_reduction_usd: 260_000,
+            confidence_pct: 68,
+            ease_of_execution_pct: 45,
+            expected_outcome: { summary: 'Reduces single-supplier exposure.', supplier_name: 'Singapore API Backup' },
+            sources: [],
+          },
+          {
+            suggestion_type: 'inventory_buffer',
+            narrative: 'Build 45 days of buffer stock for the affected SKU family.',
+            estimated_var_reduction_usd: 410_000,
+            confidence_pct: 77,
+            ease_of_execution_pct: 80,
+            expected_outcome: { summary: 'Absorbs near-term shipment delay.' },
+            sources: [],
+          },
+          {
+            suggestion_type: 'contract_clause',
+            narrative: 'Prepare force majeure notice language for late delivery.',
+            estimated_var_reduction_usd: 180_000,
+            confidence_pct: 71,
+            ease_of_execution_pct: 65,
+            expected_outcome: { summary: 'Preserves contractual notice window.' },
+            sources: [],
+          },
+          {
+            suggestion_type: 'hedge',
+            narrative: 'Lock near-term EUR freight exposure.',
+            estimated_var_reduction_usd: 90_000,
+            confidence_pct: 55,
+            ease_of_execution_pct: 50,
+            expected_outcome: { summary: 'Limits FX-sensitive surcharge risk.' },
+            sources: [],
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        ranked: [
+          { candidate_index: 2, rank_score: 252_560, rationale: 'High VaR reduction and easy to execute.' },
+          { candidate_index: 0, rank_score: 298_480, rationale: 'Largest direct route-risk reduction.' },
+          { candidate_index: 1, rank_score: 79_560, rationale: 'Useful but slower supplier qualification.' },
+        ],
+      });
+
+    const { runMitigationSuggest } = await getWorker();
+    const result = await runMitigationSuggest(String(alert._id));
+
+    expect(callLLMJson).toHaveBeenCalledTimes(3);
+    expect(jest.mocked(callLLMJson).mock.calls[0][2]).toContain('ANALYZE');
+    expect(jest.mocked(callLLMJson).mock.calls[1][2]).toContain('GENERATE');
+    expect(jest.mocked(callLLMJson).mock.calls[2][2]).toContain('RANK');
+    expect(result.suggestionsCreated).toBe(3);
+
+    const suggestions = await MitigationSuggestion.find({ alert_id: alert._id }).sort({ created_at: 1 }).lean();
+    expect(suggestions.map(s => s.suggestion_type)).toEqual(['alt_route', 'inventory_buffer', 'alt_supplier']);
+    expect(suggestions[0].expected_outcome).toMatchObject({
+      summary: 'Avoids Red Sea exposure with a longer transit window.',
+      extra_days: 14,
+    });
+    expect(suggestions[0].outcome_actual).toBeNull();
   });
 
 });
