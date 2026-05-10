@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Sidebar } from '@/components/shell/Sidebar';
 import { TopBar } from '@/components/shell/TopBar';
+import { AssistantDrawer } from '@/components/assistant/AssistantDrawer';
 import { getOrgBySlug } from '@/lib/org';
 import { ensureDb } from '@/lib/db';
 
@@ -25,6 +26,7 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
           </div>
         </main>
       </div>
+      <AssistantDrawer orgSlug={org.slug} />
     </div>
   );
 }

@@ -37,6 +37,7 @@ export { Contract } from './models/Contract.js';
 export { MitigationSuggestion } from './models/MitigationSuggestion.js';
 export { WarRoomActionItem } from './models/WarRoomActionItem.js';
 export { NLConversation } from './models/NLConversation.js';
+export { AssistantThread } from './models/AssistantThread.js';
 
 export type { IOrganization } from './models/Organization.js';
 export type { IUser } from './models/User.js';
@@ -84,6 +85,7 @@ export type { IMitigationSuggestion, MitigationSuggestionType, MitigationStatus 
 export type { IWarRoomActionItem, ActionItemStatus } from './models/WarRoomActionItem.js';
 export type { IWarRoomMessage, WarRoomMsgType, IPoll, IPollVote } from './models/WarRoomMessage.js';
 export type { INLConversation, INLConversationTurn, INLConversationState, INLFilterSnapshot } from './models/NLConversation.js';
+export type { IAssistantThread, IAssistantThreadTurn } from './models/AssistantThread.js';
 
 export { Forecast } from './models/Forecast.js';
 export { ForecastPrior } from './models/ForecastPrior.js';

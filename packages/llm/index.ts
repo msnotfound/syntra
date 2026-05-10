@@ -117,6 +117,70 @@ export async function parseNLWatchlistQuery(
   );
 }
 
+export interface AssistantTurnUsage {
+  input_tokens: number;
+  output_tokens: number;
+}
+
+/**
+ * Streams an assistant response token-by-token. Calls onToken for each text chunk.
+ * Falls back to a deterministic mock when ANTHROPIC_API_KEY is not set.
+ * Returns the full accumulated text and token usage when the stream is exhausted.
+ */
+export async function streamAssistantTurn(
+  systemPrompt: string,
+  messages: { role: 'user' | 'assistant'; content: string }[],
+  onToken: (text: string) => void,
+): Promise<{ fullText: string; usage: AssistantTurnUsage }> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (!apiKey) {
+    const mockText =
+      'Based on the org context provided, I can see the relevant risk indicators in your watchlist. ' +
+      'No live claims are available in mock mode.';
+    onToken(mockText);
+    return {
+      fullText: mockText,
+      usage: { input_tokens: 0, output_tokens: Math.ceil(mockText.length / 4) },
+    };
+  }
+
+  const client = getClient();
+  let fullText = '';
+  let inputTokens = 0;
+  let outputTokens = 0;
+
+  // Use the low-level create() with stream:true so we stay on the same code-path
+  // as the rest of the LLM helpers (no direct SDK import in call-sites).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stream = (await (client.messages as any).create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 2048,
+    system: systemPrompt,
+    messages,
+    stream: true,
+  })) as AsyncIterable<Record<string, unknown>>;
+
+  for await (const event of stream) {
+    const type = event.type as string;
+    if (type === 'content_block_delta') {
+      const delta = event.delta as { type: string; text?: string };
+      if (delta.type === 'text_delta' && delta.text) {
+        fullText += delta.text;
+        onToken(delta.text);
+      }
+    } else if (type === 'message_start') {
+      const msg = event.message as { usage?: { input_tokens: number } } | undefined;
+      inputTokens = msg?.usage?.input_tokens ?? 0;
+    } else if (type === 'message_delta') {
+      const usage = event.usage as { output_tokens?: number } | undefined;
+      outputTokens = usage?.output_tokens ?? outputTokens;
+    }
+  }
+
+  return { fullText, usage: { input_tokens: inputTokens, output_tokens: outputTokens } };
+}
+
 let _client: import('@anthropic-ai/sdk').default | null = null;
 
 function getClient() {

@@ -18,6 +18,7 @@ export interface IOrganization extends Document {
     quiet_hours_start: string | null;
     quiet_hours_end: string | null;
     timezone: string;
+    assistant_token_budget_monthly?: number;
   };
   demo_mode: boolean;
   created_at: Date;
@@ -42,6 +43,7 @@ const OrgSchema = new Schema<IOrganization>({
     quiet_hours_start: { type: String, default: null },
     quiet_hours_end: { type: String, default: null },
     timezone: { type: String, default: 'Asia/Kolkata' },
+    assistant_token_budget_monthly: { type: Number, default: 200_000 },
   },
   demo_mode: { type: Boolean, default: false },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });

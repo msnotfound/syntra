@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { ChevronDown, Search, Bell, User } from 'lucide-react';
+import { ChevronDown, Search, Bell, User, MessageSquare } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface TopBarProps {
@@ -36,6 +36,18 @@ export function TopBar({ orgName, orgSlug, unreadCount = 0 }: TopBarProps) {
         <span className="text-text-muted">·</span>
         <span className="font-mono tabular-nums text-severity-critical">3 critical</span>
       </div>
+
+      {/* Ask AI assistant */}
+      <button
+        type="button"
+        onClick={() => window.dispatchEvent(new CustomEvent('assistant:toggle'))}
+        aria-label="Open AI assistant (Cmd+K)"
+        title="AI assistant (Cmd+K)"
+        className="flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-border-subtle bg-bg-base text-xs text-text-secondary hover:border-border-default hover:bg-bg-surface-2 hover:text-text-primary transition-colors duration-quick ease-out active:scale-95 mr-2"
+      >
+        <MessageSquare size={13} />
+        <span className="hidden lg:inline">Ask</span>
+      </button>
 
       {/* Notifications */}
       <button
