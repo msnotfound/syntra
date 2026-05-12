@@ -223,6 +223,9 @@ Maya is sharp. Don't bullshit her. If you find yourself using buildplan or scope
 
 ## Appendix: orcha cheatsheet
 
+> **Full orcha reference**: `~/agents/ORCHA.md` — read this first if you need to spawn agents. 200-line comprehensive doc covering architecture, all 5 known failure modes, parallel-vs-sequential decision tree, integration workflow, spawn templates per agent type.
+
+
 Bash scripts at `~/agents/bin/`, on `$PATH`. Run any with `-h` for help.
 
 ```bash
